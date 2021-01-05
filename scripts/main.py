@@ -113,6 +113,17 @@ class EnsembleAE(nn.Module):
         res = [nn.encoder(x) for nn in self.ae_list]
         return res
 
+    def reset(self):
+        # Initialize weights
+        def init_weights(m):
+            if type(m) == nn.Linear:
+                torch.nn.init.normal_(m.weight, mean=0.0, std=0.3)
+                torch.nn.init.uniform_(m.bias, 0.0, 1.0)
+        for ae in self.ae_list:
+            ae.encoder.apply(init_weights)
+            ae.decoder.apply(init_weights)
+
+
 #        res = [nn(x) for nn in self.ae_list]
 #        return torch.Tensor(res)
 
@@ -210,9 +221,11 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
     def __init__(self, container: ContainerLike,
             div_coeff: float = 0.5,
             diversity_loss_computation: str = "outputs",
+            reset_model_every_training: bool = False,
             **kwargs: Any) -> None:
         self.div_coeff = div_coeff
         self.diversity_loss_computation = diversity_loss_computation
+        self.reset_model_every_training = reset_model_every_training
         if not self.diversity_loss_computation in ['outputs', 'latent']:
             raise ValueError(f"Unknown diversity_loss_computation type: {self.diversity_loss_computation}.")
         super().__init__(container, **kwargs)
@@ -304,6 +317,10 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         criterion_perf = nn.MSELoss()
         criterion_diversity = nn.MSELoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate, weight_decay=1e-5) # type: ignore
+
+        # Reset model, if needed
+        if self.reset_model_every_training:
+            model.reset()
 
         # Train !
         for epoch in range(nb_epochs):
@@ -408,9 +425,13 @@ class RastriginExperiment(QDExperiment):
                     iteration_filenames=iteration_filenames, final_filename=final_filename, save_period=self.save_period)
             self.algs_loggers.append(logger)
 
-        for i, alg in enumerate(algos):
-            stat_qd_score = LoggerStat(f"qd_score-{alg.name}", lambda algo: f"{algo.algorithms[i].container.qd_score(normalized=True):.2f}", True)
+        def fn_qd_score(i_alg, algo):
+            return f"{algo.algorithms[i_alg].container.qd_score(True):.2f}"
+        for i_alg, alg in enumerate(algos):
+            stat_qd_score = LoggerStat(f"qd_score-{alg.name}", partial(fn_qd_score, i_alg), True)
             self.logger.register_stat(stat_qd_score)
+
+
 
 ########## BASE FUNCTIONS ########### {{{1
 
