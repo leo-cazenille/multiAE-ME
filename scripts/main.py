@@ -20,6 +20,7 @@ import gc
 import copy
 #import pickle
 import numpy as np
+import warnings
 
 # QDpy
 import qdpy
@@ -43,11 +44,11 @@ import matplotlib.pyplot as plt
 
 ########## NN ########### {{{1
 
-num_epochs = 100
-batch_size = 128
-learning_rate = 1e-3
-nb_modules = 4
-div_coeff = 0.5
+#num_epochs = 100
+#batch_size = 128
+#learning_rate = 1e-3
+#nb_modules = 4
+#div_coeff = 0.5
 
 #class AE(nn.Module):
 #    def __init__(self, input_size):
@@ -89,7 +90,6 @@ div_coeff = 0.5
 #
 
 
-# XXX
 #class EnsembleAE(nn.Module):
 #    def __init__(self, input_size, latent_size=2, nb_modules = 4):
 #        super().__init__()
@@ -107,6 +107,10 @@ class EnsembleAE(nn.Module):
 
     def forward(self, x):
         res = [nn(x) for nn in self.ae_list]
+        return res
+
+    def encoders(self, x):
+        res = [nn.encoder(x) for nn in self.ae_list]
         return res
 
 #        res = [nn(x) for nn in self.ae_list]
@@ -203,9 +207,16 @@ current_loss = np.nan
 class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContainerDecorator):
     """TODO""" # TODO
 
-    def __init__(self, container: ContainerLike, div_coeff: float = 0.5, **kwargs: Any) -> None:
+    def __init__(self, container: ContainerLike,
+            div_coeff: float = 0.5,
+            diversity_loss_computation: str = "outputs",
+            **kwargs: Any) -> None:
         self.div_coeff = div_coeff
+        self.diversity_loss_computation = diversity_loss_computation
+        if not self.diversity_loss_computation in ['outputs', 'latent']:
+            raise ValueError(f"Unknown diversity_loss_computation type: {self.diversity_loss_computation}.")
         super().__init__(container, **kwargs)
+        self.last_recomputed = 0
 
     def _create_default_model(self, example_ind: IndividualLike) -> None:
         print(f"DEBUG {self.name} ############# CREATE DEFAULT MODEL ###############")
@@ -226,7 +237,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         global nn_models
         nn_models[self.name] = self.model
 
-    def _train_and_recompute_if_needed(self):
+    def _train_and_recompute_if_needed(self, update_params=()):
         global last_training_nb_inds
 
         # Train and recomputed all features if necessary
@@ -249,11 +260,18 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
                     self.train(self.nb_epochs if nb_training_inds > self.training_period else self.initial_nb_epochs)
                     last_training_nb_inds = nb_training_inds
                 print(f"DEBUG {self.name} RECOMPUTE FEATURES")
-                self.recompute_features_all_ind()
+                self.recompute_features_all_ind(update_params)
+                self.last_recomputed = nb_training_inds
             except Exception as e:
                 print("Training failed !")
                 traceback.print_exc()
                 raise e
+
+        elif self.last_recomputed < last_training_nb_inds:
+            self.clear() # type: ignore
+            print(f"DEBUG {self.name} RECOMPUTE FEATURES")
+            self.recompute_features_all_ind(update_params)
+            self.last_recomputed = nb_training_inds
 
 
     def train(self, nb_epochs: int) -> None:
@@ -294,16 +312,42 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
                 #print(f"DEBUG training2: {d} {d.shape}")
                 output = model(d) # type: ignore
 
+                # Compute performance loss
                 loss_perf = 0.
-                loss_diversity = 0.
-                mean_output = 0.
                 for r in output:
                     loss_perf += criterion_perf(r, d)
-                    mean_output += r
-                mean_output /= len(output)
                 loss_perf /= len(output)
-                for r in output:
-                    loss_diversity += criterion_diversity(r, mean_output)
+
+                # Compute diversity loss
+                loss_diversity = 0.
+                if self.diversity_loss_computation == "outputs":
+                    #mean_output = 0.
+                    #for r in output:
+                    #    mean_output += r
+                    #mean_output /= len(output)
+                    mean_output = [torch.mean(o, 0) for o in output]
+                    mean_output = sum(mean_output) / len(mean_output)
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore")
+                        for r in output:
+                            loss_diversity += criterion_diversity(r, mean_output)
+                            #print(f"DEBUG outputs: {r.shape} {mean_output.shape} {criterion_diversity(r, mean_output)}")
+                elif self.diversity_loss_computation == "latent":
+                    latent = model.encoders(d)
+                    #mean_latent = 0.
+                    #for l in latent:
+                    #    mean_latent += l
+                    #mean_latent /= len(latent)
+                    mean_latent = [torch.mean(l, 0) for l in latent]
+                    mean_latent = sum(mean_latent) / len(mean_latent)
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore")
+                        for r in latent:
+                            loss_diversity += criterion_diversity(r, mean_latent)
+                            #print(f"DEBUG latent: {r.shape} {mean_latent.shape} {criterion_diversity(r, mean_latent)}")
+                else:
+                    raise ValueError(f"Unknown diversity_loss_computation type: {self.diversity_loss_computation}.")
+
                 loss = loss_perf - self.div_coeff * loss_diversity
 #                loss = loss_perf #- self.div_coeff * loss_diversity
 
@@ -320,7 +364,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
 
 
 
-########## EXPERIMENT CLASS ########### {{{1
+########## EXPERIMENT CLASSES ########### {{{1
 
 class RastriginExperiment(QDExperiment):
 
@@ -330,7 +374,8 @@ class RastriginExperiment(QDExperiment):
         return res
 
     def reinit(self):
-        self.bench = artificial_landscapes.NormalisedRastriginBenchmark(nb_features = 2)
+        self.nb_features = self.config.get('nb_features', 4)
+        self.bench = artificial_landscapes.NormalisedRastriginBenchmark(nb_features = self.nb_features)
         #self.config['fitness_type'] = "perf"
         ##self.config['perfDomain'] = (0., artificial_landscapes.rastrigin([4.5]*2, 10.)[0])
         #self.config['perfDomain'] = (0., math.inf)
@@ -350,8 +395,8 @@ class RastriginExperiment(QDExperiment):
         stat_loss = LoggerStat("loss", lambda algo: f"{current_loss:.4f}", True)
         stat_training = LoggerStat("training_size", lambda algo: f"{len(algo.container._get_training_inds())}", True)
         self.logger.register_stat(stat_loss, stat_training)
-        self.logger._tabs_size = 6
-        self.logger._min_cols_size = 12
+        self.logger._tabs_size = 5
+        self.logger._min_cols_size = 10
 
         # Create additional loggers
         algos = self.algo.algorithms
@@ -363,6 +408,10 @@ class RastriginExperiment(QDExperiment):
                     iteration_filenames=iteration_filenames, final_filename=final_filename, save_period=self.save_period)
             self.algs_loggers.append(logger)
 
+        for i, alg in enumerate(algos):
+            stat_qd_score = LoggerStat(f"qd_score-{alg.name}", lambda algo: f"{algo.algorithms[i].container.qd_score(normalized=True):.2f}", True)
+            self.logger.register_stat(stat_qd_score)
+
 ########## BASE FUNCTIONS ########### {{{1
 
 def parse_args():
@@ -371,18 +420,24 @@ def parse_args():
     parser.add_argument('-c', '--configFilename', type=str, default='conf/test.yaml', help = "Path of configuration file")
     parser.add_argument('-o', '--resultsBaseDir', type=str, default='results/', help = "Path of results files")
     parser.add_argument('-p', '--parallelismType', type=str, default='concurrent', help = "Type of parallelism to use")
-    parser.add_argument('--replayBestFrom', type=str, default='', help = "Path of results data file -- used to replay the best individual")
+#    parser.add_argument('--replayBestFrom', type=str, default='', help = "Path of results data file -- used to replay the best individual")
     parser.add_argument('--seed', type=int, default=None, help="Numpy random seed")
+    parser.add_argument('-v', '--verbose', default=False, action='store_true', help = "Enable verbose mode")
     return parser.parse_args()
 
 def create_base_config(args):
     base_config = {}
     if len(args.resultsBaseDir) > 0:
         base_config['resultsBaseDir'] = args.resultsBaseDir
+    base_config['verbose'] = args.verbose
     return base_config
 
 def create_experiment(args, base_config):
-    exp = RastriginExperiment(args.configFilename, args.parallelismType, seed=args.seed, base_config=base_config)
+    exp_type = base_config.get('experiment_type', 'rastrigin')
+    if exp_type == 'rastrigin':
+        exp = RastriginExperiment(args.configFilename, args.parallelismType, seed=args.seed, base_config=base_config)
+    else:
+        raise ValueError(f"Unknown experiment type: {exp_type}.")
     print("Using configuration file '%s'. Instance name: '%s'" % (args.configFilename, exp.instance_name))
     return exp
 
@@ -394,6 +449,13 @@ def make_plots(exp):
     for logger in exp.algs_loggers:
         logger.save(os.path.join(logger.log_base_path, logger.final_filename))
         qdpy.plots.default_plots_grid(logger, exp.log_base_path, suffix=f"-{exp.instance_name}-{logger.algorithms[0].name}")
+
+    qdpy.plots.plot_iterations(exp.logger, os.path.join(exp.log_base_path, f"./iterations_loss-{exp.instance_name}.pdf"), "loss", ylabel="Loss")
+
+    parent_archive = exp.container.container.parents[0]
+    ylim_contsize = (0, len(parent_archive)) if np.isinf(parent_archive.capacity) else (0, parent_archive.capacity)
+    qdpy.plots.plot_iterations(exp.logger, os.path.join(exp.log_base_path, f"./iterations_trainingsize{exp.instance_name}.pdf"), "training_size", ylim=ylim_contsize, ylabel="Training size")
+
 #
 #        output_dir = exp.log_base_path
 #        suffix=f"-{exp.instance_name}-{logger.algorithms[0].name}"
