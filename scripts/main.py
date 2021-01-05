@@ -222,10 +222,12 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
             div_coeff: float = 0.5,
             diversity_loss_computation: str = "outputs",
             reset_model_every_training: bool = False,
+            training_budget: Optional[int] = None,
             **kwargs: Any) -> None:
         self.div_coeff = div_coeff
         self.diversity_loss_computation = diversity_loss_computation
         self.reset_model_every_training = reset_model_every_training
+        self.training_budget = training_budget
         if not self.diversity_loss_computation in ['outputs', 'latent']:
             raise ValueError(f"Unknown diversity_loss_computation type: {self.diversity_loss_computation}.")
         super().__init__(container, **kwargs)
@@ -295,6 +297,10 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         training_inds = self._get_training_inds()
         assert(len(training_inds) > 0)
         assert(self.model != None)
+
+        # Skip training if we already exceed the training budget
+        if self.training_budget != None and len(training_inds) > self.training_budget:
+            return
 
         # Identify base scores
         if self.base_scores == None: # Not base scores specified, use all scores (except those created through feature extraction)
