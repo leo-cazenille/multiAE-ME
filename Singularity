@@ -22,19 +22,26 @@ From: lcazenille/qdpy-bipedal_walker
 
 %apprun several_main
     nb_runs=$1
-    shift;
+    config=$2
+    shift; shift;
+    exp_name=`echo $config | sed 's/.yaml$//'`
+    mkdir results/$exp_name
     for i in $(seq 1 $nb_runs); do
         sleep 1
-        ./scripts/main.py $@
+        logname=$(date +%Y%m%d%H%M%S).log
+        ./scripts/main.py -c conf/$config $@ 2>&1 | tee results/$exp_name/$logname
     done
 
 %apprun parallel_main
     nb_runs=$1
-    shift;
+    config=$2
+    shift; shift;
+    exp_name=`echo $config | sed 's/.yaml$//'`
+    mkdir results/$exp_name
     for i in $(seq 1 $nb_runs); do
         sleep 1
         logname=$(date +%Y%m%d%H%M%S).log
-        ./scripts/main.py $@ 2>&1 > results/$logname &
+        ./scripts/main.py -c conf/$config $@ 2>&1 > results/$exp_name/$logname &
     done
     wait
 
