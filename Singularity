@@ -33,7 +33,8 @@ From: lcazenille/qdpy-bipedal_walker
     shift;
     for i in $(seq 1 $nb_runs); do
         sleep 1
-        ./scripts/main.py $@ &
+        logname=$(date +%Y%m%d%H%M%S).log
+        ./scripts/main.py $@ 2&>1 > results/$logname &
     done
     wait
 
