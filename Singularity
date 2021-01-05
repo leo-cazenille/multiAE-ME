@@ -20,4 +20,21 @@ From: lcazenille/qdpy-bipedal_walker
 %apprun main
     exec ./scripts/main.py $@
 
+%apprun several_main
+    nb_runs=$1
+    shift;
+    for i in $(seq 1 $nb_runs); do
+        sleep 1
+        ./scripts/main.py $@
+    done
+
+%apprun parallel_main
+    nb_runs=$1
+    shift;
+    for i in $(seq 1 $nb_runs); do
+        sleep 1
+        ./scripts/main.py $@ &
+    done
+    wait
+
 
