@@ -7,7 +7,7 @@
 
 
 # The random seed
-seed: 42
+#seed: 42
 
 # Type of experiment
 experiment_type: rastrigin
