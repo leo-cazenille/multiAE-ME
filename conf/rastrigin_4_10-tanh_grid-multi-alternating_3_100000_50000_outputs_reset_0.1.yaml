@@ -7,11 +7,11 @@
 
 
 # The random seed
-seed: 42
+#seed: 42
 
 # Type of experiment
 experiment_type: rastrigin
-nb_features: 2
+nb_features: 4
 
 # The name of the main algorithm (see below the description of 'algoQD')
 main_algorithm_name: algoTotal
@@ -28,13 +28,14 @@ containers:
 
     # Feature extraction decorator parameters
     initial_nb_epochs: 100                            # The number of epochs used the first time the model is optimised
-    nb_epochs: 100                                     # The number of epochs used for subsequent training processes
+    nb_epochs: 60                                     # The number of epochs used for subsequent training processes
     learning_rate: 1.e-3                              # Learning rate of the training (by default, the Adam optimiser is used to train the model)
-    training_period: 1000                             # Re-train the model every time `training_period` add operations are performed
+    training_period: 500                             # Re-train the model every time `training_period` add operations are performed
     div_coeff: 0.1
     diversity_loss_computation: outputs
-    base_scores: ["0", "1"]
-    #reset_model_every_training: True
+    base_scores: ["0", "1", "2", "3"]
+    reset_model_every_training: True
+    training_budget: 50000
     tanh_encoder: True
 
     parentContainer:                             # We create a container that will contain ALL tested individuals
@@ -47,32 +48,23 @@ containers:
 
     grid1:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-        #type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        #fitness_domain: [[-.inf, .inf]]                             # The domain of each fitness objective (here we only have one objective)
         fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
-        #features_domain: [[-.inf, .inf], [-.inf, .inf]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         features_domain: [[-1., 1.], [-1., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid2:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-        #type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        #fitness_domain: [[-.inf, .inf]]                             # The domain of each fitness objective (here we only have one objective)
         fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
-        #features_domain: [[-.inf, .inf], [-.inf, .inf]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         features_domain: [[-1., 1.], [-1., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid3:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-        #type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        #fitness_domain: [[-.inf, .inf]]                             # The domain of each fitness objective (here we only have one objective)
         fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
-        #features_domain: [[-.inf, .inf], [-.inf, .inf]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         features_domain: [[-1., 1.], [-1., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     cont1:                                                # A feature-extracting container decorator applied to the main grid
@@ -95,7 +87,7 @@ containers:
 algorithms:
     # Default parameter values for each algorithm
     optimisation_task: minimisation   # We perform maximisation of all fitness objectives
-    dimension: 5                      # The number of dimensions of the problem. For rastrigin, any dimension >= 2 can be chosen
+    dimension: 10                      # The number of dimensions of the problem. For rastrigin, any dimension >= 2 can be chosen
     ind_domain: [0., 1.]              # The domain of each value of the genome (optional)
 
     # Evolution parameters
@@ -128,7 +120,7 @@ algorithms:
         #type: SqAlgWrapper
 #        batch_size: 100     # The number of evaluations in each subsequent batch 
         #batch_mode: True
-        budget: 5000
+        budget: 100000
         tell_container_when_switching: False
         #tell_container_when_switching: True               # Whether to tell the next algorithm in the list all results of the previous algorithm
         algorithms: ['algo1', 'algo2', 'algo3'] # The list of algorithms to execute
