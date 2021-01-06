@@ -28,7 +28,7 @@ from qdpy.base import *
 from qdpy.experiment import QDExperiment
 from qdpy.benchmarks import artificial_landscapes
 from qdpy.algorithms import LoggerStat, TQDMAlgorithmLogger, AlgorithmLogger
-from qdpy.containers import TorchAE, TorchFeatureExtractionContainerDecorator, ContainerLike
+from qdpy.containers import TorchAE, TorchFeatureExtractionContainerDecorator, ContainerLike, NoveltyArchive, Container
 import qdpy.plots
 
 # Pytorch
@@ -40,6 +40,8 @@ from torch.utils.data import DataLoader
 
 
 import matplotlib.pyplot as plt
+
+from kdtree_backend import *
 
 
 ########## NN ########### {{{1
@@ -137,6 +139,57 @@ class AE(nn.Module):
         x = self.encoder(x)
         x = self.decoder(x)
         return x
+
+
+
+# TODO
+class ConvAE(nn.Module):
+    def __init__(self, input_size, latent_size=2, tanh_encoder=False):
+        super().__init__()
+        self.input_size = input_size
+        self.latent_size = latent_size
+        self.tanh_encoder = tanh_encoder
+
+        fst_layer_size = input_size//2 if input_size > 7 else 4
+        snd_layer_size = input_size//4 if input_size > 7 else 2
+
+        if self.tanh_encoder:
+            self.encoder = nn.Sequential(
+                nn.Linear(input_size, fst_layer_size),
+                nn.ReLU(True),
+                nn.Linear(fst_layer_size, snd_layer_size),
+                nn.ReLU(True),
+                nn.Linear(snd_layer_size, latent_size),
+                nn.Tanh())
+        else:
+            self.encoder = nn.Sequential(
+                nn.Linear(input_size, fst_layer_size),
+                nn.ReLU(True),
+                nn.Linear(fst_layer_size, snd_layer_size),
+                nn.ReLU(True),
+                nn.Linear(snd_layer_size, latent_size))
+
+        self.decoder = nn.Sequential(
+            nn.Linear(latent_size, snd_layer_size),
+            nn.ReLU(True),
+            nn.Linear(snd_layer_size, fst_layer_size),
+            nn.ReLU(True),
+            nn.Linear(fst_layer_size, input_size), nn.Tanh())
+
+        # Initialize weights
+        def init_weights(m):
+            if type(m) == nn.Linear:
+                torch.nn.init.normal_(m.weight, mean=0.0, std=0.3)
+                torch.nn.init.ones_(m.bias)
+        self.encoder.apply(init_weights)
+        self.decoder.apply(init_weights)
+
+
+    def forward(self, x):
+        x = self.encoder(x)
+        x = self.decoder(x)
+        return x
+
 
 
 
@@ -259,11 +312,130 @@ class EnsembleAE(nn.Module):
 
 nn_models = {}
 last_training_nb_inds = 0
+last_training_size = 0
 current_loss = np.nan
 
 
 
 ########## CONTAINER CLASS ########### {{{1
+
+
+
+#@registry.register
+#class NoveltyArchive(Container):
+#    """TODO""" # TODO
+#
+#    #depot: BackendLike[IndividualLike]
+#
+#    k: int
+#    threshold_novelty: float
+#    novelty_distance: Union[str, Callable]
+#
+#    def __init__(self, iterable: Optional[Iterable] = None,
+#            k: int = 15, threshold_novelty: float = 0.01, novelty_distance: Union[str, Callable] = "euclidean",
+#            parents: Sequence[ContainerLike] = [], **kwargs: Any) -> None:
+#        self.k = k
+#        self.threshold_novelty = threshold_novelty
+#        self.novelty_distance = novelty_distance
+#        if len(parents) == 0:
+#            raise ValueError("``parents`` must contain at least one parent container to create an archive container.")
+#        super().__init__(iterable, parents=parents, **kwargs)
+#
+#
+#    def _add_internal(self, individual: IndividualLike, raise_if_not_added_to_parents: bool, only_to_parents: bool) -> Optional[int]:
+#        # Find novelty of this individual, and its nearest neighbour
+#        all_parents = self.all_parents_inds()
+#        novelty, nn = novelty_nn(individual, all_parents, k=self.k, nn_size=1, dist=self.novelty_distance, ignore_first=False)
+#        if novelty > self.threshold_novelty:
+#            # Add individual
+#            return super()._add_internal(individual, raise_if_not_added_to_parents, only_to_parents)
+#        else:
+#            ind_nn = all_parents[nn[0]]
+#            ind_nn_fit = self.get_ind_fitness(ind_nn)
+#            ind_fit = self.get_ind_fitness(individual)
+#            if len(nn) > 0 and ind_fit.dominates(ind_nn_fit):
+#                #self.discard(nn[0])
+#                #self._discard_by_index(ind_nn, idx_depot=nn[0])
+#                self._discard_by_index(ind_nn)
+#                return super()._add_internal(individual, raise_if_not_added_to_parents, only_to_parents)
+#            else:
+#                return None
+#
+
+
+@registry.register
+class SelfAdaptiveNoveltyArchive(Container):
+    """TODO""" # TODO
+
+    def __init__(self, iterable: Optional[Iterable] = None,
+            rebalancing_period: int = 100,
+            k: int = 15, threshold_novelty: float = 0.01, novelty_distance: Union[str, Callable] = "euclidean",
+            parents: Sequence[ContainerLike] = [], **kwargs: Any) -> None:
+        self.rebalancing_period = rebalancing_period
+        self.k = k
+        self.threshold_novelty = threshold_novelty
+        self.novelty_distance = novelty_distance
+        if len(parents) == 0:
+            raise ValueError("``parents`` must contain at least one parent container to create an archive container.")
+
+        # XXX hack: set backend directly
+        features_score_names = kwargs.get('features_score_names', [])
+        features_domain = kwargs['features_domain']
+        storage_type = kwargs.get('storage_type', [])
+        storage = self._create_storage(storage_type)
+        backend = KDTreeBackend(len(features_domain), base_backend=storage, features_score_names=features_score_names)
+        kwargs['storage_type'] = backend
+
+        super().__init__(iterable, parents=parents, **kwargs)
+
+
+    def _add_internal(self, individual: IndividualLike, raise_if_not_added_to_parents: bool, only_to_parents: bool) -> Optional[int]:
+        if self.nb_operations + self.nb_rejected % self.rebalancing_period == 0:
+            self.items.rebalance()
+        all_parents = self.all_parents_inds()
+
+        # Compute novelty
+        if len(self) == 0:
+            novelty = np.inf
+        else:
+            knn_res = self.items.knn(individual, self.k)
+            nn, dists = tuple(zip(*knn_res))
+            novelty = np.mean(dists)
+        #print(f"DEBUG _add_internal {len(self)} novelty={novelty}")
+
+        # Check if individual is sufficiently novel
+        if novelty > self.threshold_novelty:
+            # Add individual
+            return super()._add_internal(individual, raise_if_not_added_to_parents, only_to_parents)
+
+        else:
+            ind_nn = nn[0]
+            ind_nn_fit = self.get_ind_fitness(ind_nn)
+            ind_fit = self.get_ind_fitness(individual)
+            if ind_fit.dominates(ind_nn_fit):
+                self.discard(ind_nn)
+                return super()._add_internal(individual, raise_if_not_added_to_parents, only_to_parents)
+            else:
+                return None
+
+
+    # Inspired from original code of Cully2019 "Autonomous skill discovery with Quality-Diversity and Unsupervised Descriptors"
+    def compute_new_threshold(self) -> None:
+        fts = np.array([ind.features for ind in self.all_parents_inds()])
+        xx = np.sum(fts**2., 1)
+        xx = xx.reshape(xx.shape + (1,))
+        xy = (2*fts) @ fts.T
+        dist = xx @ np.ones((1, fts.shape[0]))
+        dist += np.ones((fts.shape[0], 1)) @ xx.T
+        dist -= xy
+        maxdist = np.sqrt(np.max(dist))
+        K = 60000 # Arbitrary value to have a specific "resolution"
+        self.threshold_novelty = maxdist / np.sqrt(K)
+        print(f"DEBUG compute_new_threshold: {self.threshold_novelty}")
+
+
+
+
 @registry.register
 class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContainerDecorator):
     """TODO""" # TODO
@@ -272,18 +444,26 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
             div_coeff: float = 0.5,
             diversity_loss_computation: str = "outputs",
             reset_model_every_training: bool = False,
+            train_only_on_last_inds: bool = False,
             training_budget: Optional[int] = None,
+            training_period_type: str = "linear",
             tanh_encoder: bool = False,
+            model_type: Type = AE,
             **kwargs: Any) -> None:
         self.div_coeff = div_coeff
         self.diversity_loss_computation = diversity_loss_computation
         self.reset_model_every_training = reset_model_every_training
+        self.train_only_on_last_inds = train_only_on_last_inds
         self.training_budget = training_budget
+        self.training_period_type = training_period_type
         self.tanh_encoder = tanh_encoder
+        self.model_type = model_type
         if not self.diversity_loss_computation in ['outputs', 'latent']:
             raise ValueError(f"Unknown diversity_loss_computation type: {self.diversity_loss_computation}.")
         super().__init__(container, **kwargs)
         self.last_recomputed = 0
+        self._training_id = 0
+        self._last_training_nb_inds2 = 0
 
     def _create_default_model(self, example_ind: IndividualLike) -> None:
         print(f"DEBUG {self.name} ############# CREATE DEFAULT MODEL ###############")
@@ -299,7 +479,8 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         # Set extracted scores names as the default features of the container
         self.container.features_score_names = [f"extracted_{id(self)}_{j}" for j in range(latent_size)]
         # Create simple auto-encoder as default model
-        self.model = AE(input_size, latent_size, self.tanh_encoder)
+        #self.model = AE(input_size, latent_size, self.tanh_encoder)
+        self.model = self.model_type(input_size, latent_size, self.tanh_encoder)
         # Register model in global dict
         global nn_models
         nn_models[self.name] = self.model
@@ -315,8 +496,19 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         if self.model == None and nb_training_inds > 0:
             self._create_default_model(training_inds[0])
 
+        if self.training_period_type == "linear":
+            do_recomputation = nb_training_inds >= self.training_period and nb_training_inds % self.training_period == 0 and nb_training_inds != self._last_training_nb_inds
+        elif self.training_period_type == "exp_decay":
+            do_recomputation = nb_training_inds >= self._last_training_nb_inds2 + self.training_period * 2**(self._training_id)
+            if do_recomputation:
+                print(f"DEBUG _train_and_recompute_if_needed exp_decay {nb_training_inds} {self._last_training_nb_inds2} {self.training_period} {self._training_id} {self._last_training_nb_inds2 + self.training_period * 2**(self._training_id)}")
+                self._last_training_nb_inds2 = self._last_training_nb_inds2 + self.training_period * 2**(self._training_id)
+        else:
+            raise ValueError(f"Unknown training_period_type: {self.training_period_type}.")
+
         #print("DEBUG add !", nb_training_inds, self.training_period, self._last_training_nb_inds)
-        if nb_training_inds >= self.training_period and nb_training_inds % self.training_period == 0 and nb_training_inds != self._last_training_nb_inds:
+        if do_recomputation:
+            self._training_id += 1
             do_training = nb_training_inds - last_training_nb_inds >= self.training_period
             print(f"DEBUG {self.name} _train_and_recompute_if_needed: {nb_training_inds} {last_training_nb_inds} {self.training_period}")
             self._last_training_nb_inds = nb_training_inds
@@ -328,6 +520,8 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
                     last_training_nb_inds = nb_training_inds
                 print(f"DEBUG {self.name} RECOMPUTE FEATURES")
                 self.recompute_features_all_ind(update_params)
+                if hasattr(self.container, 'compute_new_threshold'):
+                    self.container.compute_new_threshold()
                 self.last_recomputed = nb_training_inds
             except Exception as e:
                 print("Training failed !")
@@ -343,6 +537,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
 
     def train(self, nb_epochs: int) -> None:
         global nn_models
+        global last_training_size
         #print("###########  DEBUG: training.. ###########")
         #start_time = timer() # XXX
 
@@ -353,6 +548,16 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         # Skip training if we already exceed the training budget
         if self.training_budget != None and len(training_inds) > self.training_budget:
             return
+
+        # If needed, only use the last inds of the training set
+        if self.train_only_on_last_inds:
+            nb_new_inds = len(training_inds) - last_training_size
+            #print(f"DEBUG train_only_on_last_inds: {nb_new_inds} {last_training_size}")
+            last_training_size = len(training_inds)
+            training_inds = training_inds[-nb_new_inds:]
+        else:
+            last_training_size = len(training_inds)
+        print(f" training size: {len(training_inds)}")
 
         # Identify base scores
         if self.base_scores == None: # Not base scores specified, use all scores (except those created through feature extraction)
@@ -441,29 +646,8 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
 
 ########## EXPERIMENT CLASSES ########### {{{1
 
-class RastriginExperiment(QDExperiment):
-
-    def eval(self, ind):
-        res = self.bench.fn(ind)
-        print("DEBUG:", res)
-        return res
-
-    def reinit(self):
-        self.nb_features = self.config.get('nb_features', 4)
-        self.bench = artificial_landscapes.NormalisedRastriginBenchmark(nb_features = self.nb_features)
-        #self.config['fitness_type'] = "perf"
-        ##self.config['perfDomain'] = (0., artificial_landscapes.rastrigin([4.5]*2, 10.)[0])
-        #self.config['perfDomain'] = (0., math.inf)
-        #self.config['features_list'] = ["0", "1"]
-        #self.config['0Domain'] = self.bench.features_domain[0]
-        #self.config['1Domain'] = self.bench.features_domain[1]
-        self.config['algorithms']['ind_domain'] = self.bench.ind_domain
-        #self.features_domain = self.bench.features_domain
-        super().reinit()
-        self.eval_fn = self.bench.fn
-        #self.eval_fn = self.eval
-        self.optimisation_task = self.bench.default_task
-
+class MultiAEExperiment(QDExperiment):
+    def reinit_loggers(self):
         # Update stats
         #stat_loss = LoggerStat("loss", lambda algo: f"{algo.container.current_loss:.4f}", True)
         global current_loss
@@ -491,6 +675,45 @@ class RastriginExperiment(QDExperiment):
 
 
 
+class RastriginExperiment(MultiAEExperiment):
+    def reinit(self):
+        self.nb_features = self.config.get('nb_features', 4)
+        self.bench = artificial_landscapes.NormalisedRastriginBenchmark(nb_features = self.nb_features)
+        #self.config['fitness_type'] = "perf"
+        ##self.config['perfDomain'] = (0., artificial_landscapes.rastrigin([4.5]*2, 10.)[0])
+        #self.config['perfDomain'] = (0., math.inf)
+        #self.config['features_list'] = ["0", "1"]
+        #self.config['0Domain'] = self.bench.features_domain[0]
+        #self.config['1Domain'] = self.bench.features_domain[1]
+        self.config['algorithms']['ind_domain'] = self.bench.ind_domain
+        #self.features_domain = self.bench.features_domain
+        super().reinit()
+        self.eval_fn = self.bench.fn
+        self.optimisation_task = self.bench.default_task
+        super().reinit_loggers()
+
+
+
+# TODO
+class BallisticExperiment(MultiAEExperiment):
+    def reinit(self):
+        self.nb_features = self.config.get('nb_features', 4)
+        self.bench = artificial_landscapes.NormalisedRastriginBenchmark(nb_features = self.nb_features)
+        #self.config['fitness_type'] = "perf"
+        ##self.config['perfDomain'] = (0., artificial_landscapes.rastrigin([4.5]*2, 10.)[0])
+        #self.config['perfDomain'] = (0., math.inf)
+        #self.config['features_list'] = ["0", "1"]
+        #self.config['0Domain'] = self.bench.features_domain[0]
+        #self.config['1Domain'] = self.bench.features_domain[1]
+        self.config['algorithms']['ind_domain'] = self.bench.ind_domain
+        #self.features_domain = self.bench.features_domain
+        super().reinit()
+        self.eval_fn = self.bench.fn
+        self.optimisation_task = self.bench.default_task
+        super().reinit_loggers()
+
+
+
 ########## BASE FUNCTIONS ########### {{{1
 
 def parse_args():
@@ -515,6 +738,8 @@ def create_experiment(args, base_config):
     exp_type = base_config.get('experiment_type', 'rastrigin')
     if exp_type == 'rastrigin':
         exp = RastriginExperiment(args.configFilename, args.parallelismType, seed=args.seed, base_config=base_config)
+    elif exp_type == 'balistic':
+        exp = BallisticExperiment(args.configFilename, args.parallelismType, seed=args.seed, base_config=base_config)
     else:
         raise ValueError(f"Unknown experiment type: {exp_type}.")
     print("Using configuration file '%s'. Instance name: '%s'" % (args.configFilename, exp.instance_name))
