@@ -90,6 +90,55 @@ import matplotlib.pyplot as plt
 #
 
 
+
+class AE(nn.Module):
+    def __init__(self, input_size, latent_size=2, tanh_encoder=False):
+        super().__init__()
+        self.input_size = input_size
+        self.latent_size = latent_size
+        self.tanh_encoder = tanh_encoder
+
+        fst_layer_size = input_size//2 if input_size > 7 else 4
+        snd_layer_size = input_size//4 if input_size > 7 else 2
+
+        if self.tanh_encoder:
+            self.encoder = nn.Sequential(
+                nn.Linear(input_size, fst_layer_size),
+                nn.ReLU(True),
+                nn.Linear(fst_layer_size, snd_layer_size),
+                nn.Tanh(),
+                nn.Linear(snd_layer_size, latent_size))
+        else:
+            self.encoder = nn.Sequential(
+                nn.Linear(input_size, fst_layer_size),
+                nn.ReLU(True),
+                nn.Linear(fst_layer_size, snd_layer_size),
+                nn.ReLU(True),
+                nn.Linear(snd_layer_size, latent_size))
+
+        self.decoder = nn.Sequential(
+            nn.Linear(latent_size, snd_layer_size),
+            nn.ReLU(True),
+            nn.Linear(snd_layer_size, fst_layer_size),
+            nn.ReLU(True),
+            nn.Linear(fst_layer_size, input_size), nn.Tanh())
+
+        # Initialize weights
+        def init_weights(m):
+            if type(m) == nn.Linear:
+                torch.nn.init.normal_(m.weight, mean=0.0, std=0.3)
+                torch.nn.init.ones_(m.bias)
+        self.encoder.apply(init_weights)
+        self.decoder.apply(init_weights)
+
+
+    def forward(self, x):
+        x = self.encoder(x)
+        x = self.decoder(x)
+        return x
+
+
+
 #class EnsembleAE(nn.Module):
 #    def __init__(self, input_size, latent_size=2, nb_modules = 4):
 #        super().__init__()
@@ -223,11 +272,13 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
             diversity_loss_computation: str = "outputs",
             reset_model_every_training: bool = False,
             training_budget: Optional[int] = None,
+            tanh_encoder: bool = False,
             **kwargs: Any) -> None:
         self.div_coeff = div_coeff
         self.diversity_loss_computation = diversity_loss_computation
         self.reset_model_every_training = reset_model_every_training
         self.training_budget = training_budget
+        self.tanh_encoder = tanh_encoder
         if not self.diversity_loss_computation in ['outputs', 'latent']:
             raise ValueError(f"Unknown diversity_loss_computation type: {self.diversity_loss_computation}.")
         super().__init__(container, **kwargs)
@@ -247,7 +298,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         # Set extracted scores names as the default features of the container
         self.container.features_score_names = [f"extracted_{id(self)}_{j}" for j in range(latent_size)]
         # Create simple auto-encoder as default model
-        self.model = TorchAE(input_size, latent_size)
+        self.model = AE(input_size, latent_size, self.tanh_encoder)
         # Register model in global dict
         global nn_models
         nn_models[self.name] = self.model
