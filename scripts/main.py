@@ -106,8 +106,9 @@ class AE(nn.Module):
                 nn.Linear(input_size, fst_layer_size),
                 nn.ReLU(True),
                 nn.Linear(fst_layer_size, snd_layer_size),
-                nn.Tanh(),
-                nn.Linear(snd_layer_size, latent_size))
+                nn.ReLU(True),
+                nn.Linear(snd_layer_size, latent_size),
+                nn.Tanh())
         else:
             self.encoder = nn.Sequential(
                 nn.Linear(input_size, fst_layer_size),
