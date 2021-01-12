@@ -225,8 +225,8 @@ class ConvEncoder(nn.Module):
         self.nb_filters = nb_filters
         self.batch_norm_before_latent = batch_norm_before_latent
 
-        #self.drop_out1 = nn.Dropout(0.2)
-        #self.drop_out2 = nn.Dropout(0.2)
+        self.drop_out1 = nn.Dropout(0.2)
+        self.drop_out2 = nn.Dropout(0.2)
 
         # Encoder
 #        self.enc_conv1 = nn.Sequential(
@@ -311,9 +311,9 @@ class ConvEncoder(nn.Module):
         m1, self.i1 = self.enc_pool1(x)
         x = self.enc_conv2(m1)
         x = x.reshape(x.size(0), -1)
-        #x = self.drop_out1(x)
+        x = self.drop_out1(x)
         x = self.enc_fc1(x)
-        #x = self.drop_out2(x)
+        x = self.drop_out2(x)
         x = self.enc_fc2(x)
         #print(f"DEBUG forward {x}")
 
@@ -328,8 +328,8 @@ class ConvDecoder(nn.Module):
         self.latent_size = latent_size
         self.nb_filters = nb_filters
 
-        #self.drop_out1 = nn.Dropout(0.2)
-        #self.drop_out2 = nn.Dropout(0.2)
+        self.drop_out1 = nn.Dropout(0.2)
+        self.drop_out2 = nn.Dropout(0.2)
 
         # Decoder
         self.dec_fc2 = nn.Sequential(
@@ -391,10 +391,10 @@ class ConvDecoder(nn.Module):
 #        x = self.dec_out(x)
 
         # Decoder
-        #x = self.drop_out1(x)
         x = self.dec_fc2(x)
-        #x = self.drop_out2(x)
+        x = self.drop_out2(x)
         x = self.dec_fc1(x)
+        x = self.drop_out1(x)
         x = x.reshape(x.size(0), self.nb_filters, self.input_size//2-3)
         x = self.dec_conv1(x)
         x = self.dec_unpool1(x, self.encoder.i1)
