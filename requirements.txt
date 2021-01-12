@@ -9,3 +9,4 @@ cma>=2.6.0
 colorama>=0.4.1
 tqdm>=4.28.1
 git+https://gitlab.com/leo.cazenille/qdpy.git@develop
+kdtree>=0.16
