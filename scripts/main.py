@@ -340,7 +340,7 @@ class BipedalWalkerExperiment(MultiAEExperiment):
         ind.fitness.values = scores[self.fitness_type],
         ind.features.values = [scores[x] for x in self.features_list]
         ind.scores.update(scores)
-        obs = np.array(list(scores.values()))
+        obs = np.array(list(scores.values())) # TODO use real observations instead
         ind.scores['observations'] = obs
         return ind
 

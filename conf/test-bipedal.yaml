@@ -14,8 +14,40 @@ batch_mode: True
 #max_nb_suggestions_per_call: 20
 
 # Type of experiment
-experiment_type: ballistic
-nb_features: 2
+experiment_type: bipedal_walker
+
+debug_features: False # set to True to determine feature domain bounds
+indv_eps: 5       # episodes per individual
+
+fitness_type: "meanAvgReward"
+meanAvgRewardDomain: [-200., 350.]
+
+#features_list: ["meanDistance", "meanHeadStability"]
+#meanDistanceDomain: [0., 50.]
+#meanHeadStabilityDomain: [0., 2.5]
+#meanTorquePerStepDomain: [0., 25.]
+#meanJumpDomain: [0., 0.75]
+#meanLeg0HipAngleDomain: [0., 2.5]
+#meanLeg0HipSpeedDomain: [0., 10.]
+#meanLeg0KneeAngleDomain: [0., 2.5]
+#meanLeg0KneeSpeedDomain: [0., 10.]
+#meanLeg1HipAngleDomain: [0., 2.5]
+#meanLeg1HipSpeedDomain: [0., 10.]
+#meanLeg1KneeAngleDomain: [0., 2.5]
+#meanLeg1KneeSpeedDomain: [0., 10.]
+
+
+game: 
+    env_name: 'BipedalWalker-v2'
+    input_size: 24
+    output_size: 4
+    time_factor: 0
+    layers: [40, 40]
+    activation: 'tanh'
+    noise_bias: 0.0
+    output_noise: [False, False, False]
+    rnn_mode: False
+
 
 # The name of the main algorithm (see below the description of 'algoQD')
 main_algorithm_name: algoTotal
@@ -43,13 +75,13 @@ containers:
     epsilon: 0.1
 
     # Feature extraction decorator parameters
-    model_type: ConvAE
+    model_type: AE #ConvAE
     initial_nb_epochs: 100                            # The number of epochs used the first time the model is optimised
     nb_epochs: 100 # 500                                     # The number of epochs used for subsequent training processes
-    learning_rate: 0.01 # 1.e-3                              # Learning rate of the training (by default, the Adam optimiser is used to train the model)
+    learning_rate: 0.001 # 1.e-3                              # Learning rate of the training (by default, the Adam optimiser is used to train the model)
     training_period: 1000                             # Re-train the model every time `training_period` add operations are performed
     div_coeff: 0.3 # 0.01
-    diversity_loss_computation: covlatent # outputs # pwoutputs #outputs
+    diversity_loss_computation: none # covlatent # outputs # pwoutputs #outputs
     #base_scores: ["0", "1"]
     reset_model_every_training: False
     train_only_on_last_inds: False
@@ -138,12 +170,12 @@ containers:
 # The list of all algorithms
 algorithms:
     # Default parameter values for each algorithm
-    optimisation_task: minimisation   # We perform maximisation of all fitness objectives
-    dimension: 5                      # The number of dimensions of the problem. For rastrigin, any dimension >= 2 can be chosen
-    ind_domain: [0.1, 0.9]              # The domain of each value of the genome (optional)
+    #optimisation_task: minimisation   # We perform maximisation of all fitness objectives
+    #dimension: 5                      # The number of dimensions of the problem. For rastrigin, any dimension >= 2 can be chosen
+    #ind_domain: [0.1, 0.9]              # The domain of each value of the genome (optional)
 
     # Evolution parameters
-    batch_size: 200     # The number of evaluations in each subsequent batch
+    batch_size: 5     # The number of evaluations in each subsequent batch
     sel_pb: 0.0 # 1.0         # The probability of performing selection+variation instead of initialising a new genome
     init_pb: 1.0 # 0.0        # The probability of initiating a new genome instead of performing selection
     mut_pb: 0.4 # 0.1         # The probability of mutating each value of the genome of a selected individual
@@ -175,7 +207,7 @@ algorithms:
         #type: SqAlgWrapper
 #        batch_size: 100     # The number of evaluations in each subsequent batch
         #batch_mode: True
-        budget: 10000
+        budget: 50
         tell_container_when_switching: False
         tell_all: True
         #tell_container_when_switching: True               # Whether to tell the next algorithm in the list all results of the previous algorithm
