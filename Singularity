@@ -11,7 +11,7 @@ From: lcazenille/qdpy-bipedal_walker
     export LANG=C.UTF-8
 
 %post
-    pip3 install kdtree
+    pip3 install kdtree ray
     pip3 uninstall -y qdpy
     pip3 uninstall -y tqdm
     pip3 install --upgrade --no-cache-dir git+https://gitlab.com/leo.cazenille/qdpy.git@develop
