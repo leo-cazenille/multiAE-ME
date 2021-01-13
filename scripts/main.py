@@ -309,15 +309,19 @@ class BipedalWalkerExperiment(MultiAEExperiment):
 #    def __init__(self, config_filename, parallelism_type = "concurrent", seed = None, base_config = None):
 #        super().__init__(config_filename, parallelism_type, seed, base_config)
 
-    # TODO
     def reinit(self):
+        # Init simulation model
+        self.env_name = self.config['game']['env_name']
+        self.sim_model = sim.Model(self.config['game'])
+
         # Base configs
-        env = BallisticEnv()
-        self.set_defaultconfig_entry(['algorithms', 'ind_domain'], env.ind_domain)
-        self.set_defaultconfig_entry(['algorithms', 'dimension'], env.dimensions)
-        self.set_defaultconfig_entry(['containers', 'base_scores'], env.get_observations_scores_names())
+        self.set_defaultconfig_entry(['algorithms', 'ind_domain'], [-1., 1.])
+        self.set_defaultconfig_entry(['algorithms', 'dimension'], self.sim_model.param_count)
+        print(f"CONFIG param_count: {self.sim_model.param_count}")
+        self.set_defaultconfig_entry(['containers', 'base_scores'], ["meanAvgReward", "meanDistance", "meanHeadStability", "meanTorquePerStep", "meanJump", "meanLeg0HipAngle", "meanLeg0HipSpeed", "meanLeg0KneeAngle", "meanLeg0KneeSpeed", "meanLeg1HipAngle", "meanLeg1HipSpeed", "meanLeg1KneeAngle", "meanLeg1KneeSpeed"])
         # Reinit
         super().reinit()
+
         #self.eval_fn = self._eval
         self.optimisation_task = "minimisation"
         super().reinit_globals()
@@ -325,38 +329,19 @@ class BipedalWalkerExperiment(MultiAEExperiment):
         super().reinit_loggers()
 
 
-    # TODO
-    def reinit(self):
-        super().reinit()
-        self.env_name = self.config['game']['env_name']
-        self.init_model()
-        self.update_dimension()
-
-    def init_model(self):
-        self.model = Model(self.config['game'])
-
-    def update_dimension(self):
-        self.algo.dimension = self.model.param_count
-
-
-    # TODO
-    def _eval(self, ind):
-        env = BallisticEnv()
-        res = env.eval(ind)
-        #print(f"DEBUG _eval: {res}")
-        return res
-
-    # TODO
     def eval_fn(self, ind, render_mode = False):
-        env = make_env(self.env_name)
-        self.model.set_model_params(ind)
-        scores = simulate(self.model,
+        #print(f"DEBUG ind len={len(ind)}")
+        env = sim.make_env(self.env_name)
+        self.sim_model.set_model_params(ind)
+        scores = sim.simulate(self.sim_model,
                 env,
                 render_mode=render_mode,
                 num_episode=self.config['indv_eps'])
         ind.fitness.values = scores[self.fitness_type],
         ind.features.values = [scores[x] for x in self.features_list]
         ind.scores.update(scores)
+        obs = np.array(list(scores.values()))
+        ind.scores['observations'] = obs
         return ind
 
 
@@ -390,6 +375,8 @@ def create_experiment(args, base_config):
         exp = RastriginExperiment(args.configFilename, args.parallelismType, seed=args.seed, base_config=base_config)
     elif exp_type == 'ballistic':
         exp = BallisticExperiment(args.configFilename, args.parallelismType, seed=args.seed, base_config=base_config)
+    elif exp_type == 'bipedal_walker':
+        exp = BipedalWalkerExperiment(args.configFilename, args.parallelismType, seed=args.seed, base_config=base_config)
     else:
         raise ValueError(f"Unknown experiment type: {exp_type}.")
     print("Using configuration file '%s'. Experiment type '%s'. Instance name: '%s'" % (args.configFilename, exp_type, exp.instance_name))
