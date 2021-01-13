@@ -44,6 +44,7 @@ from nets import *
 ########## CONTAINER CLASSES ########### {{{1
 
 clear_all_containers = None
+recompute_features_all_ind = None
 
 
 @registry.register
@@ -152,10 +153,15 @@ class SelfAdaptiveNoveltyArchive(Container):
         print(f"DEBUG compute_new_threshold: {self.threshold_novelty}")
 
 
+#    def get_ind_features(self, individual: IndividualLike, *args, **kwargs) -> FeaturesLike:
+#        print("DEBUG SelfAdaptiveNoveltyArchive.get_ind_features")
+#        return super().get_ind_features(individual, *args, **kwargs)
+
 
 
 # Unbound get_ind_features method of the ``DebugTorchFeatureExtractionContainerDecorator`` class
 def _TorchMultiFeatureExtractionContainerDecorator_get_ind_features(self, individual: IndividualLike, *args, **kwargs) -> FeaturesLike:
+    #print("DEBUG _TorchMultiFeatureExtractionContainerDecorator_get_ind_features")
     # Extracted features are already computed. Use the stored values.
     if f"extracted_{id(self)}_0" in individual.scores:
         latent_scores = []
@@ -189,6 +195,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
             nb_training_sessions: int = 5,
             nb_filters: int = 4,
             batch_norm_before_latent: bool = True,
+            trainer_type: str = "NNTrainer",
             **kwargs: Any) -> None:
         self.div_coeff = div_coeff
         self.diversity_loss_computation = diversity_loss_computation
@@ -212,7 +219,14 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         #self.current_loss_reconstruction = np.nan
         #self.current_loss_diversity = np.nan
 
-        self.trainer = NNTrainer(nb_training_sessions=self.nb_training_sessions, nb_epochs=self.nb_epochs,
+        self.trainer_type = trainer_type
+        if self.trainer_type == "NNTrainer":
+            trainer_class = NNTrainer
+        elif self.trainer_type == "IterativeNNTrainer":
+            trainer_class = IterativeNNTrainer
+        else:
+            raise ValueError("``trainer_type`` must be either 'NNTrainer' or 'IterativeNNTrainer'.")
+        self.trainer = trainer_class(nb_training_sessions=self.nb_training_sessions, nb_epochs=self.nb_epochs,
                 learning_rate=self.learning_rate, batch_size=self.batch_size, epochs_avg_loss=self.epochs_avg_loss,
                 validation_split=self.validation_split, reset_model_every_training=self.reset_model_every_training,
                 diversity_loss_computation=self.diversity_loss_computation, div_coeff=self.div_coeff)
@@ -227,9 +241,10 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
     def __getstate__(self):
         odict = self.__dict__.copy()
         del odict['_orig_get_ind_features']
-        if 'get_ind_features' in odict['container'].__dict__:
-            del odict['container'].__dict__['get_ind_features']
+#        if 'get_ind_features' in odict['container'].__dict__:
+#            del odict['container'].__dict__['get_ind_features']
         del odict['get_ind_features']
+        del odict['trainer']
         return odict
 
     # Note: we change the ``get_ind_features`` and ``add`` methods of ``self.container``. So it's necessary to update them here when objects of this class are unpickled
@@ -272,7 +287,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
 #        else:
 #            base_scores = self.base_scores # type: ignore
         # Find default model parameters
-        input_size = example_ind.observations.shape[-1] #len(base_scores)
+        input_size = example_ind.scores['observations'].shape[-1] #len(base_scores)
         assert(self.container.features_domain != None)
         latent_size = len(self.container.features_domain) # type: ignore
         # Set extracted scores names as the default features of the container
@@ -319,18 +334,22 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
             print(f"DEBUG {self.name} _train_and_recompute_if_needed: {nb_training_inds} {last_training_nb_inds} {self.training_period}")
             self._last_training_nb_inds = nb_training_inds
             try:
-                #self.clear() # type: ignore
-                global clear_all_containers
-                clear_all_containers() # type: ignore # XXX HACK
                 if do_training:
+                    #self.clear() # type: ignore
+                    global clear_all_containers
+                    clear_all_containers() # type: ignore # XXX HACK
                     print(f"DEBUG {self.name} DO TRAINING !")
                     #self.train(self.nb_epochs if nb_training_inds > self.training_period else self.initial_nb_epochs)
                     self.train()
                     last_training_nb_inds = nb_training_inds
-                print(f"DEBUG {self.name} RECOMPUTE FEATURES")
-                self.recompute_features_all_ind(update_params)
+                    print(f"DEBUG {self.name} RECOMPUTE FEATURES")
+                    #self.recompute_features_all_ind(update_params)
+                    global recompute_features_all_ind
+                    recompute_features_all_ind()
                 if hasattr(self.container, 'compute_new_threshold'): # XXX
                     self.container.compute_new_threshold() # XXX
+                if hasattr(self.container, '_add_rescaling'): # XXX HACK
+                    self.container._add_rescaling(training_inds[0]) # XXX HACK
                 self.last_recomputed = nb_training_inds
             except Exception as e:
                 print("Training failed !")
@@ -338,9 +357,9 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
                 raise e
 
         elif self.last_recomputed < last_training_nb_inds:
-            self.clear() # type: ignore
-            print(f"DEBUG {self.name} RECOMPUTE FEATURES")
-            self.recompute_features_all_ind(update_params)
+#            self.clear() # type: ignore
+#            print(f"DEBUG {self.name} RECOMPUTE FEATURES")
+#            self.recompute_features_all_ind(update_params)
             self.last_recomputed = nb_training_inds
 
 

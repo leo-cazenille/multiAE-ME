@@ -160,6 +160,15 @@ class AE(nn.Module):
         return x
 
 
+    def freeze(self):
+        for param in self.parameters():
+            param.requires_grad = False
+
+    def unfreeze(self):
+        for param in self.parameters():
+            param.requires_grad = True
+
+
 
 #
 #class ConvNet(nn.Module):
@@ -415,6 +424,14 @@ class ConvAE(nn.Module):
         x = self.decoder(x)
         return x
 
+    def freeze(self):
+        for param in self.parameters():
+            param.requires_grad = False
+
+    def unfreeze(self):
+        for param in self.parameters():
+            param.requires_grad = True
+
 
 
 
@@ -570,7 +587,7 @@ class NNTrainer(object):
         self.min = 0.
         self.max = 1.
 
-        if not self.diversity_loss_computation in ['outputs', 'pwoutputs', 'latent', 'covlatent']:
+        if not self.diversity_loss_computation in ['none', 'outputs', 'pwoutputs', 'latent', 'covlatent']:
             raise ValueError(f"Unknown diversity_loss_computation type: {self.diversity_loss_computation}.")
 
         if nn_models != None:
@@ -607,11 +624,6 @@ class NNTrainer(object):
             mean_output = sum(mean_output) / len(mean_output)
             for r in output:
                 loss_diversity += criterion_diversity(r, mean_output)
-#            with warnings.catch_warnings():
-#                warnings.simplefilter("ignore")
-#                for r in output:
-#                    loss_diversity += criterion_diversity(r, mean_output)
-#                    #print(f"DEBUG outputs: {r.shape} {mean_output.shape} {criterion_diversity(r, mean_output)}")
         elif self.diversity_loss_computation == "pwoutputs":
             for r1 in output:
                 for r2 in output:
@@ -627,11 +639,6 @@ class NNTrainer(object):
             mean_n_latent = torch.nansum(mean_n_latent, 0) / len(mean_n_latent)
             for r in latent:
                 loss_diversity += criterion_diversity(r, mean_n_latent)
-#            with warnings.catch_warnings():
-#                warnings.simplefilter("ignore")
-#                for r in latent:
-#                    loss_diversity += criterion_diversity(r, mean_latent)
-#                    #print(f"DEBUG latent: {r.shape} {mean_latent.shape} {criterion_diversity(r, mean_latent)}")
 
         elif self.diversity_loss_computation == "covlatent":
             latent = model.encoders(d)
@@ -653,9 +660,12 @@ class NNTrainer(object):
             for i in range(c.size(0)):
                 for j in range(c.size(1)):
                     if i != j:
-                        loss_diversity -= c[i,j] # XXX
+                        loss_diversity -= c[i,j]
                     #else: # XXX ?
                     #    loss_diversity += c[i,j] # XXX ?
+
+        elif self.diversity_loss_computation == "none":
+            loss_diversity = torch.zeros(1)
 
         else:
             raise ValueError(f"Unknown diversity_loss_computation type: {self.diversity_loss_computation}.")
@@ -664,9 +674,9 @@ class NNTrainer(object):
         return loss, loss_reconstruction, loss_diversity
 
 
-    def training_session(self, data):
+    def training_session(self, data, model):
         # Create optimizer
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate, weight_decay=1e-5) # type: ignore
+        self.optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate, weight_decay=1e-5) # type: ignore
         #self.scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda epoch: 0.9 ** (epoch / self.nb_epochs))
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, 'min', patience=30, verbose=True)
 
@@ -682,9 +692,9 @@ class NNTrainer(object):
             rt_loss = 0.
             rt_loss_reconstruction = 0.
             rt_loss_diversity = 0.
-            self.model.train()
+            model.train()
             for data in train_dataset:
-                t_loss, t_loss_reconstruction, t_loss_diversity = self.compute_loss(data, self.model)
+                t_loss, t_loss_reconstruction, t_loss_diversity = self.compute_loss(data, model)
                 self.optimizer.zero_grad()
                 t_loss.backward()
                 self.optimizer.step()
@@ -697,10 +707,10 @@ class NNTrainer(object):
             rv_loss = 0.
             rv_loss_reconstruction = 0.
             rv_loss_diversity = 0.
-            self.model.eval()
+            model.eval()
             with torch.no_grad():
                 for data in validation_dataset:
-                    v_loss, v_loss_reconstruction, v_loss_diversity = self.compute_loss(data, self.model)
+                    v_loss, v_loss_reconstruction, v_loss_diversity = self.compute_loss(data, model)
                     rv_loss += v_loss
                     rv_loss_reconstruction += v_loss_reconstruction
                     rv_loss_diversity += v_loss_diversity
@@ -738,6 +748,9 @@ class NNTrainer(object):
         #start_time = timer() # XXX
 
         assert(len(training_inds) > 0)
+        global nn_models
+        self.create_ensemble_model(nn_models) # XXX HACK
+        assert(len(self.model.ae_list) == len(nn_models)) # XXX HACK
 
 #        # Skip training if we already exceed the training budget
 #        if self.training_budget != None and len(training_inds) > self.training_budget:
@@ -767,9 +780,9 @@ class NNTrainer(object):
 #        #dataset = torch.utils.data.TensorDataset(data)
 
         # Build dataset
-        data = torch.empty(len(training_inds), *training_inds[0].observations.shape)
+        data = torch.empty(len(training_inds), *training_inds[0].scores['observations'].shape)
         for i, ind in enumerate(training_inds):
-            data[i] = torch.Tensor(ind.observations)
+            data[i] = torch.Tensor(ind.scores['observations'])
             #for j, s in enumerate(base_scores):
             #    data[i,j] = ind.scores[s]
 
@@ -787,7 +800,7 @@ class NNTrainer(object):
         loss_reconstruction_lst = []
         loss_diversity_lst = []
         for _ in range(self.nb_training_sessions):
-            l, r, d = self.training_session(data)
+            l, r, d = self.training_session(data, self.model)
             loss_lst.append(l)
             loss_reconstruction_lst.append(r)
             loss_diversity_lst.append(d)
@@ -809,7 +822,7 @@ class NNTrainer(object):
 
 
 #    def eval(self, ind):
-#        obs = torch.Tensor(ind.observations)
+#        obs = torch.Tensor(ind.scores['observations'])
 #        obs = (obs - self.min) / (self.max - self.min)
 #        obs = obs.reshape(1, *obs.shape)
 #        self.model.eval()
@@ -820,9 +833,9 @@ class NNTrainer(object):
     def eval(self, inds, model = None):
         assert(len(inds) > 0)
         _model = self.model if model == None else model
-        obs = torch.empty(len(inds), *inds[0].observations.shape)
+        obs = torch.empty(len(inds), *inds[0].scores['observations'].shape)
         for i, ind in enumerate(inds):
-            obs[i] = torch.Tensor(ind.observations)
+            obs[i] = torch.Tensor(ind.scores['observations'])
         obs = (obs - self.min) / (self.max - self.min)
         _model.eval()
         if hasattr(_model, "encoders"):
@@ -831,6 +844,74 @@ class NNTrainer(object):
             res = [_model.encoder(obs)]
         res = [r.tolist() for r in res]
         return res
+
+
+
+
+class IterativeNNTrainer(NNTrainer):
+    def train(self, training_inds) -> None:
+        #print("###########  DEBUG: training.. ###########")
+        #start_time = timer() # XXX
+
+        assert(len(training_inds) > 0)
+
+        global nn_models
+        self.create_ensemble_model(nn_models) # XXX HACK
+        assert(len(self.model.ae_list) == len(nn_models)) # XXX HACK
+
+        # Build dataset
+        data = torch.empty(len(training_inds), *training_inds[0].scores['observations'].shape)
+        for i, ind in enumerate(training_inds):
+            data[i] = torch.Tensor(ind.scores['observations'])
+            #for j, s in enumerate(base_scores):
+            #    data[i,j] = ind.scores[s]
+
+        # Normalize dataset
+        self.min = data.min()
+        self.max = data.max()
+        data = (data - self.min) / (self.max - self.min)
+
+        # Reset model, if needed
+        if self.reset_model_every_training:
+            self.model.reset()
+
+        # Train each AE model one after the one !
+        for i in range(len(self.model.ae_list)):
+            print(f"Training AE {i+1}/{len(self.model.ae_list)}...")
+            # Unfreeze this model
+            current_model = self.model.ae_list[i]
+            current_model.unfreeze()
+            # Freeze the other models
+            for j in range(len(self.model.ae_list)):
+                if i != j:
+                    self.model.ae_list[j].freeze()
+
+            loss_lst = []
+            loss_reconstruction_lst = []
+            loss_diversity_lst = []
+            for _ in range(self.nb_training_sessions):
+                l, r, d = self.training_session(data, self.model)
+                loss_lst.append(l)
+                loss_reconstruction_lst.append(r)
+                loss_diversity_lst.append(d)
+                print(f"Finished session: loss={l} loss_reconstruction={r} loss_diversity={d}")
+
+        # Unfreeze all models
+        for i in range(len(self.model.ae_list)):
+            # Unfreeze this model
+            current_model = self.model.ae_list[i]
+            current_model.unfreeze()
+
+        # Compute and save mean losses
+        self.current_loss = np.mean(loss_lst)
+        self.current_loss_reconstruction = np.mean(loss_reconstruction_lst)
+        self.current_loss_diversity = np.mean(loss_diversity_lst)
+
+
+        #elapsed = timer() - start_time # XXX
+        #print(f"# Training: final loss: {loss}  elapsed: {elapsed}")
+
+        return self.current_loss, self.current_loss_reconstruction, self.current_loss_diversity
 
 
 

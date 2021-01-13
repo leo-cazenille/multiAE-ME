@@ -23,6 +23,16 @@ import numpy as np
 import warnings
 import yaml
 
+# Pytorch
+import torch
+import torch.multiprocessing
+torch.multiprocessing.set_sharing_strategy('file_system')
+import torch.nn as nn
+from torch.nn.utils import parameters_to_vector, vector_to_parameters
+from torch.autograd import Variable
+from torch.utils.data import DataLoader
+
+
 # QDpy
 import qdpy
 from qdpy.base import *
@@ -31,13 +41,6 @@ from qdpy.benchmarks import artificial_landscapes
 from qdpy.algorithms import LoggerStat, TQDMAlgorithmLogger, AlgorithmLogger, QDAlgorithmLike
 from qdpy.containers import TorchAE, TorchFeatureExtractionContainerDecorator, ContainerLike, NoveltyArchive, Container
 import qdpy.plots
-
-# Pytorch
-import torch
-import torch.nn as nn
-from torch.nn.utils import parameters_to_vector, vector_to_parameters
-from torch.autograd import Variable
-from torch.utils.data import DataLoader
 
 
 import matplotlib.pyplot as plt
@@ -48,7 +51,7 @@ from nets import *
 from metrics import *
 import containers
 from containers import *
-
+import sim
 
 
 
@@ -82,6 +85,7 @@ class MultiAEExperiment(QDExperiment):
 
     def reinit_globals(self):
         containers.clear_all_containers = partial(self.clear_all_containers)
+        containers.recompute_features_all_ind = partial(self.recompute_features_all_ind)
 
 
     def reinit_curiosity(self):
@@ -138,6 +142,10 @@ class MultiAEExperiment(QDExperiment):
     def clear_all_containers(self):
         for alg in self.algo.algorithms:
             alg.container.clear()
+
+    def recompute_features_all_ind(self, update_params={}) -> None:
+        for alg in self.algo.algorithms:
+            alg.container.recompute_features_all_ind(update_params)
 
 
 
@@ -219,7 +227,8 @@ class BallisticEnv(object):
         #scores = {'observations': self.get_flat_observations(), 'gen0': gen0, 'gen1': gen1, 'hardcoded0': hardcoded0, 'hardcoded1': hardcoded1}
         obs = {f"o{i}": o for i, o in enumerate(self.get_flat_observations())}
         scores = {**obs, 'gen0': gen0, 'gen1': gen1, 'hardcoded0': hardcoded0, 'hardcoded1': hardcoded1} # XXX One key-val for each observation !!!
-        ind.observations = self.cart_traj.T
+        #ind.observations = self.cart_traj.T
+        scores['observations'] = self.cart_traj.T
         #if self._dead:
         #    fitness = -1.,
         #print(f"# DEBUG eval: {fitness} {features} {scores}")
@@ -292,6 +301,65 @@ class BallisticExperiment(MultiAEExperiment):
         super().reinit_globals()
         super().reinit_curiosity()
         super().reinit_loggers()
+
+
+
+class BipedalWalkerExperiment(MultiAEExperiment):
+
+#    def __init__(self, config_filename, parallelism_type = "concurrent", seed = None, base_config = None):
+#        super().__init__(config_filename, parallelism_type, seed, base_config)
+
+    # TODO
+    def reinit(self):
+        # Base configs
+        env = BallisticEnv()
+        self.set_defaultconfig_entry(['algorithms', 'ind_domain'], env.ind_domain)
+        self.set_defaultconfig_entry(['algorithms', 'dimension'], env.dimensions)
+        self.set_defaultconfig_entry(['containers', 'base_scores'], env.get_observations_scores_names())
+        # Reinit
+        super().reinit()
+        #self.eval_fn = self._eval
+        self.optimisation_task = "minimisation"
+        super().reinit_globals()
+        super().reinit_curiosity()
+        super().reinit_loggers()
+
+
+    # TODO
+    def reinit(self):
+        super().reinit()
+        self.env_name = self.config['game']['env_name']
+        self.init_model()
+        self.update_dimension()
+
+    def init_model(self):
+        self.model = Model(self.config['game'])
+
+    def update_dimension(self):
+        self.algo.dimension = self.model.param_count
+
+
+    # TODO
+    def _eval(self, ind):
+        env = BallisticEnv()
+        res = env.eval(ind)
+        #print(f"DEBUG _eval: {res}")
+        return res
+
+    # TODO
+    def eval_fn(self, ind, render_mode = False):
+        env = make_env(self.env_name)
+        self.model.set_model_params(ind)
+        scores = simulate(self.model,
+                env,
+                render_mode=render_mode,
+                num_episode=self.config['indv_eps'])
+        ind.fitness.values = scores[self.fitness_type],
+        ind.features.values = [scores[x] for x in self.features_list]
+        ind.scores.update(scores)
+        return ind
+
+
 
 
 
