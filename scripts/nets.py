@@ -593,7 +593,7 @@ class NNTrainer(object):
         # Compute reconstruction loss
         loss_reconstruction = torch.Tensor([0.])
         for r in output:
-            loss_reconstruction += criterion_reconstruction(r, d)
+            loss_reconstruction += criterion_reconstruction(r, d) **(1./3.)
         loss_reconstruction /= len(output)
 
         # Compute diversity loss
@@ -653,7 +653,7 @@ class NNTrainer(object):
             for i in range(c.size(0)):
                 for j in range(c.size(1)):
                     if i != j:
-                        loss_diversity -= c[i,j]
+                        loss_diversity -= c[i,j] # XXX
                     #else: # XXX ?
                     #    loss_diversity += c[i,j] # XXX ?
 
@@ -668,7 +668,7 @@ class NNTrainer(object):
         # Create optimizer
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate, weight_decay=1e-5) # type: ignore
         #self.scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda epoch: 0.9 ** (epoch / self.nb_epochs))
-        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, 'min', verbose=True)
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, 'min', patience=30, verbose=True)
 
         dataloader: Any = DataLoader(data, batch_size=self.batch_size, shuffle=True) # type: ignore
         train_size = int(np.floor(len(dataloader) * (1. - self.validation_split)))

@@ -133,13 +133,19 @@ class SelfAdaptiveNoveltyArchive(Container):
 
 
     # Inspired from original code of Cully2019 "Autonomous skill discovery with Quality-Diversity and Unsupervised Descriptors"
-    def compute_new_threshold(self) -> None:
-        fts = np.array([ind.features for ind in self.all_parents_inds()])
+    def compute_new_threshold(self, max_nb_inds = 50000) -> None:
+        # Randomly selects individual and regroup their features descriptors into a matrix
+        parents_inds = self.all_parents_inds()
+        if len(parents_inds) > max_nb_inds:
+            inds = random.sample(parents_inds, k=max_nb_inds)
+            fts = np.array([ind.features for ind in inds], dtype=np.float16)
+        else:
+            fts = np.array([ind.features for ind in parents_inds], dtype=np.float16)
         xx = np.sum(fts**2., 1)
         xx = xx.reshape(xx.shape + (1,))
         xy = (2*fts) @ fts.T
-        dist = xx @ np.ones((1, fts.shape[0]))
-        dist += np.ones((fts.shape[0], 1)) @ xx.T
+        dist = xx @ np.ones((1, fts.shape[0]), dtype=np.float16)
+        dist += np.ones((fts.shape[0], 1), dtype=np.float16) @ xx.T
         dist -= xy
         maxdist = np.sqrt(np.max(dist))
         self.threshold_novelty = maxdist / np.sqrt(self.k_resolution)
