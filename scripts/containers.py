@@ -349,7 +349,8 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
                 if hasattr(self.container, 'compute_new_threshold'): # XXX
                     self.container.compute_new_threshold() # XXX
                 if hasattr(self.container, '_add_rescaling'): # XXX HACK
-                    self.container._add_rescaling(training_inds[0]) # XXX HACK
+                    print(f"DEBUG {self.name} call _add_rescaling")
+                    self.container._add_rescaling(training_inds) # XXX HACK
                 self.last_recomputed = nb_training_inds
             except Exception as e:
                 print("Training failed !")
@@ -361,6 +362,11 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
 #            print(f"DEBUG {self.name} RECOMPUTE FEATURES")
 #            self.recompute_features_all_ind(update_params)
             self.last_recomputed = nb_training_inds
+            if hasattr(self.container, 'compute_new_threshold'): # XXX
+                self.container.compute_new_threshold() # XXX
+            if hasattr(self.container, '_add_rescaling'): # XXX HACK
+                print(f"DEBUG {self.name} call _add_rescaling")
+                self.container._add_rescaling(training_inds) # XXX HACK
 
 
 
