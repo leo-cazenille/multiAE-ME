@@ -18,7 +18,7 @@ experiment_type: ballistic
 nb_features: 2
 
 
-reference_data_file: "results/test-ballistic/final_20210114155338.p" # XXX HACK
+reference_data_file: "data/ballistic-10000.p"
 
 # The name of the main algorithm (see below the description of 'algoQD')
 main_algorithm_name: algoTotal
@@ -35,7 +35,7 @@ containers:
     max_items_per_bin: 1                              # The number of items in each bin of the grid
     fitness_scaling: False                            # Whether to autoscale the fitness or not
     features_scaling: True                            # Whether to autoscale the features or not
-    rescaling_period: 200                            # When to perform the autoscaling operation. Here it's done every time 1000 individuals are added.
+    rescaling_period: 1000                            # When to perform the autoscaling operation. Here it's done every time 1000 individuals are added.
     shape: [25, 25]                                   # The number of bins for each feature
 
     # Novelty Archive parameters
@@ -48,19 +48,19 @@ containers:
     # Feature extraction decorator parameters
     model_type: ConvAE
     initial_nb_epochs: 100                            # The number of epochs used the first time the model is optimised
-    nb_epochs: 200                                     # The number of epochs used for subsequent training processes
-    learning_rate: 0.001 # 1.e-3                              # Learning rate of the training (by default, the Adam optimiser is used to train the model)
-    training_period: 2000                             # Re-train the model every time `training_period` add operations are performed
-    div_coeff: 0.4 # 0.01
+    nb_epochs: 50                                     # The number of epochs used for subsequent training processes
+    learning_rate: 0.10 # 1.e-3                              # Learning rate of the training (by default, the Adam optimiser is used to train the model)
+    training_period: 5000                             # Re-train the model every time `training_period` add operations are performed
+    div_coeff: 1.0 # 0.01
     batch_size: 1024
-    diversity_loss_computation: corrlatent # coveragelatent # varlatent # covlatent # outputs # pwoutputs #outputs
+    diversity_loss_computation: coveragelatent2 # corrlatent # coveragelatent # varlatent # covlatent # outputs # pwoutputs #outputs
     #base_scores: ["0", "1"]
     reset_model_every_training: False
     train_only_on_last_inds: False
     tanh_encoder: True
     training_period_type: exp_decay
     nb_filters: 4
-    batch_norm_before_latent: False
+    batch_norm_before_latent: True
     trainer_type: NNTrainer
 
     epochs_avg_loss: 500
@@ -185,13 +185,14 @@ algorithms:
         #type: SqAlgWrapper
 #        batch_size: 100     # The number of evaluations in each subsequent batch
         #batch_mode: True
-        budget: 400
+        #budget: 400
+        budget: 50000
         tell_container_when_switching: False
         tell_all: True
         #tell_container_when_switching: True               # Whether to tell the next algorithm in the list all results of the previous algorithm
         #algorithms: ['algo1', 'algo2', 'algo3'] # The list of algorithms to execute
-        #algorithms: ['algo1', 'algo2'] # The list of algorithms to execute
-        algorithms: ['algo1'] # The list of algorithms to execute
+        algorithms: ['algo1', 'algo2'] # The list of algorithms to execute
+        #algorithms: ['algo1'] # The list of algorithms to execute
         #algorithms: # The dict of algorithms to execute
         #    algo1: 1
         #    algo2: 1

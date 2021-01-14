@@ -368,16 +368,16 @@ class ConvDecoder(nn.Module):
         self.dec_conv2 = nn.Sequential(
             nn.ConvTranspose1d(nb_filters, 2, 3),
             nn.BatchNorm1d(num_features=2),
-            #nn.ReLU()
+            nn.ReLU()
             #nn.LeakyReLU()
-            nn.Sigmoid()
+            #nn.Sigmoid()
         )
 
-#        self.dec_out = nn.Sequential(
-#            nn.Linear(input_size, input_size),
-#            nn.Sigmoid()
-#            #nn.ReLU()
-#        )
+        self.dec_out = nn.Sequential(
+            nn.Linear(input_size, input_size),
+            nn.Sigmoid()
+            #nn.ReLU()
+        )
 
         # Initialize weights
         def init_weights(m):
@@ -389,7 +389,7 @@ class ConvDecoder(nn.Module):
         self.dec_fc1.apply(init_weights)
         self.dec_conv1.apply(init_weights)
         self.dec_conv2.apply(init_weights)
-#        self.dec_out.apply(init_weights)
+        self.dec_out.apply(init_weights)
 
 
     def forward(self, x):
@@ -411,7 +411,7 @@ class ConvDecoder(nn.Module):
         x = self.dec_conv1(x)
         x = self.dec_unpool1(x, self.encoder.i1)
         x = self.dec_conv2(x)
-#        x = self.dec_out(x)
+        x = self.dec_out(x)
         return x
 
 class ConvAE(nn.Module):
@@ -590,7 +590,7 @@ class NNTrainer(object):
         self.min = 0.
         self.max = 1.
 
-        if not self.diversity_loss_computation in ['none', 'outputs', 'pwoutputs', 'latent', 'covlatent', 'varlatent', 'corrlatent', 'coveragelatent']:
+        if not self.diversity_loss_computation in ['none', 'outputs', 'pwoutputs', 'latent', 'covlatent', 'varlatent', 'corrlatent', 'coveragelatent', 'coveragelatent2']:
             raise ValueError(f"Unknown diversity_loss_computation type: {self.diversity_loss_computation}.")
 
         if nn_models != None:
@@ -719,22 +719,53 @@ class NNTrainer(object):
             loss_diversity /= latent_flat.shape[1] * 4
 
 
+        elif self.diversity_loss_computation == "coveragelatent2":
+            latent = model.encoders(d)
+            latent_flat = torch.cat([l for l in latent], 1)
+
+            c = torch.abs(cov(latent_flat, rowvar=False))
+            #corrcoef = torch.empty_like(c)
+            #print(f"DEBUG covlatent {c}")
+            for i in range(c.size(0)):
+                for j in range(c.size(1)):
+                    corrcoef = c[i,j] / torch.sqrt(torch.abs(c[i,i] * c[j,j]))
+                    if i != j and not torch.isnan(corrcoef) and not torch.isinf(corrcoef):
+                        loss_diversity -= corrcoef
+            #loss_diversity /= c.size(0) * c.size(1) - c.size(0)
+
+            criterion_coveragelatent = nn.MSELoss() # nn.L1Loss()
+            q = torch.linspace(0., 1., 11)
+            diff05 = (torch.Tensor([0.5, 0.5] * len(latent)) - latent_flat + 0.5) / 2.0
+            for i in range(latent_flat.shape[1]):
+                loss_diversity -= criterion_coveragelatent(torch.quantile(diff05[:, i], q), q)
+
+
+
         elif self.diversity_loss_computation == "none":
             loss_diversity = torch.zeros(1)
 
         else:
             raise ValueError(f"Unknown diversity_loss_computation type: {self.diversity_loss_computation}.")
 
+        if torch.isnan(loss_reconstruction) or torch.isinf(loss_reconstruction):
+            loss_reconstruction = torch.ones(1)
+        if torch.isnan(loss_diversity) or torch.isinf(loss_diversity):
+            loss_diversity = torch.zeros(1)
+
         loss = loss_reconstruction - self.div_coeff * loss_diversity
         #loss = - self.div_coeff * loss_diversity # XXX
         return loss, loss_reconstruction, loss_diversity
 
 
+    def _lr_lambda(self, epoch):
+        return 1.0 * (1+self.nb_epochs - epoch) / self.nb_epochs
+
     def training_session(self, data, model):
         # Create optimizer
         self.optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate, weight_decay=1e-5) # type: ignore
+        self.scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=self._lr_lambda)
         #self.scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda epoch: 0.9 ** (epoch / self.nb_epochs))
-        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, 'min', patience=30, verbose=True)
+        #self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, 'min', patience=30, verbose=True)
 
         dataloader: Any = DataLoader(data, batch_size=self.batch_size, shuffle=True) # type: ignore
         train_size = int(np.floor(len(dataloader) * (1. - self.validation_split)))
@@ -793,8 +824,8 @@ class NNTrainer(object):
             last_mean_rv_loss = mean_rv_loss
 
             print(f"# Epoch {epoch}/{self.nb_epochs}  Validation loss:{v_loss} loss_reconstruction:{v_loss_reconstruction} loss_diversity:{v_loss_diversity} ")
-            self.scheduler.step(v_loss)
-            #self.scheduler.step()
+            #self.scheduler.step(v_loss)
+            self.scheduler.step()
 
         return v_loss.item(), v_loss_reconstruction.item(), v_loss_diversity.item()
 
