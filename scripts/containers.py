@@ -244,7 +244,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
 #        if 'get_ind_features' in odict['container'].__dict__:
 #            del odict['container'].__dict__['get_ind_features']
         del odict['get_ind_features']
-        del odict['trainer']
+        #del odict['trainer'] # XXX
         return odict
 
     # Note: we change the ``get_ind_features`` and ``add`` methods of ``self.container``. So it's necessary to update them here when objects of this class are unpickled
@@ -346,27 +346,49 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
                     #self.recompute_features_all_ind(update_params)
                     global recompute_features_all_ind
                     recompute_features_all_ind()
-                if hasattr(self.container, 'compute_new_threshold'): # XXX
-                    self.container.compute_new_threshold() # XXX
-                if hasattr(self.container, '_add_rescaling'): # XXX HACK
-                    print(f"DEBUG {self.name} call _add_rescaling")
-                    self.container._add_rescaling(training_inds) # XXX HACK
                 self.last_recomputed = nb_training_inds
             except Exception as e:
                 print("Training failed !")
                 traceback.print_exc()
                 raise e
 
-        elif self.last_recomputed < last_training_nb_inds:
-#            self.clear() # type: ignore
-#            print(f"DEBUG {self.name} RECOMPUTE FEATURES")
-#            self.recompute_features_all_ind(update_params)
-            self.last_recomputed = nb_training_inds
-            if hasattr(self.container, 'compute_new_threshold'): # XXX
-                self.container.compute_new_threshold() # XXX
-            if hasattr(self.container, '_add_rescaling'): # XXX HACK
-                print(f"DEBUG {self.name} call _add_rescaling")
-                self.container._add_rescaling(training_inds) # XXX HACK
+#        elif self.last_recomputed < last_training_nb_inds:
+##            self.clear() # type: ignore
+##            print(f"DEBUG {self.name} RECOMPUTE FEATURES")
+##            self.recompute_features_all_ind(update_params)
+#            self.last_recomputed = nb_training_inds
+#            if hasattr(self.container, 'compute_new_threshold'): # XXX
+#                self.container.compute_new_threshold() # XXX
+#            if hasattr(self.container, '_add_rescaling'): # XXX HACK
+#                print(f"DEBUG {self.name} call _add_rescaling")
+#                self.container._add_rescaling(training_inds) # XXX HACK
+
+
+    def recompute_features_all_ind(self, update_params={}) -> None:
+        #print("DEBUG: features recomputed for all inds..")
+        #start_time = timer() # XXX
+
+        training_inds = self._get_training_inds()
+        self.compute_latent(training_inds)
+        #elapsed = timer() - start_time # XXX
+        #print(f"# Features recomputed for {len(training_inds)} inds.. Elapsed={elapsed}") # XXX
+        #start_time = timer() # XXX
+        self.container.update(training_inds, **update_params)
+        #for i in training_inds:
+        #    try:
+        #        #self.container.add(i)
+        #        self._orig_add(i)
+        #    except Exception:
+        #        pass
+
+        if hasattr(self.container, 'compute_new_threshold'): # XXX
+            self.container.compute_new_threshold() # XXX
+        if hasattr(self.container, '_add_rescaling'): # XXX HACK
+            print(f"DEBUG {self.name} call _add_rescaling")
+            self.container._add_rescaling(training_inds) # XXX HACK
+
+        #elapsed = timer() - start_time # XXX
+        #print(f"# Tried adding {len(training_inds)} inds back to the container: {len(self)} added.. Elapsed={elapsed}") # XXX
 
 
 
@@ -395,6 +417,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         print(f" training size: {len(training_inds)}")
 
         # Train !
+        self.trainer.create_ensemble_model(nn_models)
         self.trainer.train(training_inds)
 
 #        # Identify base scores

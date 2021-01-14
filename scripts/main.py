@@ -138,6 +138,10 @@ class MultiAEExperiment(QDExperiment):
             stat_mean_corr = LoggerStat(f"mean_corr", fn_mean_corr, True)
             self.logger.register_stat(stat_mean_corr)
 
+        # Save parent container in the 'container' entry of the data pickle file
+        self.parent_container = self.algo.algorithms[0].container.container.parents[0]
+        self.logger.saved_dict['container'] = self.parent_container
+
 
     def clear_all_containers(self):
         for alg in self.algo.algorithms:
@@ -147,6 +151,14 @@ class MultiAEExperiment(QDExperiment):
         for alg in self.algo.algorithms:
             alg.container.recompute_features_all_ind(update_params)
 
+
+    def load_ref_data(self):
+        ref_file = self.config.get("reference_data_file", "")
+        if len(ref_file) > 0:
+            with open(ref_file, "rb") as f:
+                ref_data = pickle.load(f)
+            ref_cont = ref_data['container']
+            self.parent_container.update(ref_cont)
 
 
 class RastriginExperiment(MultiAEExperiment):
@@ -167,6 +179,7 @@ class RastriginExperiment(MultiAEExperiment):
         super().reinit_globals()
         super().reinit_curiosity()
         super().reinit_loggers()
+        super().load_ref_data()
 
 
 
@@ -301,6 +314,7 @@ class BallisticExperiment(MultiAEExperiment):
         super().reinit_globals()
         super().reinit_curiosity()
         super().reinit_loggers()
+        super().load_ref_data()
 
 
 
@@ -327,6 +341,7 @@ class BipedalWalkerExperiment(MultiAEExperiment):
         super().reinit_globals()
         super().reinit_curiosity()
         super().reinit_loggers()
+        super().load_ref_data()
 
 
     def eval_fn(self, ind, render_mode = False):

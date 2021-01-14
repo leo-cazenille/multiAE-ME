@@ -281,6 +281,9 @@ class ConvEncoder(nn.Module):
                 #nn.ReLU(),
                 nn.BatchNorm1d(num_features=2, affine=False)
             )
+            #batchnorm = list(self.enc_fc2.modules())[-1]
+            #batchnorm.running_mean = torch.Tensor([0.5] * 2)
+            #batchnorm.running_var = torch.Tensor([0.1] * 2)
         else:
             self.enc_fc2 = nn.Sequential(
                 nn.Linear(latent_size*2+1, latent_size),
@@ -343,8 +346,8 @@ class ConvDecoder(nn.Module):
         # Decoder
         self.dec_fc2 = nn.Sequential(
             nn.Linear(latent_size, latent_size*2+1),
-            nn.Sigmoid()
-            #nn.ReLU()
+            #nn.Sigmoid()
+            nn.ReLU()
         )
         self.dec_fc1 = nn.Sequential(
             #nn.Linear(latent_size*2+1, input_size),
@@ -587,7 +590,7 @@ class NNTrainer(object):
         self.min = 0.
         self.max = 1.
 
-        if not self.diversity_loss_computation in ['none', 'outputs', 'pwoutputs', 'latent', 'covlatent']:
+        if not self.diversity_loss_computation in ['none', 'outputs', 'pwoutputs', 'latent', 'covlatent', 'varlatent', 'corrlatent', 'coveragelatent']:
             raise ValueError(f"Unknown diversity_loss_computation type: {self.diversity_loss_computation}.")
 
         if nn_models != None:
@@ -600,8 +603,8 @@ class NNTrainer(object):
 
 
     def compute_loss(self, data, model):
-        criterion_reconstruction = nn.MSELoss()
-        criterion_diversity = nn.MSELoss()
+        criterion_reconstruction = nn.L1Loss() # nn.MSELoss()
+        criterion_diversity = nn.L1Loss() # nn.MSELoss()
 
         d = Variable(data)
         #print(f"DEBUG training2: {d} {d.shape}")
@@ -610,7 +613,7 @@ class NNTrainer(object):
         # Compute reconstruction loss
         loss_reconstruction = torch.Tensor([0.])
         for r in output:
-            loss_reconstruction += criterion_reconstruction(r, d) **(1./3.)
+            loss_reconstruction += criterion_reconstruction(r, d)
         loss_reconstruction /= len(output)
 
         # Compute diversity loss
@@ -664,6 +667,58 @@ class NNTrainer(object):
                     #else: # XXX ?
                     #    loss_diversity += c[i,j] # XXX ?
 
+        elif self.diversity_loss_computation == "corrlatent":
+            latent = model.encoders(d)
+            latent_flat = torch.cat([l for l in latent], 1)
+
+            c = torch.abs(cov(latent_flat, rowvar=False))
+            #corrcoef = torch.empty_like(c)
+            #print(f"DEBUG covlatent {c}")
+            for i in range(c.size(0)):
+                for j in range(c.size(1)):
+                    corrcoef = c[i,j] / torch.sqrt(c[i,i] * c[j,j])
+                    if i != j:
+                        loss_diversity -= corrcoef
+            loss_diversity /= c.size(0) * c.size(1) - c.size(0)
+
+
+        elif self.diversity_loss_computation == "varlatent":
+            latent = model.encoders(d)
+            latent_flat = torch.cat([l for l in latent], 1)
+            loss_diversity = torch.mean(torch.var(latent_flat, 0))
+
+        elif self.diversity_loss_computation == "coveragelatent":
+            # Check if each latent component follow a linear distribution
+            # To do this while using only differentiable operations, we just check the distance of the quantile of each component against
+            #  the quantile of a linear 0 to 1 distribution
+            latent = model.encoders(d)
+            latent_flat = torch.cat([l for l in latent], 1)
+            criterion_coveragelatent = nn.MSELoss() # nn.L1Loss()
+
+            # XXX TESTS
+#            #loss_diversity = criterion_coveragelatent(latent_flat[:, 0], latent_flat[:, 1])
+#            #loss_diversity = -torch.mean(torch.var(latent_flat, 0, unbiased=True))
+#            #loss_diversity = torch.mean((latent_flat - 0.5) ** 2.)
+#            q = torch.linspace(0., 1., 11)
+#            diff05 = (torch.Tensor([0.5, 0.5] * len(latent)) - latent_flat + 0.5) / 2.0
+#            for i in range(latent_flat.shape[1]):
+#                loss_diversity += criterion_coveragelatent(torch.quantile(diff05[:, i], q), q)
+
+            # XXX Original version
+            q = torch.linspace(0., 1., 11)
+            diff0 = (torch.Tensor([0., 0.] * len(latent)) - latent_flat + np.sqrt(2.)) / 2.0
+            diff1 = (torch.Tensor([0., 1.] * len(latent)) - latent_flat + np.sqrt(2.)) / 2.0
+            diff2 = (torch.Tensor([1., 0.] * len(latent)) - latent_flat + np.sqrt(2.)) / 2.0
+            diff3 = (torch.Tensor([1., 1.] * len(latent)) - latent_flat + np.sqrt(2.)) / 2.0
+            for i in range(latent_flat.shape[1]):
+                #loss_diversity -= criterion_coveragelatent(torch.quantile(latent_flat[:, i], q), q)
+                loss_diversity -= criterion_coveragelatent(torch.quantile(diff0[:, i], q), q)
+                loss_diversity -= criterion_coveragelatent(torch.quantile(diff1[:, i], q), q)
+                loss_diversity -= criterion_coveragelatent(torch.quantile(diff2[:, i], q), q)
+                loss_diversity -= criterion_coveragelatent(torch.quantile(diff3[:, i], q), q)
+            loss_diversity /= latent_flat.shape[1] * 4
+
+
         elif self.diversity_loss_computation == "none":
             loss_diversity = torch.zeros(1)
 
@@ -671,6 +726,7 @@ class NNTrainer(object):
             raise ValueError(f"Unknown diversity_loss_computation type: {self.diversity_loss_computation}.")
 
         loss = loss_reconstruction - self.div_coeff * loss_diversity
+        #loss = - self.div_coeff * loss_diversity # XXX
         return loss, loss_reconstruction, loss_diversity
 
 
@@ -748,9 +804,9 @@ class NNTrainer(object):
         #start_time = timer() # XXX
 
         assert(len(training_inds) > 0)
-        global nn_models
-        self.create_ensemble_model(nn_models) # XXX HACK
-        assert(len(self.model.ae_list) == len(nn_models)) # XXX HACK
+        #global nn_models
+        #self.create_ensemble_model(nn_models) # XXX HACK
+        #assert(len(self.model.ae_list) == len(nn_models)) # XXX HACK
 
 #        # Skip training if we already exceed the training budget
 #        if self.training_budget != None and len(training_inds) > self.training_budget:
