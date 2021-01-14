@@ -1,13 +1,8 @@
 ---
 
-# An example illustrating how QD algorithms can automatically discover the feature descriptors of a Grid container.
-# Here we use a methodology similar to the AURORA algorithm (Cully2019: https://arxiv.org/pdf/1905.11874.pdf) where an autoencoder is continuously trained during the optimization process on all individuals found so far. The latent space of this autoencoder is used as the feature descriptors of the grid.
-# In order to achieve that, grids have to periodically recompute the feature descriptors of all individual found so far. So it implies that all individuals should be stored in additional container. This is achieved in QDpy by using hierarchies of containers, where a (child) container can forward all individuals it encounters to a parent container. Here, the child container is the main Grid, and the parent is an archive containing all individuals found so far.
-# Latent spaces of different autoencoders tend to have different domains (e.g. one autoencoder would operate in the [-1., 1.] domain, another on [-5., -1.]) even when they were trained on the same dataset. As such, we use AutoScalingGrid containers instead of just Grid. Such containers periodically adjust their feature descriptors domains to match all previously encountered individuals.
-
 
 # The random seed
-seed: 42
+#seed: 42
 
 batch_mode: True
 #send_several_suggestions_to_fn: True
@@ -18,14 +13,13 @@ experiment_type: ballistic
 nb_features: 2
 
 
-#reference_data_file: "data/ballistic-10000.p"
 
 # The name of the main algorithm (see below the description of 'algoQD')
 main_algorithm_name: algoTotal
 
 to_grid_parameters:
     max_items_per_bin: 1                              # The number of items in each bin of the grid
-    shape: [25, 25]                                   # The number of bins for each feature
+    shape: [50, 50]                                   # The number of bins for each feature
 
 
 # The list of all container.
@@ -51,9 +45,9 @@ containers:
     nb_epochs: 50                                     # The number of epochs used for subsequent training processes
     learning_rate: 0.10 # 1.e-3                              # Learning rate of the training (by default, the Adam optimiser is used to train the model)
     training_period: 5000                             # Re-train the model every time `training_period` add operations are performed
-    div_coeff: 1.0 # 0.01
+    div_coeff: 0.0 # 0.01
     batch_size: 1024
-    diversity_loss_computation: coveragelatent2 # corrlatent # coveragelatent # varlatent # covlatent # outputs # pwoutputs #outputs
+    diversity_loss_computation: none # corrlatent # coveragelatent # varlatent # covlatent # outputs # pwoutputs #outputs
     #base_scores: ["0", "1"]
     reset_model_every_training: False
     train_only_on_last_inds: False
@@ -78,9 +72,9 @@ containers:
 
     grid1:                                                # The main grid container
         #type: NoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-        #type: SelfAdaptiveNoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        type: SelfAdaptiveNoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         #type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-        type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        #type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
         #fitness_domain: [[-.inf, .inf]]                             # The domain of each fitness objective (here we only have one objective)
@@ -92,9 +86,9 @@ containers:
 
     grid2:                                                # The main grid container
         #type: NoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-        #type: SelfAdaptiveNoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        type: SelfAdaptiveNoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         #type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-        type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        #type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
         #fitness_domain: [[-.inf, .inf]]                             # The domain of each fitness objective (here we only have one objective)
@@ -106,9 +100,9 @@ containers:
 
     grid3:                                                # The main grid container
         #type: NoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-        #type: SelfAdaptiveNoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        type: SelfAdaptiveNoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         #type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-        type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        #type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
         #fitness_domain: [[-.inf, .inf]]                             # The domain of each fitness objective (here we only have one objective)
@@ -148,10 +142,10 @@ algorithms:
 
     # Evolution parameters
     batch_size: 200     # The number of evaluations in each subsequent batch
-    sel_pb: 0.9 # 1.0         # The probability of performing selection+variation instead of initialising a new genome
-    init_pb: 0.1 # 0.0        # The probability of initiating a new genome instead of performing selection
-    mut_pb: 0.1 # 0.4         # The probability of mutating each value of the genome of a selected individual
-    eta: 10. # 20           # The ETA parameter of the polynomial mutation (as defined in the origin NSGA-II paper by Deb.). It corresponds to the crowding degree of the mutation. A high ETA will produce mutants close to its parent, a small ETA will produce offspring with more changes.
+    sel_pb: 0.5 # 1.0         # The probability of performing selection+variation instead of initialising a new genome
+    init_pb: 0.5 # 0.0        # The probability of initiating a new genome instead of performing selection
+    mut_pb: 0.4 # 0.4         # The probability of mutating each value of the genome of a selected individual
+    eta: 20. # 20           # The ETA parameter of the polynomial mutation (as defined in the origin NSGA-II paper by Deb.). It corresponds to the crowding degree of the mutation. A high ETA will produce mutants close to its parent, a small ETA will produce offspring with more changes.
 
     #    algoInit:
     #        type: FromArchive
@@ -162,20 +156,20 @@ algorithms:
 
     # Then, we use an evolutionary algorithm that perform random search and polynomial mutations. This algorithm makes a trade-off between quality (finding good performing solutions) and diversity (find solutions corresponding to each bin of the grid)
     algo1:
-        type: RandomSearchMutPolyBounded
-        #type: ScoreProportionateRouletteMutPolyBounded
+        #type: RandomSearchMutPolyBounded
+        type: ScoreProportionateRouletteMutPolyBounded
         container: cont1                  # The container to use to store individuals told to the optimisers
         budget: .inf       # The total number of allowed evaluations for this algorithm
 
     algo2:
-        type: RandomSearchMutPolyBounded
-        #type: ScoreProportionateRouletteMutPolyBounded
+        #type: RandomSearchMutPolyBounded
+        type: ScoreProportionateRouletteMutPolyBounded
         container: cont2                  # The container to use to store individuals told to the optimisers
         budget: .inf       # The total number of allowed evaluations for this algorithm
 
     algo3:
-        type: RandomSearchMutPolyBounded
-        #type: ScoreProportionateRouletteMutPolyBounded
+        #type: RandomSearchMutPolyBounded
+        type: ScoreProportionateRouletteMutPolyBounded
         container: cont3                  # The container to use to store individuals told to the optimisers
         budget: .inf       # The total number of allowed evaluations for this algorithm
 
@@ -186,7 +180,7 @@ algorithms:
 #        batch_size: 100     # The number of evaluations in each subsequent batch
         #batch_mode: True
         #budget: 400
-        budget: 50000
+        budget: 100000
         tell_container_when_switching: False
         tell_all: True
         #tell_container_when_switching: True               # Whether to tell the next algorithm in the list all results of the previous algorithm
