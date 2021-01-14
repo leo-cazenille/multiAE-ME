@@ -1,5 +1,6 @@
 Bootstrap: docker
-From: lcazenille/qdpy-bipedal_walker
+#From: lcazenille/qdpy-bipedal_walker
+From: lcazenille/multiae
 
 
 %labels
