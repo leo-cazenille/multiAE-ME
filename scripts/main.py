@@ -243,8 +243,9 @@ class BallisticEnv(object):
         hardcoded0, hardcoded1 = self.ft_hardcoded()
         features = [hardcoded0, hardcoded1]
         #scores = {'observations': self.get_flat_observations(), 'gen0': gen0, 'gen1': gen1, 'hardcoded0': hardcoded0, 'hardcoded1': hardcoded1}
-        obs = {f"o{i}": o for i, o in enumerate(self.get_flat_observations())}
-        scores = {**obs, 'gen0': gen0, 'gen1': gen1, 'hardcoded0': hardcoded0, 'hardcoded1': hardcoded1} # XXX One key-val for each observation !!!
+        #obs = {f"o{i}": o for i, o in enumerate(self.get_flat_observations())}
+        #scores = {**obs, 'gen0': gen0, 'gen1': gen1, 'hardcoded0': hardcoded0, 'hardcoded1': hardcoded1} # XXX One key-val for each observation !!!
+        scores = {'gen0': gen0, 'gen1': gen1, 'hardcoded0': hardcoded0, 'hardcoded1': hardcoded1} # XXX One key-val for each observation !!!
         #ind.observations = self.cart_traj.T
         scores['observations'] = self.cart_traj.T
         #if self._dead:

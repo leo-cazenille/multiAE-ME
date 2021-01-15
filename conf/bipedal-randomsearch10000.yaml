@@ -204,7 +204,7 @@ algorithms:
 
     algoTotal:
         type: AlternatingAlgWrapper
-        budget: 100000
+        budget: 10000
         tell_container_when_switching: False
         tell_all: True
         #tell_container_when_switching: True               # Whether to tell the next algorithm in the list all results of the previous algorithm
