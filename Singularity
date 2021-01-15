@@ -28,7 +28,7 @@ From: lcazenille/multiae
     exp_name=`echo $config | sed 's/.yaml$//'`
     mkdir results/$exp_name
     for i in $(seq 1 $nb_runs); do
-        sleep 1
+        sleep 10
         logname=$(date +%Y%m%d%H%M%S).log
         ./scripts/main.py -c conf/$config $@ 2>&1 | tee results/$exp_name/$logname
     done
@@ -40,7 +40,7 @@ From: lcazenille/multiae
     exp_name=`echo $config | sed 's/.yaml$//'`
     mkdir results/$exp_name
     for i in $(seq 1 $nb_runs); do
-        sleep 1
+        sleep 10
         logname=$(date +%Y%m%d%H%M%S).log
         ./scripts/main.py -c conf/$config $@ 2>&1 > results/$exp_name/$logname &
     done
