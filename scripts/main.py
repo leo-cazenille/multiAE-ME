@@ -102,7 +102,10 @@ class MultiAEExperiment(QDExperiment):
         stat_loss = LoggerStat("loss", lambda algo: f"{nets.current_loss:.4f}", True)
         stat_loss_reconstruction = LoggerStat("loss_recon", lambda algo: f"{nets.current_loss_reconstruction:.4f}", True)
         stat_loss_diversity = LoggerStat("loss_div", lambda algo: f"{nets.current_loss_diversity:.4f}", True)
-        stat_training = LoggerStat("train_size", lambda algo: f"{len(algo.container._get_training_inds())}", True)
+        if hasattr(self.algo.container, '_get_training_inds()'):
+            stat_training = LoggerStat("train_size", lambda algo: f"{len(algo.container._get_training_inds())}", True)
+        else:
+            stat_training = LoggerStat("train_size", lambda algo: f"{len(algo.container.all_parents_inds())}", True)
         self.logger.register_stat(stat_loss, stat_loss_reconstruction, stat_loss_diversity, stat_training)
         self.logger._tabs_size = 5
         self.logger._min_cols_size = 9
@@ -353,12 +356,13 @@ class BipedalWalkerExperiment(MultiAEExperiment):
         scores = sim.simulate(self.sim_model,
                 env,
                 render_mode=render_mode,
-                num_episode=self.config['indv_eps'])
+                num_episode=self.config['indv_eps'], 
+                max_episode_length=self.config.get('max_episode_length', 3000))
         ind.fitness.values = scores[self.fitness_type],
         ind.features.values = [scores[x] for x in self.features_list]
         ind.scores.update(scores)
-        obs = np.array(list(scores.values())) # TODO use real observations instead
-        ind.scores['observations'] = obs
+        #obs = np.array(list(scores.values())) # TODO use real observations instead
+        #ind.scores['observations'] = obs
         return ind
 
 

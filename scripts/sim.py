@@ -76,14 +76,14 @@ class QDBipedalWalkerHardcore(QDBipedalWalker, BipedalWalkerHardcore):
 
 ########## Simulation functions ########### {{{1
 
-def simulate(model, env, render_mode=False, num_episode=5):
+def simulate(model, env, render_mode=False, num_episode=5, max_episode_length=3000):
     #reward_list = []
     #t_list = []
-    max_episode_length = 3000
     episodes_reward_sum = 0
     episodes_feature_sum = (0,) * 12
     total_reward = 0.0
     total_features = (0,) * 12
+    all_features = np.zeros((num_episode, max_episode_length, 12))
 
     for episode in range(num_episode):
         #start_time = timer()
@@ -100,6 +100,7 @@ def simulate(model, env, render_mode=False, num_episode=5):
             action = model.get_action(obs)
             prev_obs = obs
             obs, reward, features, done, info = env.step(action)
+            all_features[episode, t] = features[:12]
 
             if render_mode:
                 pass
@@ -147,7 +148,8 @@ def simulate(model, env, render_mode=False, num_episode=5):
             "meanLeg1HipAngle": episode_avg_features[8],
             "meanLeg1HipSpeed": episode_avg_features[9],
             "meanLeg1KneeAngle": episode_avg_features[10],
-            "meanLeg1KneeSpeed": episode_avg_features[11]
+            "meanLeg1KneeSpeed": episode_avg_features[11],
+            "observations": all_features
     }
 
     #return (episode_avg_reward,), tuple(episode_avg_features)
