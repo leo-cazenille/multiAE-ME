@@ -1,0 +1,62 @@
+---
+
+# An example illustrating how QD algorithms can automatically discover the feature descriptors of a Grid container.
+# Here we use a methodology similar to the AURORA algorithm (Cully2019: https://arxiv.org/pdf/1905.11874.pdf) where an autoencoder is continuously trained during the optimization process on all individuals found so far. The latent space of this autoencoder is used as the feature descriptors of the grid.
+# In order to achieve that, grids have to periodically recompute the feature descriptors of all individual found so far. So it implies that all individuals should be stored in additional container. This is achieved in QDpy by using hierarchies of containers, where a (child) container can forward all individuals it encounters to a parent container. Here, the child container is the main Grid, and the parent is an archive containing all individuals found so far.
+# Latent spaces of different autoencoders tend to have different domains (e.g. one autoencoder would operate in the [-1., 1.] domain, another on [-5., -1.]) even when they were trained on the same dataset. As such, we use AutoScalingGrid containers instead of just Grid. Such containers periodically adjust their feature descriptors domains to match all previously encountered individuals.
+
+
+# The random seed
+seed: 2323
+
+batch_mode: False
+
+# Type of experiment
+experiment_type: ballistic
+nb_features: 2
+
+# The name of the main algorithm (see below the description of 'algoQD')
+main_algorithm_name: algo1
+
+to_grid_parameters:
+    max_items_per_bin: 1                              # The number of items in each bin of the grid
+    shape: [24, 24]                                   # The number of bins for each feature
+
+
+# The list of all container.
+containers:
+
+    cont1:                             # We create a container that will contain ALL tested individuals
+        type: Container                          # A simple container, that will store ALL added individuals that are within bounds
+        #storage_type: orderedset                 # Faster than 'list' for large container
+        storage_type: indexableset              # Faster than 'orderedset' but may have compatibility problems with pickle in some versions
+        fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
+        features_domain:
+
+
+# The list of all algorithms
+algorithms:
+    # Default parameter values for each algorithm
+    #optimisation_task: minimisation   # We perform maximisation of all fitness objectives
+    #dimension: 5                      # The number of dimensions of the problem. For rastrigin, any dimension >= 2 can be chosen
+    #ind_domain: [0.1, 0.9]              # The domain of each value of the genome (optional)
+
+
+    # Then, we use an evolutionary algorithm that perform random search and polynomial mutations. This algorithm makes a trade-off between quality (finding good performing solutions) and diversity (find solutions corresponding to each bin of the grid)
+    algo1:
+        type: RandomSearchMutPolyBounded
+        #type: ScoreProportionateRouletteMutPolyBounded
+        container: cont1                  # The container to use to store individuals told to the optimisers
+        budget: 100000       # The total number of allowed evaluations for this algorithm
+        # Evolution parameters
+        batch_size: 200     # The number of evaluations in each subsequent batch
+        sel_pb: 0.0 # 1.0         # The probability of performing selection+variation instead of initialising a new genome
+        init_pb: 1.0 # 0.0        # The probability of initiating a new genome instead of performing selection
+        mut_pb: 0.4 # 0.1         # The probability of mutating each value of the genome of a selected individual
+        eta: 20. # 10           # The ETA parameter of the polynomial mutation (as defined in the origin NSGA-II paper by Deb.). It corresponds to the crowding degree of the mutation. A high ETA will produce mutants close to its parent, a small ETA will produce offspring with more changes.
+
+
+
+# MODELINE "{{{1
+# vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
+# vim:foldmethod=marker

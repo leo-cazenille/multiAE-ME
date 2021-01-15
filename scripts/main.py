@@ -108,6 +108,8 @@ class MultiAEExperiment(QDExperiment):
         self.logger._min_cols_size = 9
 
         # Create additional loggers
+        if not hasattr(self.algo, 'algorithms'):
+            return
         algos = self.algo.algorithms
         self.algs_loggers = []
         for algo in algos:
@@ -402,9 +404,10 @@ def launch_experiment(exp):
 
 
 def make_plots(exp):
-    for logger in exp.algs_loggers:
-        logger.save(os.path.join(logger.log_base_path, logger.final_filename))
-        qdpy.plots.default_plots_grid(logger, exp.log_base_path, suffix=f"-{exp.instance_name}-{logger.algorithms[0].name}", to_grid_parameters={'features_domain': logger.algorithms[0].container.features_extrema})
+    if hasattr(exp.algo, 'algorithms'):
+        for logger in exp.algs_loggers:
+            logger.save(os.path.join(logger.log_base_path, logger.final_filename))
+            qdpy.plots.default_plots_grid(logger, exp.log_base_path, suffix=f"-{exp.instance_name}-{logger.algorithms[0].name}", to_grid_parameters={'features_domain': logger.algorithms[0].container.features_extrema})
 
     qdpy.plots.plot_iterations(exp.logger, os.path.join(exp.log_base_path, f"./iterations_loss-{exp.instance_name}.pdf"), "loss", ylabel="Loss")
 
