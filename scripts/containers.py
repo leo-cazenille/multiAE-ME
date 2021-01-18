@@ -194,6 +194,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
             validation_split: float = 0.25,
             nb_training_sessions: int = 5,
             nb_filters: int = 4,
+            nb_channels: int = 2,
             batch_norm_before_latent: bool = True,
             trainer_type: str = "NNTrainer",
             **kwargs: Any) -> None:
@@ -209,6 +210,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         self.validation_split = validation_split
         self.nb_training_sessions = nb_training_sessions
         self.nb_filters = nb_filters
+        self.nb_channels = nb_channels
         self.batch_norm_before_latent = batch_norm_before_latent
         super().__init__(container, **kwargs)
 
@@ -297,7 +299,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         if self.model_type == "AE":
             self.model = AE(input_size, latent_size, self.tanh_encoder)
         elif self.model_type == "ConvAE":
-            self.model = ConvAE(input_size, latent_size, 2, self.nb_filters, self.batch_norm_before_latent)
+            self.model = ConvAE(input_size, latent_size, self.nb_channels, self.nb_filters, self.batch_norm_before_latent)
         else:
             raise ValueError(f"Unknown model_type: {self.model_type}.")
         # Register model in global dict

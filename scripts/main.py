@@ -339,16 +339,18 @@ class BallisticExperiment(MultiAEExperiment):
 
 class BipedalWalkerEval(object):
 
-    def __init__(self, env_name, sim_model, indv_eps, max_episode_length, fitness_type, features_list):
+    def __init__(self, env_name, sim_model, indv_eps, max_episode_length, fitness_type, features_list, render_mode=False):
         self.env_name = env_name
         self.sim_model = sim_model
         self.indv_eps = indv_eps
         self.max_episode_length = max_episode_length
         self.fitness_type = fitness_type
         self.features_list = features_list
+        self.render_mode = render_mode
 
     def eval_fn(self, ind, render_mode = False):
         #print(f"DEBUG ind len={len(ind)}")
+        render_mode = self.render_mode if self.render_mode == True else render_mode
         env = sim.make_env(self.env_name)
         self.sim_model.set_model_params(ind)
         scores = sim.simulate(self.sim_model,
@@ -361,6 +363,11 @@ class BipedalWalkerEval(object):
         ind.scores.update(scores)
         return ind
 
+    def several_eval_fn(self, inds):
+        res = []
+        for ind in inds:
+            res.append(self.eval_fn(ind))
+        return res
 
 
 
@@ -388,9 +395,11 @@ class BipedalWalkerExperiment(MultiAEExperiment):
                 self.config['indv_eps'],
                 self.config.get('max_episode_length', 3000),
                 self.fitness_type,
-                self.features_list
+                self.features_list,
+                render_mode = self.config.get('render_mode', False)
         )
         self.eval_fn = self.evalobj.eval_fn
+        self.several_eval_fn = self.evalobj.several_eval_fn
 
         #self.eval_fn = self._eval
         self.optimisation_task = "minimisation"
@@ -431,6 +440,7 @@ def parse_args():
 #    parser.add_argument('--replayBestFrom', type=str, default='', help = "Path of results data file -- used to replay the best individual")
     parser.add_argument('--seed', type=int, default=None, help="Numpy random seed")
     parser.add_argument('-v', '--verbose', default=False, action='store_true', help = "Enable verbose mode")
+    parser.add_argument('--renderMode', default=False, action='store_true', help = "Enable render mode")
     return parser.parse_args()
 
 def create_base_config(args):
@@ -438,6 +448,7 @@ def create_base_config(args):
     if len(args.resultsBaseDir) > 0:
         base_config['resultsBaseDir'] = args.resultsBaseDir
     base_config['verbose'] = args.verbose
+    base_config['render_mode'] = args.renderMode
     return base_config
 
 def create_experiment(args, base_config):

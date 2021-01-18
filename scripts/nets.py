@@ -447,6 +447,188 @@ class ConvAE(nn.Module):
 
 
 
+
+
+class ConvEncoder2(nn.Module):
+    def __init__(self, input_size, latent_size=2, input_channels=2, nb_filters=4, batch_norm_before_latent=True):
+        super().__init__()
+        self.input_size = input_size
+        self.latent_size = latent_size
+        self.input_channels = input_channels
+        self.nb_filters = nb_filters
+        self.batch_norm_before_latent = batch_norm_before_latent
+
+        self.drop_out1 = nn.Dropout(0.2)
+        self.drop_out2 = nn.Dropout(0.2)
+
+        # Encoder
+
+        self.enc_conv1 = nn.Sequential(
+            nn.Conv1d(input_channels, nb_filters, kernel_size=3),
+            nn.BatchNorm1d(num_features=nb_filters),
+            #nn.ReLU()
+            #nn.LeakyReLU(0.1)
+            nn.ELU()
+        )
+        self.enc_pool1 = nn.MaxPool1d(2, return_indices=True)
+        self.enc_conv2 = nn.Sequential(
+            nn.Conv1d(nb_filters, nb_filters, kernel_size=3),
+            nn.BatchNorm1d(num_features=nb_filters),
+            #nn.ReLU()
+            #nn.LeakyReLU(0.1)
+            nn.ELU()
+        )
+        self.enc_fc1 = nn.Sequential(
+            nn.Linear(nb_filters * (input_size//2-3), latent_size*2+1),
+            #nn.Sigmoid()
+            #nn.ReLU()
+            nn.ELU()
+        )
+        if self.batch_norm_before_latent:
+            self.enc_fc2 = nn.Sequential(
+                nn.Linear(latent_size*2+1, latent_size),
+                nn.Sigmoid(),
+                #nn.ReLU(),
+                nn.BatchNorm1d(num_features=latent_size, affine=False)
+            )
+            #batchnorm = list(self.enc_fc2.modules())[-1]
+            #batchnorm.running_mean = torch.Tensor([0.5] * 2)
+            #batchnorm.running_var = torch.Tensor([0.1] * 2)
+        else:
+            self.enc_fc2 = nn.Sequential(
+                nn.Linear(latent_size*2+1, latent_size),
+                nn.Sigmoid()
+                #nn.ReLU()
+            )
+
+
+        # Initialize weights
+        def init_weights(m):
+            if type(m) == nn.Linear or type(m) == nn.Conv1d:
+                torch.nn.init.xavier_uniform_(m.weight)
+                #torch.nn.init.normal_(m.weight, mean=0.0, std=0.3)
+                #torch.nn.init.ones_(m.bias)
+        self.enc_conv1.apply(init_weights)
+        self.enc_conv2.apply(init_weights)
+        self.enc_fc1.apply(init_weights)
+        self.enc_fc2.apply(init_weights)
+
+    def forward(self, x):
+        x = self.enc_conv1(x)
+        m1, self.i1 = self.enc_pool1(x)
+        x = self.enc_conv2(m1)
+        x = x.reshape(x.size(0), -1)
+        x = self.drop_out1(x)
+        x = self.enc_fc1(x)
+        x = self.drop_out2(x)
+        x = self.enc_fc2(x)
+        #print(f"DEBUG forward {x}")
+        return x
+
+
+class ConvDecoder2(nn.Module):
+    def __init__(self, encoder, input_size, latent_size=2, input_channels=2, nb_filters=4):
+        super().__init__()
+        self.encoder = encoder
+        self.input_size = input_size
+        self.latent_size = latent_size
+        self.input_channels = input_channels
+        self.nb_filters = nb_filters
+
+        self.drop_out1 = nn.Dropout(0.2)
+        self.drop_out2 = nn.Dropout(0.2)
+
+        # Decoder
+        self.dec_fc2 = nn.Sequential(
+            nn.Linear(latent_size, latent_size*2+1),
+            #nn.Sigmoid()
+            #nn.ReLU()
+            nn.ELU()
+        )
+        self.dec_fc1 = nn.Sequential(
+            #nn.Linear(latent_size*2+1, input_size),
+            #nn.Linear(latent_size*2+1, 4 * (input_size//2-1)),
+            nn.Linear(latent_size*2+1, nb_filters*(input_size//2-3)),
+            #nn.Sigmoid()
+            #nn.ReLU()
+            nn.ELU()
+        )
+        self.dec_conv1 = nn.Sequential(
+            #nn.Conv1d(4, 2, kernel_size=3, stride=1, padding=0),
+            #nn.ConvTranspose1d(4, 2, kernel_size=3, stride=2, padding=0),
+            nn.ConvTranspose1d(nb_filters, nb_filters, 3),
+            nn.BatchNorm1d(num_features=nb_filters),
+            #nn.ReLU()
+            #nn.LeakyReLU(0.1)
+            nn.ELU()
+        )
+        self.dec_unpool1 = nn.MaxUnpool1d(2)
+        self.dec_conv2 = nn.Sequential(
+            nn.ConvTranspose1d(nb_filters, input_channels, 3),
+            nn.BatchNorm1d(num_features=input_channels),
+            #nn.ReLU()
+            #nn.LeakyReLU(0.1)
+            #nn.Sigmoid()
+            nn.ELU()
+        )
+
+        self.dec_out = nn.Sequential(
+            nn.Linear(input_size, input_size),
+            nn.Sigmoid()
+            #nn.ReLU()
+        )
+
+        # Initialize weights
+        def init_weights(m):
+            if type(m) == nn.Linear or type(m) == nn.Conv1d:
+                torch.nn.init.xavier_uniform_(m.weight)
+                #torch.nn.init.normal_(m.weight, mean=0.0, std=0.3)
+                #torch.nn.init.ones_(m.bias)
+        self.dec_fc2.apply(init_weights)
+        self.dec_fc1.apply(init_weights)
+        self.dec_conv1.apply(init_weights)
+        self.dec_conv2.apply(init_weights)
+        self.dec_out.apply(init_weights)
+
+
+    def forward(self, x):
+        x = self.dec_fc2(x)
+        x = self.drop_out2(x)
+        x = self.dec_fc1(x)
+        x = self.drop_out1(x)
+        x = x.reshape(x.size(0), self.nb_filters, self.input_size//2-3)
+        x = self.dec_conv1(x)
+        x = self.dec_unpool1(x, self.encoder.i1)
+        x = self.dec_conv2(x)
+        x = self.dec_out(x)
+        return x
+
+class ConvAE2(nn.Module):
+    def __init__(self, input_size, latent_size=2, input_channels=2, nb_filters=4, batch_norm_before_latent=True):
+        super().__init__()
+        self.input_size = input_size
+        self.latent_size = latent_size
+        self.encoder = ConvEncoder2(input_size, latent_size, input_channels=input_channels, nb_filters=nb_filters, batch_norm_before_latent=batch_norm_before_latent)
+        self.decoder = ConvDecoder2(self.encoder, input_size, latent_size, input_channels=input_channels, nb_filters=nb_filters)
+
+    def forward(self, x):
+        x = self.encoder(x)
+        x = self.decoder(x)
+        return x
+
+    def freeze(self):
+        for param in self.parameters():
+            param.requires_grad = False
+
+    def unfreeze(self):
+        for param in self.parameters():
+            param.requires_grad = True
+
+
+
+
+
+
 #class EnsembleAE(nn.Module):
 #    def __init__(self, input_size, latent_size=2, nb_modules = 4):
 #        super().__init__()
