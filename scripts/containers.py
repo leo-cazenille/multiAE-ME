@@ -297,7 +297,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         if self.model_type == "AE":
             self.model = AE(input_size, latent_size, self.tanh_encoder)
         elif self.model_type == "ConvAE":
-            self.model = ConvAE(input_size, latent_size, self.nb_filters, self.batch_norm_before_latent)
+            self.model = ConvAE(input_size, latent_size, 2, self.nb_filters, self.batch_norm_before_latent)
         else:
             raise ValueError(f"Unknown model_type: {self.model_type}.")
         # Register model in global dict

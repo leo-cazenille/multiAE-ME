@@ -11,7 +11,7 @@ seed: 42
 
 batch_mode: True
 #send_several_suggestions_to_fn: True
-#max_nb_suggestions_per_call: 20
+#max_nb_suggestions_per_call: 5
 
 # Type of experiment
 experiment_type: bipedal_walker
@@ -149,20 +149,22 @@ containers:
 
 
     cont1:                                                # A feature-extracting container decorator applied to the main grid
-        #type: ContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
-        type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        type: ContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        #type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
         container: grid1                                  # The container this decorator is applied to
         training_containers: [parentContainer]            # The list of containers used to train the autoencoder. If empty, will use the parents instead.
         #features_domain: [[-2., 2.], [-2., 2.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     cont2:                                                # A feature-extracting container decorator applied to the main grid
-        type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        type: ContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        #type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
         container: grid2                                  # The container this decorator is applied to
         training_containers: [parentContainer]            # The list of containers used to train the autoencoder. If empty, will use the parents instead.
         #features_domain: [[-2., 2.], [-2., 2.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     cont3:                                                # A feature-extracting container decorator applied to the main grid
-        type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        type: ContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        #type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
         container: grid3                                  # The container this decorator is applied to
         training_containers: [parentContainer]            # The list of containers used to train the autoencoder. If empty, will use the parents instead.
         #features_domain: [[-2., 2.], [-2., 2.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features

@@ -153,7 +153,8 @@ def simulate(model, env, render_mode=False, num_episode=5, max_episode_length=30
             "meanLeg1KneeSpeed": episode_avg_features[11]
     }
     if save_all_features:
-        scores['observations'] = all_features
+        robs = all_features.reshape(-1, all_features.shape[-1]).T
+        scores['observations'] = robs
 
     #return (episode_avg_reward,), tuple(episode_avg_features)
     return scores

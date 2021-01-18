@@ -424,12 +424,12 @@ class ConvDecoder(nn.Module):
         return x
 
 class ConvAE(nn.Module):
-    def __init__(self, input_size, latent_size=2, nb_filters=4, batch_norm_before_latent=True):
+    def __init__(self, input_size, latent_size=2, input_channels=2, nb_filters=4, batch_norm_before_latent=True):
         super().__init__()
         self.input_size = input_size
         self.latent_size = latent_size
-        self.encoder = ConvEncoder(input_size, latent_size, nb_filters=nb_filters, batch_norm_before_latent=batch_norm_before_latent)
-        self.decoder = ConvDecoder(self.encoder, input_size, latent_size, nb_filters=nb_filters)
+        self.encoder = ConvEncoder(input_size, latent_size, input_channels=input_channels, nb_filters=nb_filters, batch_norm_before_latent=batch_norm_before_latent)
+        self.decoder = ConvDecoder(self.encoder, input_size, latent_size, input_channels=input_channels, nb_filters=nb_filters)
 
     def forward(self, x):
         x = self.encoder(x)

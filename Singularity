@@ -13,13 +13,16 @@ From: lcazenille/multiae
 %post
     pip3 uninstall -y qdpy
 #    pip3 uninstall -y tqdm
-    pip3 install --upgrade --no-dependencies --no-cache-dir git+https://gitlab.com/leo.cazenille/qdpy.git@develop
+    pip3 install --upgrade --no-dependencies --no-cache-dir git+https://gitlab.com/leo.cazenille/qdpy.git@develop scoop pyzmq greenlet
 
 %runscript
     echo "Nothing there yet..."
 
 %apprun main
     exec ./scripts/main.py $@
+
+%apprun scoop_main
+    exec python3 -m scoop ./scripts/main.py $@
 
 %apprun several_main
     nb_runs=$1

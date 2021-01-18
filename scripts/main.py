@@ -95,17 +95,37 @@ class MultiAEExperiment(QDExperiment):
         self.algo.add_callback("tell", self._tell_curiosity)
 
 
+    def _fn_loss(self, algo):
+        return f"{nets.current_loss:.4f}"
+    def _fn_loss_reconstruction(self, algo):
+        return f"{nets.current_loss_reconstruction:.4f}"
+    def _fn_loss_diversity(self, algo):
+        return f"{nets.current_loss_diversity:.4f}"
+    def _fn_train_size1(self, algo):
+        return f"{len(algo.container._get_training_inds())}"
+    def _fn_train_size2(self, algo):
+        return f"{len(algo.container.all_parents_inds())}"
+    def _fn_qd_score(self, i_alg, algo):
+        return f"{algo.algorithms[i_alg].container.qd_score(True):.3f}"
+    def _fn_originality(self, i_alg, algo):
+        return f"{originality(algo.algorithms[i_alg].container, [a.container for a in algo.algorithms]):.3f}"
+    def _fn_mean_originality(self, algo):
+        return f"{mean_originality([a.container for a in algo.algorithms]):.3f}"
+    def _fn_mean_corr(self, algo):
+        return f"{corr_scores(algo.algorithms[0].container.container.parents[0])[1]:.4f}"
+
+
     def reinit_loggers(self):
         # Update stats
         #stat_loss = LoggerStat("loss", lambda algo: f"{algo.container.current_loss:.4f}", True)
         #global current_loss
-        stat_loss = LoggerStat("loss", lambda algo: f"{nets.current_loss:.4f}", True)
-        stat_loss_reconstruction = LoggerStat("loss_recon", lambda algo: f"{nets.current_loss_reconstruction:.4f}", True)
-        stat_loss_diversity = LoggerStat("loss_div", lambda algo: f"{nets.current_loss_diversity:.4f}", True)
+        stat_loss = LoggerStat("loss", self._fn_loss , True)
+        stat_loss_reconstruction = LoggerStat("loss_recon", self._fn_loss_reconstruction, True)
+        stat_loss_diversity = LoggerStat("loss_div", self._fn_loss_diversity, True)
         if hasattr(self.algo.container, '_get_training_inds()'):
-            stat_training = LoggerStat("train_size", lambda algo: f"{len(algo.container._get_training_inds())}", True)
+            stat_training = LoggerStat("train_size", self._fn_train_size1, True)
         else:
-            stat_training = LoggerStat("train_size", lambda algo: f"{len(algo.container.all_parents_inds())}", True)
+            stat_training = LoggerStat("train_size", self._fn_train_size2, True)
         self.logger.register_stat(stat_loss, stat_loss_reconstruction, stat_loss_diversity, stat_training)
         self.logger._tabs_size = 5
         self.logger._min_cols_size = 9
@@ -122,25 +142,17 @@ class MultiAEExperiment(QDExperiment):
                     iteration_filenames=iteration_filenames, final_filename=final_filename, save_period=self.save_period)
             self.algs_loggers.append(logger)
 
-        def fn_qd_score(i_alg, algo):
-            return f"{algo.algorithms[i_alg].container.qd_score(True):.3f}"
-        def fn_originality(i_alg, algo):
-            return f"{originality(algo.algorithms[i_alg].container, [a.container for a in algo.algorithms]):.3f}"
-        def fn_mean_originality(algo):
-            return f"{mean_originality([a.container for a in algo.algorithms]):.3f}"
-        def fn_mean_corr(algo):
-            return f"{corr_scores(algo.algorithms[0].container.container.parents[0])[1]:.4f}"
         if hasattr(self.algo, 'algorithms'):
             algos = self.algo.algorithms
             for i_alg, alg in enumerate(algos):
-                stat_qd_score = LoggerStat(f"qd_score-{alg.name}", partial(fn_qd_score, i_alg), True)
+                stat_qd_score = LoggerStat(f"qd_score-{alg.name}", partial(self._fn_qd_score, i_alg), True)
                 self.logger.register_stat(stat_qd_score)
             for i_alg, alg in enumerate(algos):
-                stat_originality = LoggerStat(f"orig-{alg.name}", partial(fn_originality, i_alg), True)
+                stat_originality = LoggerStat(f"orig-{alg.name}", partial(self._fn_originality, i_alg), True)
                 self.logger.register_stat(stat_originality)
-            stat_mean_originality = LoggerStat(f"mean_orig", fn_mean_originality, True)
+            stat_mean_originality = LoggerStat(f"mean_orig", self._fn_mean_originality, True)
             self.logger.register_stat(stat_mean_originality)
-            stat_mean_corr = LoggerStat(f"mean_corr", fn_mean_corr, True)
+            stat_mean_corr = LoggerStat(f"mean_corr", self._fn_mean_corr, True)
             self.logger.register_stat(stat_mean_corr)
 
         # Save parent container in the 'container' entry of the data pickle file
