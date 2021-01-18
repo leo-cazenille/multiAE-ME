@@ -71,18 +71,19 @@ containers:
     shape: [25, 25]                                   # The number of bins for each feature
 
 
-#
-#    parentContainer:                             # We create a container that will contain ALL tested individuals
-#        type: Container                          # A simple container, that will store ALL added individuals that are within bounds
-#        #storage_type: orderedset                 # Faster than 'list' for large container
-#        storage_type: indexableset              # Faster than 'orderedset' but may have compatibility problems with pickle in some versions
-#        fitness_domain:
-#        features_domain:
+
+    parentContainer:                             # We create a container that will contain ALL tested individuals
+        type: Population                          # A simple container, that will store ALL added individuals that are within bounds
+        #storage_type: orderedset                 # Faster than 'list' for large container
+        storage_type: indexableset              # Faster than 'orderedset' but may have compatibility problems with pickle in some versions
+        fitness_domain:
+        features_domain:
+        capacity: 10000
 
 
     grid1:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-#        parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
+        parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         fitness_score_names: ["meanAvgReward"]
         fitness_domain: [[-200., 350.]]
         features_score_names: ["meanDistance", "meanHeadStability"]
@@ -90,7 +91,7 @@ containers:
 
     grid2:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-#        parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
+        parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         fitness_score_names: ["meanAvgReward"]
         fitness_domain: [[-200., 350.]]
         features_score_names: ["meanTorquePerStep", "meanJump"]
@@ -98,7 +99,7 @@ containers:
 
     grid3:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-#        parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
+        parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         fitness_score_names: ["meanAvgReward"]
         fitness_domain: [[-200., 350.]]
         features_score_names: ["meanLeg0HipAngle", "meanLeg1HipAngle"]
@@ -106,7 +107,7 @@ containers:
 
     grid4:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-#        parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
+        parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         fitness_score_names: ["meanAvgReward"]
         fitness_domain: [[-200., 350.]]
         features_score_names: ["meanLeg0HipSpeed", "meanLeg1HipSpeed"]
@@ -114,7 +115,7 @@ containers:
 
     grid5:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-#        parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
+        parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         fitness_score_names: ["meanAvgReward"]
         fitness_domain: [[-200., 350.]]
         features_score_names: ["meanLeg0KneeAngle", "meanLeg1KneeAngle"]
@@ -122,7 +123,7 @@ containers:
 
     grid6:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-#        parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
+        parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         fitness_score_names: ["meanAvgReward"]
         fitness_domain: [[-200., 350.]]
         features_score_names: ["meanLeg0KneeSpeed", "meanLeg1KneeSpeed"]
