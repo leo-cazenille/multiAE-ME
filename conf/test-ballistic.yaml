@@ -51,7 +51,7 @@ containers:
     nb_epochs: 200                                     # The number of epochs used for subsequent training processes
     learning_rate: 0.10 # 1.e-3                              # Learning rate of the training (by default, the Adam optimiser is used to train the model)
     training_period: 5000                             # Re-train the model every time `training_period` add operations are performed
-    div_coeff: 2.0 # 0.01
+    div_coeff: -0.1 # 0.01
     batch_size: 1024
     diversity_loss_computation: coveragelatent2 # corrlatent # coveragelatent # varlatent # covlatent # outputs # pwoutputs #outputs
     #base_scores: ["0", "1"]
@@ -65,7 +65,7 @@ containers:
 
     epochs_avg_loss: 500
     validation_split: 0.25
-    nb_training_sessions: 1
+    nb_training_sessions: 5
 
 
     parentContainer:                             # We create a container that will contain ALL tested individuals

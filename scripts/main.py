@@ -336,6 +336,34 @@ class BallisticExperiment(MultiAEExperiment):
 
 
 
+
+class BipedalWalkerEval(object):
+
+    def __init__(self, env_name, sim_model, indv_eps, max_episode_length, fitness_type, features_list):
+        self.env_name = env_name
+        self.sim_model = sim_model
+        self.indv_eps = indv_eps
+        self.max_episode_length = max_episode_length
+        self.fitness_type = fitness_type
+        self.features_list = features_list
+
+    def eval_fn(self, ind, render_mode = False):
+        #print(f"DEBUG ind len={len(ind)}")
+        env = sim.make_env(self.env_name)
+        self.sim_model.set_model_params(ind)
+        scores = sim.simulate(self.sim_model,
+                env,
+                render_mode=render_mode,
+                num_episode=self.indv_eps, 
+                max_episode_length=self.max_episode_length)
+        ind.fitness.values = scores[self.fitness_type],
+        ind.features.values = [scores[x] for x in self.features_list]
+        ind.scores.update(scores)
+        return ind
+
+
+
+
 class BipedalWalkerExperiment(MultiAEExperiment):
 
 #    def __init__(self, config_filename, parallelism_type = "concurrent", seed = None, base_config = None):
@@ -354,6 +382,16 @@ class BipedalWalkerExperiment(MultiAEExperiment):
         # Reinit
         super().reinit()
 
+        self.evalobj = BipedalWalkerEval(
+                self.env_name,
+                self.sim_model,
+                self.config['indv_eps'],
+                self.config.get('max_episode_length', 3000),
+                self.fitness_type,
+                self.features_list
+        )
+        self.eval_fn = self.evalobj.eval_fn
+
         #self.eval_fn = self._eval
         self.optimisation_task = "minimisation"
         super().reinit_globals()
@@ -362,21 +400,21 @@ class BipedalWalkerExperiment(MultiAEExperiment):
         super().load_ref_data()
 
 
-    def eval_fn(self, ind, render_mode = False):
-        #print(f"DEBUG ind len={len(ind)}")
-        env = sim.make_env(self.env_name)
-        self.sim_model.set_model_params(ind)
-        scores = sim.simulate(self.sim_model,
-                env,
-                render_mode=render_mode,
-                num_episode=self.config['indv_eps'], 
-                max_episode_length=self.config.get('max_episode_length', 3000))
-        ind.fitness.values = scores[self.fitness_type],
-        ind.features.values = [scores[x] for x in self.features_list]
-        ind.scores.update(scores)
-        #obs = np.array(list(scores.values())) # TODO use real observations instead
-        #ind.scores['observations'] = obs
-        return ind
+#    def eval_fn(self, ind, render_mode = False):
+#        #print(f"DEBUG ind len={len(ind)}")
+#        env = sim.make_env(self.env_name)
+#        self.sim_model.set_model_params(ind)
+#        scores = sim.simulate(self.sim_model,
+#                env,
+#                render_mode=render_mode,
+#                num_episode=self.config['indv_eps'], 
+#                max_episode_length=self.config.get('max_episode_length', 3000))
+#        ind.fitness.values = scores[self.fitness_type],
+#        ind.features.values = [scores[x] for x in self.features_list]
+#        ind.scores.update(scores)
+#        #obs = np.array(list(scores.values())) # TODO use real observations instead
+#        #ind.scores['observations'] = obs
+#        return ind
 
 
 

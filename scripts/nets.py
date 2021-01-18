@@ -787,9 +787,9 @@ class NNTrainer(object):
         last_mean_rv_loss = np.inf
         for epoch in range(self.nb_epochs):
             # Training
-            rt_loss = 0.
-            rt_loss_reconstruction = 0.
-            rt_loss_diversity = 0.
+            rt_loss = torch.zeros([1])
+            rt_loss_reconstruction = torch.zeros([1])
+            rt_loss_diversity = torch.zeros([1])
             model.train()
             for data in train_dataset:
                 t_loss, t_loss_reconstruction, t_loss_diversity = self.compute_loss(data, model)
@@ -802,9 +802,9 @@ class NNTrainer(object):
                 rt_loss_diversity += t_loss_diversity
 
             # Validation
-            rv_loss = 0.
-            rv_loss_reconstruction = 0.
-            rv_loss_diversity = 0.
+            rv_loss = torch.zeros([1])
+            rv_loss_reconstruction = torch.zeros([1])
+            rv_loss_diversity = torch.zeros([1])
             model.eval()
             with torch.no_grad():
                 for data in validation_dataset:
@@ -834,11 +834,11 @@ class NNTrainer(object):
                 break
             last_mean_rv_loss = mean_rv_loss
 
-            print(f"# Epoch {epoch}/{self.nb_epochs}  Validation loss:{v_loss} loss_reconstruction:{v_loss_reconstruction} loss_diversity:{v_loss_diversity} ")
+            print(f"# Epoch {epoch}/{self.nb_epochs}  Validation loss:{rv_loss} loss_reconstruction:{rv_loss_reconstruction} loss_diversity:{rv_loss_diversity} ")
             #self.scheduler.step(v_loss)
             self.scheduler.step()
 
-        return v_loss.item(), v_loss_reconstruction.item(), v_loss_diversity.item()
+        return rv_loss.item(), rv_loss_reconstruction.item(), rv_loss_diversity.item()
 
 
     def train(self, training_inds) -> None:
@@ -897,25 +897,38 @@ class NNTrainer(object):
         if self.reset_model_every_training:
             self.model.reset()
 
+        # Create model copies
+        models = [copy.deepcopy(self.model) for _ in range(self.nb_training_sessions)]
+
         # Train !
         loss_lst = []
         loss_reconstruction_lst = []
         loss_diversity_lst = []
-        for _ in range(self.nb_training_sessions):
-            l, r, d = self.training_session(data, self.model)
+        for model in models:
+            l, r, d = self.training_session(data, model)
             loss_lst.append(l)
             loss_reconstruction_lst.append(r)
             loss_diversity_lst.append(d)
             print(f"Finished session: loss={l} loss_reconstruction={r} loss_diversity={d}")
 
+        # Use the model with the lowest loss
+        #selected_model_idx = np.argmin(loss_diversity_lst)
+        selected_model_idx = np.argmin(loss_lst)
+        self.model = models[selected_model_idx]
+
         # Compute and save mean losses
-        self.current_loss = np.mean(loss_lst)
-        self.current_loss_reconstruction = np.mean(loss_reconstruction_lst)
-        self.current_loss_diversity = np.mean(loss_diversity_lst)
-        #global current_loss, current_loss_reconstruction, current_loss_diversity
-        #current_loss = self.current_loss
-        #current_loss_reconstruction = self.current_loss_reconstruction
-        #current_loss_diversity = self.current_loss_diversity
+        self.current_loss = loss_lst[selected_model_idx]
+        self.current_loss_reconstruction = loss_reconstruction_lst[selected_model_idx]
+        self.current_loss_diversity = loss_diversity_lst[selected_model_idx]
+        print(f"Selected model {selected_model_idx}: loss={self.current_loss} loss_reconstruction={self.current_loss_reconstruction} loss_diversity={self.current_loss_diversity}")
+
+        #self.current_loss = np.mean(loss_lst)
+        #self.current_loss_reconstruction = np.mean(loss_reconstruction_lst)
+        #self.current_loss_diversity = np.mean(loss_diversity_lst)
+        ##global current_loss, current_loss_reconstruction, current_loss_diversity
+        ##current_loss = self.current_loss
+        ##current_loss_reconstruction = self.current_loss_reconstruction
+        ##current_loss_diversity = self.current_loss_diversity
 
         #elapsed = timer() - start_time # XXX
         #print(f"# Training: final loss: {loss}  elapsed: {elapsed}")
