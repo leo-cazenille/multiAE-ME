@@ -7,7 +7,7 @@
 
 
 # The random seed
-seed: 42
+#seed: 42
 
 batch_mode: False #True
 #send_several_suggestions_to_fn: True
@@ -78,9 +78,9 @@ containers:
     # Feature extraction decorator parameters
     model_type: ConvAE
     initial_nb_epochs: 100                            # The number of epochs used the first time the model is optimised
-    nb_epochs: 50 # 500                                     # The number of epochs used for subsequent training processes
+    nb_epochs: 300                                     # The number of epochs used for subsequent training processes
     learning_rate: 0.10 # 1.e-3                              # Learning rate of the training (by default, the Adam optimiser is used to train the model)
-    training_period: 100                             # Re-train the model every time `training_period` add operations are performed
+    training_period: 10000                             # Re-train the model every time `training_period` add operations are performed
     div_coeff: 1.0 # 0.01
     batch_size: 1024
     diversity_loss_computation: coveragelatent2 # covlatent # outputs # pwoutputs #outputs
@@ -114,8 +114,8 @@ containers:
         type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        #fitness_domain: [[-.inf, .inf]]                             # The domain of each fitness objective (here we only have one objective)
-        fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
+        fitness_domain: [[-.inf, .inf]]                             # The domain of each fitness objective (here we only have one objective)
+        #fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
         features_domain: [[-.inf, .inf], [-.inf, .inf]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         #features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         #features_domain: [[-1., 1.], [-1., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
@@ -129,8 +129,8 @@ containers:
         type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        #fitness_domain: [[-.inf, .inf]]                             # The domain of each fitness objective (here we only have one objective)
-        fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
+        fitness_domain: [[-.inf, .inf]]                             # The domain of each fitness objective (here we only have one objective)
+        #fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
         features_domain: [[-.inf, .inf], [-.inf, .inf]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         #features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         #features_domain: [[-1., 1.], [-1., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
@@ -144,8 +144,8 @@ containers:
         type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        #fitness_domain: [[-.inf, .inf]]                             # The domain of each fitness objective (here we only have one objective)
-        fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
+        fitness_domain: [[-.inf, .inf]]                             # The domain of each fitness objective (here we only have one objective)
+        #fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
         features_domain: [[-.inf, .inf], [-.inf, .inf]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         #features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         #features_domain: [[-1., 1.], [-1., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
@@ -183,10 +183,10 @@ algorithms:
     #ind_domain: [0.1, 0.9]              # The domain of each value of the genome (optional)
 
     # Evolution parameters
-    batch_size: 10     # The number of evaluations in each subsequent batch
-    sel_pb: 0.0 # 1.0         # The probability of performing selection+variation instead of initialising a new genome
-    init_pb: 1.0 # 0.0        # The probability of initiating a new genome instead of performing selection
-    mut_pb: 0.4 # 0.1         # The probability of mutating each value of the genome of a selected individual
+    batch_size: 1000     # The number of evaluations in each subsequent batch
+    sel_pb: 0.7 # 1.0         # The probability of performing selection+variation instead of initialising a new genome
+    init_pb: 0.3 # 0.0        # The probability of initiating a new genome instead of performing selection
+    mut_pb: 0.1 # 0.1         # The probability of mutating each value of the genome of a selected individual
     eta: 20. # 10           # The ETA parameter of the polynomial mutation (as defined in the origin NSGA-II paper by Deb.). It corresponds to the crowding degree of the mutation. A high ETA will produce mutants close to its parent, a small ETA will produce offspring with more changes.
 
 
@@ -215,12 +215,12 @@ algorithms:
         #type: SqAlgWrapper
 #        batch_size: 100     # The number of evaluations in each subsequent batch
         #batch_mode: True
-        budget: 500
+        budget: 100000
         tell_container_when_switching: False
         tell_all: True
         #tell_container_when_switching: True               # Whether to tell the next algorithm in the list all results of the previous algorithm
-        #algorithms: ['algo1', 'algo2', 'algo3'] # The list of algorithms to execute
-        algorithms: ['algo1'] # The list of algorithms to execute
+        algorithms: ['algo1', 'algo2', 'algo3'] # The list of algorithms to execute
+        #algorithms: ['algo1'] # The list of algorithms to execute
         #algorithms: # The dict of algorithms to execute
         #    algo1: 1
         #    algo2: 1
