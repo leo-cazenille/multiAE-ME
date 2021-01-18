@@ -87,6 +87,7 @@ containers:
         fitness_domain: [[-200., 350.]]
         features_score_names: ["meanDistance", "meanHeadStability"]
         features_domain: [[0., 50.], [0., 2.5]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        only_add_accepted_inds_to_parents: True
 
     grid2:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
@@ -95,6 +96,7 @@ containers:
         fitness_domain: [[-200., 350.]]
         features_score_names: ["meanTorquePerStep", "meanJump"]
         features_domain: [[0., 25.], [0., 0.75]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        only_add_accepted_inds_to_parents: True
 
     grid3:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
@@ -103,6 +105,7 @@ containers:
         fitness_domain: [[-200., 350.]]
         features_score_names: ["meanLeg0HipAngle", "meanLeg1HipAngle"]
         features_domain: [[0.0, 2.5], [0.0, 2.5]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        only_add_accepted_inds_to_parents: True
 
     grid4:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
@@ -111,6 +114,7 @@ containers:
         fitness_domain: [[-200., 350.]]
         features_score_names: ["meanLeg0HipSpeed", "meanLeg1HipSpeed"]
         features_domain: [[0.0, 10.], [0.0, 10.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        only_add_accepted_inds_to_parents: True
 
     grid5:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
@@ -119,6 +123,7 @@ containers:
         fitness_domain: [[-200., 350.]]
         features_score_names: ["meanLeg0KneeAngle", "meanLeg1KneeAngle"]
         features_domain: [[0.0, 2.5], [0.0, 2.5]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        only_add_accepted_inds_to_parents: True
 
     grid6:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
@@ -127,6 +132,7 @@ containers:
         fitness_domain: [[-200., 350.]]
         features_score_names: ["meanLeg0KneeSpeed", "meanLeg1KneeSpeed"]
         features_domain: [[0.0, 10.], [0.0, 10.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        only_add_accepted_inds_to_parents: True
 
 
     cont1:                                                # A feature-extracting container decorator applied to the main grid
@@ -204,7 +210,7 @@ algorithms:
 
     algoTotal:
         type: AlternatingAlgWrapper
-        budget: 100000
+        budget: 1000000
         tell_container_when_switching: False
         tell_all: True
         #tell_container_when_switching: True               # Whether to tell the next algorithm in the list all results of the previous algorithm
