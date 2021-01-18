@@ -17,7 +17,7 @@ batch_mode: False
 experiment_type: bipedal_walker
 debug_features: False # set to True to determine feature domain bounds
 indv_eps: 5       # episodes per individual
-max_episode_length: 300
+max_episode_length: 3000
 
 
 
