@@ -13,6 +13,7 @@ From: lcazenille/multiae
 %post
     pip3 uninstall -y qdpy
 #    pip3 uninstall -y tqdm
+    pip3 install tqdm
     pip3 install --upgrade --no-dependencies --no-cache-dir git+https://gitlab.com/leo.cazenille/qdpy.git@develop scoop pyzmq greenlet
 
 %runscript

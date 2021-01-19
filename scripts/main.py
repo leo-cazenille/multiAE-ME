@@ -67,6 +67,16 @@ class MultiAEExperiment(QDExperiment):
         self.curiosity_reward = self.config.get('curiosity_reward', 1.0)
         self.curiosity_penalty = self.config.get('curiosity_penalty', 0.5)
 
+    def __getstate__(self):
+        odict = self.__dict__.copy()
+        del odict['algo']
+        del odict['container']
+        del odict['parent_container']
+        del odict['logger']
+        del odict['algs_logger']
+        return odict
+
+
     def _tell_curiosity(self, algo: QDAlgorithmLike, ind: IndividualLike, added: bool, xattr: Mapping[str, Any] = {}) -> None:
         if not hasattr(ind, 'parent'):
             ind.parent = None
