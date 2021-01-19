@@ -852,7 +852,7 @@ class NNTrainer(object):
 
             c = torch.abs(cov(latent_flat, rowvar=False))
             #print(f"DEBUG covlatent {c}")
-            loss_diversity = torch.zeros(1)
+            loss_diversity = torch.zeros(1, device=device)
             for i in range(c.size(0)):
                 for j in range(c.size(1)):
                     if i != j:
