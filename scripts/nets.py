@@ -953,7 +953,7 @@ class NNTrainer(object):
     def _lr_lambda(self, epoch):
         return 1.0 * (1+self.nb_epochs - epoch) / self.nb_epochs
 
-    def training_session(self, data, model):
+    def training_session(self, data, model, device):
         # Create optimizer
         self.optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate, weight_decay=1e-5) # type: ignore
         self.scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=self._lr_lambda)
@@ -974,6 +974,7 @@ class NNTrainer(object):
             rt_loss_diversity = torch.zeros([1])
             model.train()
             for data in train_dataset:
+                data = data.to(device)
                 t_loss, t_loss_reconstruction, t_loss_diversity = self.compute_loss(data, model)
                 self.optimizer.zero_grad()
                 t_loss.backward()
@@ -990,6 +991,7 @@ class NNTrainer(object):
             model.eval()
             with torch.no_grad():
                 for data in validation_dataset:
+                    data = data.to(device)
                     v_loss, v_loss_reconstruction, v_loss_diversity = self.compute_loss(data, model)
                     rv_loss += v_loss
                     rv_loss_reconstruction += v_loss_reconstruction
@@ -1023,11 +1025,16 @@ class NNTrainer(object):
         return rv_loss.item(), rv_loss_reconstruction.item(), rv_loss_diversity.item()
 
 
-    def train(self, training_inds) -> None:
+    def train(self, training_inds, device = None) -> None:
         #print("###########  DEBUG: training.. ###########")
         #start_time = timer() # XXX
 
         assert(len(training_inds) > 0)
+
+        if device == None:
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+
         #global nn_models
         #self.create_ensemble_model(nn_models) # XXX HACK
         #assert(len(self.model.ae_list) == len(nn_models)) # XXX HACK
@@ -1087,7 +1094,8 @@ class NNTrainer(object):
         loss_reconstruction_lst = []
         loss_diversity_lst = []
         for model in models:
-            l, r, d = self.training_session(data, model)
+            model.to(device)
+            l, r, d = self.training_session(data, model, device)
             loss_lst.append(l)
             loss_reconstruction_lst.append(r)
             loss_diversity_lst.append(d)
@@ -1130,6 +1138,7 @@ class NNTrainer(object):
     def eval(self, inds, model = None):
         assert(len(inds) > 0)
         _model = self.model if model == None else model
+        _model.cpu()
         obs = torch.empty(len(inds), *inds[0].scores['observations'].shape)
         for i, ind in enumerate(inds):
             obs[i] = torch.Tensor(ind.scores['observations'])
