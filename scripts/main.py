@@ -140,30 +140,31 @@ class MultiAEExperiment(QDExperiment):
         self.logger._tabs_size = 5
         self.logger._min_cols_size = 9
 
-        # Create additional loggers
-        if not hasattr(self.algo, 'algorithms'):
-            return
-        algos = self.algo.algorithms
-        self.algs_loggers = []
-        for algo in algos:
-            iteration_filenames = os.path.join(self.log_base_path, f"iteration-{algo.name}-%i_" + self.instance_name + ".p")
-            final_filename = os.path.join(self.log_base_path, f"final-{algo.name}_" + self.instance_name + ".p")
-            logger = AlgorithmLogger(algo, verbose=False,
-                    iteration_filenames=iteration_filenames, final_filename=final_filename, save_period=self.save_period)
-            self.algs_loggers.append(logger)
-
-        if hasattr(self.algo, 'algorithms'):
-            algos = self.algo.algorithms
-            for i_alg, alg in enumerate(algos):
-                stat_qd_score = LoggerStat(f"qd_score-{alg.name}", partial(self._fn_qd_score, i_alg), True)
-                self.logger.register_stat(stat_qd_score)
-            for i_alg, alg in enumerate(algos):
-                stat_originality = LoggerStat(f"orig-{alg.name}", partial(self._fn_originality, i_alg), True)
-                self.logger.register_stat(stat_originality)
-            stat_mean_originality = LoggerStat(f"mean_orig", self._fn_mean_originality, True)
-            self.logger.register_stat(stat_mean_originality)
-            stat_mean_corr = LoggerStat(f"mean_corr", self._fn_mean_corr, True)
-            self.logger.register_stat(stat_mean_corr)
+# XXX TOO SLOW ??
+#        # Create additional loggers
+#        if not hasattr(self.algo, 'algorithms'):
+#            return
+#        algos = self.algo.algorithms
+#        self.algs_loggers = []
+#        for algo in algos:
+#            iteration_filenames = os.path.join(self.log_base_path, f"iteration-{algo.name}-%i_" + self.instance_name + ".p")
+#            final_filename = os.path.join(self.log_base_path, f"final-{algo.name}_" + self.instance_name + ".p")
+#            logger = AlgorithmLogger(algo, verbose=False,
+#                    iteration_filenames=iteration_filenames, final_filename=final_filename, save_period=self.save_period)
+#            self.algs_loggers.append(logger)
+#
+#        if hasattr(self.algo, 'algorithms'):
+#            algos = self.algo.algorithms
+#            for i_alg, alg in enumerate(algos):
+#                stat_qd_score = LoggerStat(f"qd_score-{alg.name}", partial(self._fn_qd_score, i_alg), True)
+#                self.logger.register_stat(stat_qd_score)
+#            for i_alg, alg in enumerate(algos):
+#                stat_originality = LoggerStat(f"orig-{alg.name}", partial(self._fn_originality, i_alg), True)
+#                self.logger.register_stat(stat_originality)
+#            stat_mean_originality = LoggerStat(f"mean_orig", self._fn_mean_originality, True)
+#            self.logger.register_stat(stat_mean_originality)
+#            stat_mean_corr = LoggerStat(f"mean_corr", self._fn_mean_corr, True)
+#            self.logger.register_stat(stat_mean_corr)
 
         # Save parent container in the 'container' entry of the data pickle file
         try:
@@ -417,7 +418,7 @@ class BipedalWalkerExperiment(MultiAEExperiment):
         #self.eval_fn = self._eval
         self.optimisation_task = "minimisation"
         super().reinit_globals()
-        super().reinit_curiosity()
+        #super().reinit_curiosity() # XXX
         super().reinit_loggers()
         super().load_ref_data()
 
