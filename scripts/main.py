@@ -156,7 +156,10 @@ class MultiAEExperiment(QDExperiment):
             self.logger.register_stat(stat_mean_corr)
 
         # Save parent container in the 'container' entry of the data pickle file
-        self.parent_container = self.algo.algorithms[0].container.container.parents[0]
+        try:
+            self.parent_container = self.algo.algorithms[0].container.container.parents[0]
+        except Exception as e:
+            self.parent_container = None
         self.logger.saved_dict['container'] = self.parent_container
 
 
