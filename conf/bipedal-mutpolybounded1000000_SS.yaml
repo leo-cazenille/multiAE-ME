@@ -10,8 +10,8 @@
 #seed: 2323
 
 batch_mode: False
-#send_several_suggestions_to_fn: True
-#max_nb_suggestions_per_call: 10
+send_several_suggestions_to_fn: True
+max_nb_suggestions_per_call: 10
 
 # Type of experiment
 experiment_type: bipedal_walker
