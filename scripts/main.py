@@ -140,7 +140,6 @@ class MultiAEExperiment(QDExperiment):
         self.logger._tabs_size = 5
         self.logger._min_cols_size = 9
 
-# XXX TOO SLOW ??
         # Create additional loggers
         if not hasattr(self.algo, 'algorithms'):
             return
@@ -163,8 +162,8 @@ class MultiAEExperiment(QDExperiment):
                 self.logger.register_stat(stat_originality)
             stat_mean_originality = LoggerStat(f"mean_orig", self._fn_mean_originality, True)
             self.logger.register_stat(stat_mean_originality)
-#            stat_mean_corr = LoggerStat(f"mean_corr", self._fn_mean_corr, True)
-#            self.logger.register_stat(stat_mean_corr)
+            stat_mean_corr = LoggerStat(f"mean_corr", self._fn_mean_corr, True)
+            self.logger.register_stat(stat_mean_corr)
 
         # Save parent container in the 'container' entry of the data pickle file
         try:

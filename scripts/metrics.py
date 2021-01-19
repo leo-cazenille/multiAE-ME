@@ -20,16 +20,27 @@ from qdpy.phenotype import IndividualLike
 
 
 def originality(c, conts):
-    originality = 0.
-    for ind in c:
-        present = np.any([ind in other for other in conts if id(other) != id(c)])
-        originality += not present
-    originality /= len(c)
+    sets = [set(x) for x in conts]
+    c_s = set(c)
+    inter = set()
+    for s, x in zip(sets, conts):
+        if id(x) == id(c):
+            continue
+        inter |= c_s & s
+    originality = 1. - len(inter)/len(c_s)
     return originality
 
 def mean_originality(conts):
-    return np.mean([originality(c, conts) for c in conts])
-
+    sets = [set(c) for c in conts]
+    orig_lst = []
+    for i, s1 in enumerate(sets):
+        inter = set()
+        for j, s2 in enumerate(sets):
+            if i == j:
+                continue
+            inter |= s1 & s2
+        orig_lst.append(1. - len(inter)/len(s1))
+    return np.mean([orig_lst])
 
 
 def inds_to_scores_mat(inds: Sequence[IndividualLike], scores_names: Optional[Sequence] = None, default_val: float = 0.):
