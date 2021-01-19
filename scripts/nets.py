@@ -804,13 +804,13 @@ class NNTrainer(object):
         output = model(d) # type: ignore
 
         # Compute reconstruction loss
-        loss_reconstruction = torch.Tensor([0.], device=device)
+        loss_reconstruction = torch.zeros(1, device=device)
         for r in output:
             loss_reconstruction += criterion_reconstruction(r, d)
         loss_reconstruction /= len(output)
 
         # Compute diversity loss
-        loss_diversity = torch.Tensor([0.], device=device)
+        loss_diversity = torch.zeros(1, device=device)
         if self.diversity_loss_computation == "outputs":
             #mean_output = 0.
             #for r in output:
@@ -928,7 +928,8 @@ class NNTrainer(object):
 
             criterion_coveragelatent = nn.MSELoss() # nn.L1Loss()
             q = torch.linspace(0., 1., 11, device=device)
-            diff05 = (torch.Tensor([0.5, 0.5] * len(latent), device=device) - latent_flat + 0.5) / 2.0
+            #diff05 = (torch.Tensor([0.5, 0.5] * len(latent), device=device) - latent_flat + 0.5) / 2.0
+            diff05 = (torch.full((len(latent)//2,), 0.5, device=device) - latent_flat + 0.5) / 2.0
             for i in range(latent_flat.shape[1]):
                 loss_diversity -= criterion_coveragelatent(torch.quantile(diff05[:, i], q), q)
 
