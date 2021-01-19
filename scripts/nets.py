@@ -929,7 +929,7 @@ class NNTrainer(object):
             criterion_coveragelatent = nn.MSELoss() # nn.L1Loss()
             q = torch.linspace(0., 1., 11, device=device)
             #diff05 = (torch.Tensor([0.5, 0.5] * len(latent), device=device) - latent_flat + 0.5) / 2.0
-            print(f"DEBUG diff05. latent: {latent.shape}")
+            print(f"DEBUG diff05. latent: {len(latent)} {latent_flat.shape}")
             diff05 = (torch.full((len(latent)//2,), 0.5, device=device) - latent_flat + 0.5) / 2.0
             for i in range(latent_flat.shape[1]):
                 loss_diversity -= criterion_coveragelatent(torch.quantile(diff05[:, i], q), q)
