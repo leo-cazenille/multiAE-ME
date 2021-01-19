@@ -1,4 +1,5 @@
-FROM ubuntu:18.04
+#FROM ubuntu:18.04
+FROM nvidia/cuda:10.1-runtime-ubuntu18.04
 MAINTAINER leo.cazenille@gmail.com
 
 ENV DEBIAN_FRONTEND noninteractive
