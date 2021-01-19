@@ -79,22 +79,24 @@ class SelfAdaptiveNoveltyArchive(Container):
 
 
     def _add_internal(self, individual: IndividualLike, raise_if_not_added_to_parents: bool, only_to_parents: bool) -> Optional[int]:
-        if self.nb_operations + self.nb_rejected % self.rebalancing_period == 0:
+        self.items.features_score_names = self.features_score_names
+        if self.nb_operations + self.nb_rejected % self.rebalancing_period == 0 and len(self.items) > 1:
             self.items.rebalance()
         all_parents = self.all_parents_inds()
 
         # Compute novelty
-        if len(self) == 0:
+        if len(self) <= 1:
             novelty = np.inf
         else:
-            knn_res = self.items.knn(individual, self.k)
+            ind_ft = self.get_ind_features(individual)
+            knn_res = self.items.knn(ind_ft, self.k)
             nn, dists = tuple(zip(*knn_res))
             novelty = np.mean(dists)
         #print(f"DEBUG _add_internal {len(self)} novelty={novelty}")
 
         # Check if individual should be added
         if self.epsilon_dominance:
-            dist_fst_nn = dists[0] if len(self) > 0 else np.inf
+            dist_fst_nn = dists[0] if len(self) > 1 else np.inf
             if dist_fst_nn > self.threshold_novelty:
                 # Add individual
                 return super()._add_internal(individual, raise_if_not_added_to_parents, only_to_parents)
@@ -102,8 +104,9 @@ class SelfAdaptiveNoveltyArchive(Container):
                 # Check if this individual dominates its nearest neighbour according to the 3 epsilon-dominance criteria:
                 ind_nn = nn[0]
                 ind_nn_fit = self.get_ind_fitness(ind_nn)
+                ind_nn_ft = self.get_ind_features(ind_nn)
                 ind_fit = self.get_ind_fitness(individual)
-                ind_nn_knn = self.items.knn(ind_nn, self.k)
+                ind_nn_knn = self.items.knn(ind_nn_ft, self.k)
                 ind_nn_nn, ind_nn_dists = tuple(zip(*ind_nn_knn))
                 ind_nn_novelty = np.mean(ind_nn_dists)
                 cond_novelty = novelty >= (1. - self.epsilon) * ind_nn_novelty
