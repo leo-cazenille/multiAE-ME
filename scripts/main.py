@@ -153,11 +153,11 @@ class MultiAEExperiment(QDExperiment):
                     iteration_filenames=iteration_filenames, final_filename=final_filename, save_period=self.save_period)
             self.algs_loggers.append(logger)
 
-#        if hasattr(self.algo, 'algorithms'):
-#            algos = self.algo.algorithms
-#            for i_alg, alg in enumerate(algos):
-#                stat_qd_score = LoggerStat(f"qd_score-{alg.name}", partial(self._fn_qd_score, i_alg), True)
-#                self.logger.register_stat(stat_qd_score)
+        if hasattr(self.algo, 'algorithms'):
+            algos = self.algo.algorithms
+            for i_alg, alg in enumerate(algos):
+                stat_qd_score = LoggerStat(f"qd_score-{alg.name}", partial(self._fn_qd_score, i_alg), True)
+                self.logger.register_stat(stat_qd_score)
 #            for i_alg, alg in enumerate(algos):
 #                stat_originality = LoggerStat(f"orig-{alg.name}", partial(self._fn_originality, i_alg), True)
 #                self.logger.register_stat(stat_originality)
