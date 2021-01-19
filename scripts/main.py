@@ -158,11 +158,11 @@ class MultiAEExperiment(QDExperiment):
             for i_alg, alg in enumerate(algos):
                 stat_qd_score = LoggerStat(f"qd_score-{alg.name}", partial(self._fn_qd_score, i_alg), True)
                 self.logger.register_stat(stat_qd_score)
-#            for i_alg, alg in enumerate(algos):
-#                stat_originality = LoggerStat(f"orig-{alg.name}", partial(self._fn_originality, i_alg), True)
-#                self.logger.register_stat(stat_originality)
-#            stat_mean_originality = LoggerStat(f"mean_orig", self._fn_mean_originality, True)
-#            self.logger.register_stat(stat_mean_originality)
+            for i_alg, alg in enumerate(algos):
+                stat_originality = LoggerStat(f"orig-{alg.name}", partial(self._fn_originality, i_alg), True)
+                self.logger.register_stat(stat_originality)
+            stat_mean_originality = LoggerStat(f"mean_orig", self._fn_mean_originality, True)
+            self.logger.register_stat(stat_mean_originality)
 #            stat_mean_corr = LoggerStat(f"mean_corr", self._fn_mean_corr, True)
 #            self.logger.register_stat(stat_mean_corr)
 
