@@ -1,0 +1,259 @@
+---
+
+# An example illustrating how QD algorithms can automatically discover the feature descriptors of a Grid container.
+# Here we use a methodology similar to the AURORA algorithm (Cully2019: https://arxiv.org/pdf/1905.11874.pdf) where an autoencoder is continuously trained during the optimization process on all individuals found so far. The latent space of this autoencoder is used as the feature descriptors of the grid.
+# In order to achieve that, grids have to periodically recompute the feature descriptors of all individual found so far. So it implies that all individuals should be stored in additional container. This is achieved in QDpy by using hierarchies of containers, where a (child) container can forward all individuals it encounters to a parent container. Here, the child container is the main Grid, and the parent is an archive containing all individuals found so far.
+# Latent spaces of different autoencoders tend to have different domains (e.g. one autoencoder would operate in the [-1., 1.] domain, another on [-5., -1.]) even when they were trained on the same dataset. As such, we use AutoScalingGrid containers instead of just Grid. Such containers periodically adjust their feature descriptors domains to match all previously encountered individuals.
+
+
+# The random seed
+#seed: 42
+
+batch_mode: False #True
+send_several_suggestions_to_fn: True
+max_nb_suggestions_per_call: 20
+
+# Type of experiment
+experiment_type: bipedal_walker
+
+debug_features: False # set to True to determine feature domain bounds
+indv_eps: 5       # episodes per individual
+max_episode_length: 300
+
+fitness_type: "meanAvgReward"
+meanAvgRewardDomain: [-200., 350.]
+
+#features_list: ["meanDistance", "meanHeadStability"]
+#meanDistanceDomain: [0., 50.]
+#meanHeadStabilityDomain: [0., 2.5]
+#meanTorquePerStepDomain: [0., 25.]
+#meanJumpDomain: [0., 0.75]
+#meanLeg0HipAngleDomain: [0., 2.5]
+#meanLeg0HipSpeedDomain: [0., 10.]
+#meanLeg0KneeAngleDomain: [0., 2.5]
+#meanLeg0KneeSpeedDomain: [0., 10.]
+#meanLeg1HipAngleDomain: [0., 2.5]
+#meanLeg1HipSpeedDomain: [0., 10.]
+#meanLeg1KneeAngleDomain: [0., 2.5]
+#meanLeg1KneeSpeedDomain: [0., 10.]
+
+
+game: 
+    env_name: 'BipedalWalker-v2'
+    input_size: 24
+    output_size: 4
+    time_factor: 0
+    layers: [40, 40]
+    activation: 'tanh'
+    noise_bias: 0.0
+    output_noise: [False, False, False]
+    rnn_mode: False
+
+
+# The name of the main algorithm (see below the description of 'algoQD')
+main_algorithm_name: algoTotal
+
+to_grid_parameters:
+    max_items_per_bin: 1                              # The number of items in each bin of the grid
+    shape: [25, 25]                                   # The number of bins for each feature
+
+
+# The list of all container.
+containers:
+
+    # Grid parameters
+    max_items_per_bin: 1                              # The number of items in each bin of the grid
+    fitness_scaling: True                            # Whether to autoscale the fitness or not
+    features_scaling: True                            # Whether to autoscale the features or not
+    rescaling_period: 10000                            # When to perform the autoscaling operation. Here it's done every time 1000 individuals are added.
+    shape: [25, 25]                                   # The number of bins for each feature
+
+    # Novelty Archive parameters
+    k: 15
+    k_resolution: 60000 # 3000
+    threshold_novelty: 0.1 # 0.1
+    epsilon_dominance: True
+    epsilon: 0.1
+
+    # Feature extraction decorator parameters
+    model_type: ConvAE
+    initial_nb_epochs: 100                            # The number of epochs used the first time the model is optimised
+    nb_epochs: 200                                     # The number of epochs used for subsequent training processes
+    learning_rate: 0.10 # 1.e-3                              # Learning rate of the training (by default, the Adam optimiser is used to train the model)
+    training_period: 10000                             # Re-train the model every time `training_period` add operations are performed
+    div_coeff: 1.0 # 0.01
+    batch_size: 1024
+    diversity_loss_computation: coveragelatent2 # covlatent # outputs # pwoutputs #outputs
+    #base_scores: ["0", "1"]
+    reset_model_every_training: False
+    train_only_on_last_inds: False
+    tanh_encoder: True
+    training_period_type: exp_decay
+    nb_filters: 4
+    nb_channels: 12
+    batch_norm_before_latent: False
+    trainer_type: NNTrainer
+
+    epochs_avg_loss: 500
+    validation_split: 0.25
+    nb_training_sessions: 5
+
+
+    parentContainer:                             # We create a container that will contain ALL tested individuals
+        type: Container                          # A simple container, that will store ALL added individuals that are within bounds
+        name: parentContainer                    # The name of the container. Optional. Default to the parent key (here also 'cont0')
+        #storage_type: orderedset                 # Faster than 'list' for large container
+        storage_type: indexableset              # Faster than 'orderedset' but may have compatibility problems with pickle in some versions
+        fitness_domain:
+        features_domain:
+
+    grid1:                                                # The main grid container
+        #type: NoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        type: SelfAdaptiveNoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        #type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        #type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
+        scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
+        fitness_domain: [[-.inf, .inf]]                             # The domain of each fitness objective (here we only have one objective)
+        #fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
+        features_domain: [[-.inf, .inf], [-.inf, .inf]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        #features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        #features_domain: [[-1., 1.], [-1., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        #features_domain: [[-2., 2.], [-2., 2.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+
+    grid2:                                                # The main grid container
+        #type: NoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        type: SelfAdaptiveNoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        #type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        #type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
+        scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
+        fitness_domain: [[-.inf, .inf]]                             # The domain of each fitness objective (here we only have one objective)
+        #fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
+        features_domain: [[-.inf, .inf], [-.inf, .inf]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        #features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        #features_domain: [[-1., 1.], [-1., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        #features_domain: [[-2., 2.], [-2., 2.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+
+    grid3:                                                # The main grid container
+        #type: NoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        type: SelfAdaptiveNoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        #type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        #type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
+        scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
+        fitness_domain: [[-.inf, .inf]]                             # The domain of each fitness objective (here we only have one objective)
+        #fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
+        features_domain: [[-.inf, .inf], [-.inf, .inf]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        #features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        #features_domain: [[-1., 1.], [-1., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        #features_domain: [[-2., 2.], [-2., 2.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+
+    grid4:                                                # The main grid container
+        #type: NoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        type: SelfAdaptiveNoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        #type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        #type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
+        scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
+        fitness_domain: [[-.inf, .inf]]                             # The domain of each fitness objective (here we only have one objective)
+        #fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
+        features_domain: [[-.inf, .inf], [-.inf, .inf]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        #features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        #features_domain: [[-1., 1.], [-1., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        #features_domain: [[-2., 2.], [-2., 2.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+
+
+    cont1:                                                # A feature-extracting container decorator applied to the main grid
+        #type: ContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        container: grid1                                  # The container this decorator is applied to
+        training_containers: [parentContainer]            # The list of containers used to train the autoencoder. If empty, will use the parents instead.
+        #features_domain: [[-2., 2.], [-2., 2.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+
+    cont2:                                                # A feature-extracting container decorator applied to the main grid
+        #type: ContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        container: grid2                                  # The container this decorator is applied to
+        training_containers: [parentContainer]            # The list of containers used to train the autoencoder. If empty, will use the parents instead.
+        #features_domain: [[-2., 2.], [-2., 2.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+
+    cont3:                                                # A feature-extracting container decorator applied to the main grid
+        #type: ContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        container: grid3                                  # The container this decorator is applied to
+        training_containers: [parentContainer]            # The list of containers used to train the autoencoder. If empty, will use the parents instead.
+        #features_domain: [[-2., 2.], [-2., 2.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+
+    cont4:                                                # A feature-extracting container decorator applied to the main grid
+        #type: ContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        container: grid4                                  # The container this decorator is applied to
+        training_containers: [parentContainer]            # The list of containers used to train the autoencoder. If empty, will use the parents instead.
+        #features_domain: [[-2., 2.], [-2., 2.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+
+
+# The list of all algorithms
+algorithms:
+    # Default parameter values for each algorithm
+    #optimisation_task: minimisation   # We perform maximisation of all fitness objectives
+    #dimension: 5                      # The number of dimensions of the problem. For rastrigin, any dimension >= 2 can be chosen
+    #ind_domain: [0.1, 0.9]              # The domain of each value of the genome (optional)
+
+    # Evolution parameters
+    batch_size: 2000     # The number of evaluations in each subsequent batch
+    sel_pb: 0.7 # 1.0         # The probability of performing selection+variation instead of initialising a new genome
+    init_pb: 0.3 # 0.0        # The probability of initiating a new genome instead of performing selection
+    mut_pb: 0.1 # 0.1         # The probability of mutating each value of the genome of a selected individual
+    eta: 20. # 10           # The ETA parameter of the polynomial mutation (as defined in the origin NSGA-II paper by Deb.). It corresponds to the crowding degree of the mutation. A high ETA will produce mutants close to its parent, a small ETA will produce offspring with more changes.
+
+
+    # Then, we use an evolutionary algorithm that perform random search and polynomial mutations. This algorithm makes a trade-off between quality (finding good performing solutions) and diversity (find solutions corresponding to each bin of the grid)
+    algo1:
+        type: RandomSearchMutPolyBounded
+        #type: ScoreProportionateRouletteMutPolyBounded
+        container: cont1                  # The container to use to store individuals told to the optimisers
+        budget: .inf       # The total number of allowed evaluations for this algorithm
+
+    algo2:
+        type: RandomSearchMutPolyBounded
+        #type: ScoreProportionateRouletteMutPolyBounded
+        container: cont2                  # The container to use to store individuals told to the optimisers
+        budget: .inf       # The total number of allowed evaluations for this algorithm
+
+    algo3:
+        type: RandomSearchMutPolyBounded
+        #type: ScoreProportionateRouletteMutPolyBounded
+        container: cont3                  # The container to use to store individuals told to the optimisers
+        budget: .inf       # The total number of allowed evaluations for this algorithm
+
+    algo4:
+        type: RandomSearchMutPolyBounded
+        #type: ScoreProportionateRouletteMutPolyBounded
+        container: cont4                  # The container to use to store individuals told to the optimisers
+        budget: .inf       # The total number of allowed evaluations for this algorithm
+
+    algoTotal:
+        #type: MEMAPElitesUCB1
+        type: AlternatingAlgWrapper
+        #type: SqAlgWrapper
+#        batch_size: 100     # The number of evaluations in each subsequent batch
+        #batch_mode: True
+        budget: 100000
+        tell_container_when_switching: False
+        tell_all: True
+        #tell_container_when_switching: True               # Whether to tell the next algorithm in the list all results of the previous algorithm
+        algorithms: ['algo1', 'algo2', 'algo3', 'algo4'] # The list of algorithms to execute
+        #algorithms: ['algo1'] # The list of algorithms to execute
+        #algorithms: # The dict of algorithms to execute
+        #    algo1: 1
+        #    algo2: 1
+        #    algo3: 1
+        zeta: 0.0005
+        nb_active_emitters: 4
+        shuffle_emitters: True
+
+
+# MODELINE "{{{1
+# vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
+# vim:foldmethod=marker
