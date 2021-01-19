@@ -795,7 +795,7 @@ class NNTrainer(object):
         self.model = EnsembleAE(list(nn_models.values()))
 
 
-    def compute_loss(self, data, model):
+    def compute_loss(self, data, model, device):
         criterion_reconstruction = nn.L1Loss() # nn.MSELoss()
         criterion_diversity = nn.L1Loss() # nn.MSELoss()
 
@@ -804,13 +804,13 @@ class NNTrainer(object):
         output = model(d) # type: ignore
 
         # Compute reconstruction loss
-        loss_reconstruction = torch.Tensor([0.])
+        loss_reconstruction = torch.Tensor([0.], device=device)
         for r in output:
             loss_reconstruction += criterion_reconstruction(r, d)
         loss_reconstruction /= len(output)
 
         # Compute diversity loss
-        loss_diversity = torch.Tensor([0.])
+        loss_diversity = torch.Tensor([0.], device=device)
         if self.diversity_loss_computation == "outputs":
             #mean_output = 0.
             #for r in output:
@@ -927,23 +927,23 @@ class NNTrainer(object):
             #loss_diversity /= c.size(0) * c.size(1) - c.size(0)
 
             criterion_coveragelatent = nn.MSELoss() # nn.L1Loss()
-            q = torch.linspace(0., 1., 11)
-            diff05 = (torch.Tensor([0.5, 0.5] * len(latent)) - latent_flat + 0.5) / 2.0
+            q = torch.linspace(0., 1., 11, device=device)
+            diff05 = (torch.Tensor([0.5, 0.5] * len(latent), device=device) - latent_flat + 0.5) / 2.0
             for i in range(latent_flat.shape[1]):
                 loss_diversity -= criterion_coveragelatent(torch.quantile(diff05[:, i], q), q)
 
 
 
         elif self.diversity_loss_computation == "none":
-            loss_diversity = torch.zeros(1)
+            loss_diversity = torch.zeros(1, device=device)
 
         else:
             raise ValueError(f"Unknown diversity_loss_computation type: {self.diversity_loss_computation}.")
 
         if torch.isnan(loss_reconstruction) or torch.isinf(loss_reconstruction):
-            loss_reconstruction = torch.ones(1)
+            loss_reconstruction = torch.ones(1, device=device)
         if torch.isnan(loss_diversity) or torch.isinf(loss_diversity):
-            loss_diversity = torch.zeros(1)
+            loss_diversity = torch.zeros(1, device=device)
 
         loss = loss_reconstruction - self.div_coeff * loss_diversity
         #loss = - self.div_coeff * loss_diversity # XXX
@@ -975,14 +975,14 @@ class NNTrainer(object):
             model.train()
             for data in train_dataset:
                 data = data.to(device)
-                t_loss, t_loss_reconstruction, t_loss_diversity = self.compute_loss(data, model)
+                t_loss, t_loss_reconstruction, t_loss_diversity = self.compute_loss(data, model, device)
                 self.optimizer.zero_grad()
                 t_loss.backward()
                 self.optimizer.step()
 
-                rt_loss += t_loss
-                rt_loss_reconstruction += t_loss_reconstruction
-                rt_loss_diversity += t_loss_diversity
+                rt_loss += t_loss.cpu()
+                rt_loss_reconstruction += t_loss_reconstruction.cpu()
+                rt_loss_diversity += t_loss_diversity.cpu()
 
             # Validation
             rv_loss = torch.zeros([1])
@@ -992,10 +992,10 @@ class NNTrainer(object):
             with torch.no_grad():
                 for data in validation_dataset:
                     data = data.to(device)
-                    v_loss, v_loss_reconstruction, v_loss_diversity = self.compute_loss(data, model)
-                    rv_loss += v_loss
-                    rv_loss_reconstruction += v_loss_reconstruction
-                    rv_loss_diversity += v_loss_diversity
+                    v_loss, v_loss_reconstruction, v_loss_diversity = self.compute_loss(data, model, device)
+                    rv_loss += v_loss.cpu()
+                    rv_loss_reconstruction += v_loss_reconstruction.cpu()
+                    rv_loss_diversity += v_loss_diversity.cpu()
 
     #            # Check stopping criterion
     #            if len(rv_loss_lst) >= self.epochs_avg_loss:
@@ -1011,7 +1011,7 @@ class NNTrainer(object):
             # Check stopping criterion
             if len(rv_loss_lst) >= self.epochs_avg_loss:
                 del rv_loss_lst[0]
-            rv_loss_lst.append(v_loss)
+            rv_loss_lst.append(v_loss.cpu())
             mean_rv_loss = np.mean(rv_loss_lst)
             if epoch > self.epochs_avg_loss and mean_rv_loss > last_mean_rv_loss:
                 print(f"Training: stop early: mean_rv_loss={mean_rv_loss} last_mean_rv_loss{last_mean_rv_loss}")
@@ -1019,7 +1019,7 @@ class NNTrainer(object):
             last_mean_rv_loss = mean_rv_loss
 
             print(f"# Epoch {epoch}/{self.nb_epochs}  Validation loss:{rv_loss} loss_reconstruction:{rv_loss_reconstruction} loss_diversity:{rv_loss_diversity} ")
-            #self.scheduler.step(v_loss)
+            #self.scheduler.step(v_loss.cpu())
             self.scheduler.step()
 
         return rv_loss.item(), rv_loss_reconstruction.item(), rv_loss_diversity.item()
