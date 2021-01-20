@@ -249,9 +249,9 @@ algorithms:
         tell_container_when_switching: False
         tell_all: True
         #tell_container_when_switching: True               # Whether to tell the next algorithm in the list all results of the previous algorithm
-        #algorithms: ['algo1', 'algo2', 'algo3'] # The list of algorithms to execute
+        algorithms: ['algo1', 'algo2', 'algo3'] # The list of algorithms to execute
         #algorithms: ['algo1'] # The list of algorithms to execute
-        algorithms: ['algo4'] # The list of algorithms to execute
+        #algorithms: ['algo4'] # The list of algorithms to execute
         #algorithms: # The dict of algorithms to execute
         #    algo1: 1
         #    algo2: 1

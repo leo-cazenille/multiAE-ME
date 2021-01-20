@@ -1097,20 +1097,20 @@ class NNTrainer(object):
         for model in models:
             model.to(device)
             l, r, d = self.training_session(data, model, device)
-            loss_lst.append(l)
-            loss_reconstruction_lst.append(r)
-            loss_diversity_lst.append(d)
+            loss_lst.append(l.cpu())
+            loss_reconstruction_lst.append(r.cpu())
+            loss_diversity_lst.append(d.cpu())
             print(f"Finished session: loss={l} loss_reconstruction={r} loss_diversity={d}")
 
         # Use the model with the lowest loss
         #selected_model_idx = np.argmin(loss_diversity_lst)
         selected_model_idx = np.argmin(loss_lst)
-        self.model = models[selected_model_idx]
+        self.model = models[selected_model_idx].cpu()
 
         # Compute and save mean losses
-        self.current_loss = loss_lst[selected_model_idx]
-        self.current_loss_reconstruction = loss_reconstruction_lst[selected_model_idx]
-        self.current_loss_diversity = loss_diversity_lst[selected_model_idx]
+        self.current_loss = loss_lst[selected_model_idx].cpu()
+        self.current_loss_reconstruction = loss_reconstruction_lst[selected_model_idx].cpu()
+        self.current_loss_diversity = loss_diversity_lst[selected_model_idx].cpu()
         print(f"Selected model {selected_model_idx}: loss={self.current_loss} loss_reconstruction={self.current_loss_reconstruction} loss_diversity={self.current_loss_diversity}")
 
         #self.current_loss = np.mean(loss_lst)
