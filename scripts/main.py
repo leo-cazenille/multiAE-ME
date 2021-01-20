@@ -71,9 +71,11 @@ class MultiAEExperiment(QDExperiment):
         odict = self.__dict__.copy()
         del odict['algo']
         del odict['container']
-        del odict['parent_container']
+        if 'parent_container' in odict:
+            del odict['parent_container']
         del odict['logger']
-        del odict['algs_logger']
+        if 'algs_loggers' in odict:
+            del odict['algs_loggers']
         return odict
 
 
@@ -269,8 +271,8 @@ class BallisticEnv(object):
         features = [hardcoded0, hardcoded1]
         #scores = {'observations': self.get_flat_observations(), 'gen0': gen0, 'gen1': gen1, 'hardcoded0': hardcoded0, 'hardcoded1': hardcoded1}
         #obs = {f"o{i}": o for i, o in enumerate(self.get_flat_observations())}
-        #scores = {**obs, 'gen0': gen0, 'gen1': gen1, 'hardcoded0': hardcoded0, 'hardcoded1': hardcoded1} # XXX One key-val for each observation !!!
-        scores = {'gen0': gen0, 'gen1': gen1, 'hardcoded0': hardcoded0, 'hardcoded1': hardcoded1} # XXX One key-val for each observation !!!
+        #scores = {**obs, 'gen0': gen0, 'gen1': gen1, 'hardcoded0': hardcoded0, 'hardcoded1': hardcoded1}
+        scores = {'gen0': gen0, 'gen1': gen1, 'hardcoded0': hardcoded0, 'hardcoded1': hardcoded1}
         #ind.observations = self.cart_traj.T
         scores['observations'] = self.cart_traj.T
         #if self._dead:
