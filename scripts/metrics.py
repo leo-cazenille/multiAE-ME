@@ -82,6 +82,23 @@ def corr_scores(inds: Sequence[IndividualLike], scores_names: Optional[Sequence]
     return corr_mat, mean_corr
 
 
+
+def kl_coverage(inds: Sequence[IndividualLike], refs: Sequence[IndividualLike], scores_names, nb_bins=15, epsilon=1e-20):
+    mat_inds = inds_to_scores_mat(inds, scores_names)
+    mat_refs = inds_to_scores_mat(refs, scores_names)
+    # Compute refs extrema
+    refs_min = np.min(mat_refs, 0)
+    refs_max = np.max(mat_refs, 0)
+    refs_range = list(zip(refs_min, refs_max))
+    # Compute histograms
+    density_inds = (np.histogramdd(mat_inds, nb_bins, range=refs_range, density=False)[0] / len(mat_inds)).ravel()
+    density_inds[np.where(density_inds == 0.)] = epsilon
+    density_refs = (np.histogramdd(mat_refs, nb_bins, range=refs_range, density=False)[0] / len(mat_refs)).ravel()
+    density_refs[np.where(density_refs == 0.)] = epsilon
+    # Compute KLC
+    return np.sum(density_inds * np.log(density_inds / density_refs))
+
+
 # MODELINE  "{{{1
 # vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
 # vim:foldmethod=marker
