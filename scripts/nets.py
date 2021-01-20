@@ -1097,9 +1097,9 @@ class NNTrainer(object):
         for model in models:
             model.to(device)
             l, r, d = self.training_session(data, model, device)
-            loss_lst.append(l.cpu())
-            loss_reconstruction_lst.append(r.cpu())
-            loss_diversity_lst.append(d.cpu())
+            loss_lst.append(l)
+            loss_reconstruction_lst.append(r)
+            loss_diversity_lst.append(d)
             print(f"Finished session: loss={l} loss_reconstruction={r} loss_diversity={d}")
 
         # Use the model with the lowest loss
