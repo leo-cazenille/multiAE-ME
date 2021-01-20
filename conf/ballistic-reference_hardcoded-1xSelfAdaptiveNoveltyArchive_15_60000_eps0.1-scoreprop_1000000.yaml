@@ -34,7 +34,7 @@ containers:
     threshold_novelty: 0.0075 # 0.01 # 0.1
     epsilon_dominance: True
     epsilon: 0.1
-    rebalancing_period: 1000
+    rebalancing_period: 0
     compute_new_threshold_period: 10000
 
 
@@ -51,8 +51,10 @@ containers:
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
         fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
-        features_domain: [[-1., 1.], [-1., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        features_domain: [[-2., 2.], [-2., 2.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         only_add_accepted_inds_to_parents: True
+        features_score_names: ["hardcoded0", "hardcoded1"]
+        storage_type: indexableset              # Faster than 'orderedset' but may have compatibility problems with pickle in some versions
 
 
 # The list of all algorithms
@@ -71,9 +73,9 @@ algorithms:
         budget: 1000000       # The total number of allowed evaluations for this algorithm
         # Evolution parameters
         batch_size: 200     # The number of evaluations in each subsequent batch
-        sel_pb: 0.9 # 1.0         # The probability of performing selection+variation instead of initialising a new genome
-        init_pb: 0.1 # 0.0        # The probability of initiating a new genome instead of performing selection
-        mut_pb: 0.4 # 0.1         # The probability of mutating each value of the genome of a selected individual
+        sel_pb: 0.5 # 1.0         # The probability of performing selection+variation instead of initialising a new genome
+        init_pb: 0.5 # 0.0        # The probability of initiating a new genome instead of performing selection
+        mut_pb: 1.0 # 0.1         # The probability of mutating each value of the genome of a selected individual
         eta: 20. # 10           # The ETA parameter of the polynomial mutation (as defined in the origin NSGA-II paper by Deb.). It corresponds to the crowding degree of the mutation. A high ETA will produce mutants close to its parent, a small ETA will produce offspring with more changes.
 
 

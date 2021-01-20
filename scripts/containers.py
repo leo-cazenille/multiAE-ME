@@ -52,7 +52,7 @@ class SelfAdaptiveNoveltyArchive(Container):
     """TODO""" # TODO
 
     def __init__(self, iterable: Optional[Iterable] = None,
-            rebalancing_period: int = 1000,
+            rebalancing_period: int = 0,
             compute_new_threshold_period: int = 0,
             k: int = 15, k_resolution: int = 60000,  # k_resolution: increase to have more capacity
             threshold_novelty: float = 0.01, novelty_distance: Union[str, Callable] = "euclidean",
@@ -89,8 +89,8 @@ class SelfAdaptiveNoveltyArchive(Container):
         if self.compute_new_threshold_period != 0 and nb_op % self.compute_new_threshold_period == 0 and len(self.items) > 1 and nb_op - self._last_compute_new_threshold >= self.compute_new_threshold_period:
             self.compute_new_threshold()
             self._last_compute_new_threshold = nb_op
-        if nb_op % self.rebalancing_period == 0 and len(self.items) > 1 and nb_op - self._last_rebalancing >= self.rebalancing_period:
-            self.items.rebalance()
+        if self.rebalancing_period != 0 and nb_op % self.rebalancing_period == 0 and len(self.items) > 1 and nb_op - self._last_rebalancing >= self.rebalancing_period:
+            self.items.rebalance() # XXX Bug ?
             self._last_rebalancing = nb_op
         all_parents = self.all_parents_inds()
 

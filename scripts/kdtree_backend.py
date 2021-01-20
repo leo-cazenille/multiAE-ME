@@ -122,9 +122,10 @@ class KDTreeBackend(MutableSequence):
         self.base_backend.__delitem__(idx)
 
     def insert(self, index, value):
-        self.base_backend.insert(index, value)
-        p = self.ind_to_point(value)
-        self.tree.add(p)
+        self.add(value)
+#        self.base_backend.insert(index, value)
+#        p = self.ind_to_point(value)
+#        self.tree.add(p)
 
     def reverse(self):
         return self.base_backend.reverse()
