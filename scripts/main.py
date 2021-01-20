@@ -143,14 +143,14 @@ class MultiAEExperiment(QDExperiment):
         # Create additional loggers
         if not hasattr(self.algo, 'algorithms'):
             return
-        algos = self.algo.algorithms
-        self.algs_loggers = []
-        for algo in algos:
-            iteration_filenames = os.path.join(self.log_base_path, f"iteration-{algo.name}-%i_" + self.instance_name + ".p")
-            final_filename = os.path.join(self.log_base_path, f"final-{algo.name}_" + self.instance_name + ".p")
-            logger = AlgorithmLogger(algo, verbose=False,
-                    iteration_filenames=iteration_filenames, final_filename=final_filename, save_period=self.save_period)
-            self.algs_loggers.append(logger)
+#        algos = self.algo.algorithms
+#        self.algs_loggers = []
+#        for algo in algos:
+#            iteration_filenames = os.path.join(self.log_base_path, f"iteration-{algo.name}-%i_" + self.instance_name + ".p")
+#            final_filename = os.path.join(self.log_base_path, f"final-{algo.name}_" + self.instance_name + ".p")
+#            logger = AlgorithmLogger(algo, verbose=False,
+#                    iteration_filenames=iteration_filenames, final_filename=final_filename, save_period=self.save_period)
+#            self.algs_loggers.append(logger)
 
         if hasattr(self.algo, 'algorithms'):
             algos = self.algo.algorithms
