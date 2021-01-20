@@ -456,6 +456,7 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=None, help="Numpy random seed")
     parser.add_argument('-v', '--verbose', default=False, action='store_true', help = "Enable verbose mode")
     parser.add_argument('--renderMode', default=False, action='store_true', help = "Enable render mode")
+    parser.add_argument('-P', '--noProgressBar', default=False, action='store_true', help = "Disable TQDM progress bar")
     return parser.parse_args()
 
 def create_base_config(args):
@@ -464,6 +465,7 @@ def create_base_config(args):
         base_config['resultsBaseDir'] = args.resultsBaseDir
     base_config['verbose'] = args.verbose
     base_config['render_mode'] = args.renderMode
+    base_config['logger_type'] = "basic" if args.noProgressBar else "tqdm"
     return base_config
 
 def create_experiment(args, base_config):

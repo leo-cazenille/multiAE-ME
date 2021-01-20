@@ -40,9 +40,9 @@ containers:
         type: SelfAdaptiveNoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-.inf, .inf]]                             # The domain of each fitness objective (here we only have one objective)
-        #fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
+        fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
         features_domain: [[-1., 1.], [-1., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        only_add_accepted_inds_to_parents: True
 
 
 # The list of all algorithms
