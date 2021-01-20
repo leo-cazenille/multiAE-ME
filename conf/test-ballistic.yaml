@@ -40,10 +40,12 @@ containers:
 
     # Novelty Archive parameters
     k: 15
-    k_resolution: 3000 # 60000 # 3000
-    threshold_novelty: 0.1 # 0.1
+    k_resolution: 60000 # 3000
+    threshold_novelty: 0.01 # 0.1
     epsilon_dominance: True
     epsilon: 0.1
+    rebalancing_period: 1000
+    compute_new_threshold_period: 1000
 
     # Feature extraction decorator parameters
     model_type: ConvAE
@@ -120,20 +122,22 @@ containers:
 
 
     cont1:                                                # A feature-extracting container decorator applied to the main grid
-        #type: ContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
-        type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        type: ContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        #type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
         container: grid1                                  # The container this decorator is applied to
         training_containers: [parentContainer]            # The list of containers used to train the autoencoder. If empty, will use the parents instead.
         #features_domain: [[-2., 2.], [-2., 2.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     cont2:                                                # A feature-extracting container decorator applied to the main grid
-        type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        type: ContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        #type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
         container: grid2                                  # The container this decorator is applied to
         training_containers: [parentContainer]            # The list of containers used to train the autoencoder. If empty, will use the parents instead.
         #features_domain: [[-2., 2.], [-2., 2.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     cont3:                                                # A feature-extracting container decorator applied to the main grid
-        type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        type: ContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        #type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
         container: grid3                                  # The container this decorator is applied to
         training_containers: [parentContainer]            # The list of containers used to train the autoencoder. If empty, will use the parents instead.
         #features_domain: [[-2., 2.], [-2., 2.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
@@ -185,7 +189,7 @@ algorithms:
         #type: SqAlgWrapper
 #        batch_size: 100     # The number of evaluations in each subsequent batch
         #batch_mode: True
-        budget: 400
+        budget: 4000
         #budget: 50000
         tell_container_when_switching: False
         tell_all: True

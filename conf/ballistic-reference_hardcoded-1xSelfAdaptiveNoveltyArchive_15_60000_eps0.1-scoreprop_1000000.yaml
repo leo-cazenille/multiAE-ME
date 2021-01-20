@@ -28,6 +28,16 @@ to_grid_parameters:
 # The list of all container.
 containers:
 
+    # Novelty Archive parameters
+    k: 15
+    k_resolution: 60000 # 3000
+    threshold_novelty: 0.0075 # 0.01 # 0.1
+    epsilon_dominance: True
+    epsilon: 0.1
+    rebalancing_period: 1000
+    compute_new_threshold_period: 10000
+
+
     parentContainer:                             # We create a container that will contain ALL tested individuals
         type: Container                          # A simple container, that will store ALL added individuals that are within bounds
         name: parentContainer                    # The name of the container. Optional. Default to the parent key (here also 'cont0')
