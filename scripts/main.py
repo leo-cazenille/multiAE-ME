@@ -178,23 +178,6 @@ class MultiAEExperiment(QDExperiment):
         self.logger.saved_dict['container'] = self.parent_container
 
 
-    def _fn_klc(self, algo):
-        return f"{kl_coverage(algo.container, self.reference_container, self.klc_scores_names, self.klc_nb_bins, self.klc_epsilon)}"
-
-    def reinit_reference(self):
-        reference_data_file = self.config.get("reference_data_file", None)
-        if reference_data_file == None:
-            return
-        self.klc_scores_names = self.config['klc_scores_names']
-        self.klc_nb_bins = self.config['klc_nb_bins']
-        self.klc_epsilon = self.config.get('klc_epsilon', 1e-20)
-        with open(reference_data_file, "rb") as f:
-            ref_data = pickle.load(f)
-        self.reference_container = ref_data['container']
-        stat_klc = LoggerStat(f"klc", self._fn_klc, True)
-        self.logger.register_stat(stat_klc)
-
-
 
     def clear_all_containers(self):
         for alg in self.algo.algorithms:
@@ -205,6 +188,10 @@ class MultiAEExperiment(QDExperiment):
             alg.container.recompute_features_all_ind(update_params)
 
 
+
+    def _fn_klc(self, algo):
+        return f"{kl_coverage(algo.container, self.reference_container, self.klc_scores_names, self.klc_nb_bins, self.klc_epsilon)}"
+
     def load_ref_data(self):
         ref_file = self.config.get("reference_data_file", "")
         if len(ref_file) > 0:
@@ -212,6 +199,18 @@ class MultiAEExperiment(QDExperiment):
                 ref_data = pickle.load(f)
             ref_cont = ref_data['container']
             self.parent_container.update(ref_cont)
+
+        klc_reference_data_file = self.config.get("klc_reference_data_file", "")
+        if len(klc_reference_data_file) > 0:
+            self.klc_scores_names = self.config['klc_scores_names']
+            self.klc_nb_bins = self.config['klc_nb_bins']
+            self.klc_epsilon = self.config.get('klc_epsilon', 1e-20)
+            with open(klc_reference_data_file, "rb") as f:
+                ref_data = pickle.load(f)
+            self.klc_reference_container = ref_data['container']
+            stat_klc = LoggerStat(f"klc", self._fn_klc, True)
+            self.logger.register_stat(stat_klc)
+
 
 
 class RastriginExperiment(MultiAEExperiment):
