@@ -30,7 +30,6 @@ From: lcazenille/multiae
     config=$2
     shift; shift;
     exp_name=`echo $config | sed 's/.yaml$//'`
-    pip3 uninstall -y tqdm
     mkdir results/$exp_name
     for i in $(seq 1 $nb_runs); do
         sleep 10
@@ -43,7 +42,6 @@ From: lcazenille/multiae
     config=$2
     shift; shift;
     exp_name=`echo $config | sed 's/.yaml$//'`
-    pip3 uninstall -y tqdm
     mkdir results/$exp_name
     for i in $(seq 1 $nb_runs); do
         sleep 10
