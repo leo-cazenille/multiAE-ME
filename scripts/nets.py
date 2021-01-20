@@ -898,11 +898,11 @@ class NNTrainer(object):
 #                loss_diversity += criterion_coveragelatent(torch.quantile(diff05[:, i], q), q)
 
             # XXX Original version
-            q = torch.linspace(0., 1., 11)
-            diff0 = (torch.Tensor([0., 0.] * len(latent)) - latent_flat + np.sqrt(2.)) / 2.0
-            diff1 = (torch.Tensor([0., 1.] * len(latent)) - latent_flat + np.sqrt(2.)) / 2.0
-            diff2 = (torch.Tensor([1., 0.] * len(latent)) - latent_flat + np.sqrt(2.)) / 2.0
-            diff3 = (torch.Tensor([1., 1.] * len(latent)) - latent_flat + np.sqrt(2.)) / 2.0
+            q = torch.linspace(0., 1., 11, device=device)
+            diff0 = ((torch.Tensor([0., 0.] * len(latent)) - latent_flat + np.sqrt(2.)) / 2.0).to(device)
+            diff1 = ((torch.Tensor([0., 1.] * len(latent)) - latent_flat + np.sqrt(2.)) / 2.0).to(device)
+            diff2 = ((torch.Tensor([1., 0.] * len(latent)) - latent_flat + np.sqrt(2.)) / 2.0).to(device)
+            diff3 = ((torch.Tensor([1., 1.] * len(latent)) - latent_flat + np.sqrt(2.)) / 2.0).to(device)
             for i in range(latent_flat.shape[1]):
                 #loss_diversity -= criterion_coveragelatent(torch.quantile(latent_flat[:, i], q), q)
                 loss_diversity -= criterion_coveragelatent(torch.quantile(diff0[:, i], q), q)
@@ -936,15 +936,15 @@ class NNTrainer(object):
 
 
         elif self.diversity_loss_computation == "none":
-            loss_diversity = torch.zeros(1, device=device)
+            loss_diversity = torch.zeros(1, device=device, requires_grad=True)
 
         else:
             raise ValueError(f"Unknown diversity_loss_computation type: {self.diversity_loss_computation}.")
 
         if torch.isnan(loss_reconstruction) or torch.isinf(loss_reconstruction):
-            loss_reconstruction = torch.ones(1, device=device)
+            loss_reconstruction = torch.ones(1, device=device, requires_grad=True)
         if torch.isnan(loss_diversity) or torch.isinf(loss_diversity):
-            loss_diversity = torch.zeros(1, device=device)
+            loss_diversity = torch.zeros(1, device=device, requires_grad=True)
 
         loss = loss_reconstruction - self.div_coeff * loss_diversity
         #loss = - self.div_coeff * loss_diversity # XXX
