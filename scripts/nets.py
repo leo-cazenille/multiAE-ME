@@ -1108,9 +1108,9 @@ class NNTrainer(object):
         self.model = models[selected_model_idx].cpu()
 
         # Compute and save mean losses
-        self.current_loss = loss_lst[selected_model_idx].cpu()
-        self.current_loss_reconstruction = loss_reconstruction_lst[selected_model_idx].cpu()
-        self.current_loss_diversity = loss_diversity_lst[selected_model_idx].cpu()
+        self.current_loss = loss_lst[selected_model_idx]
+        self.current_loss_reconstruction = loss_reconstruction_lst[selected_model_idx]
+        self.current_loss_diversity = loss_diversity_lst[selected_model_idx]
         print(f"Selected model {selected_model_idx}: loss={self.current_loss} loss_reconstruction={self.current_loss_reconstruction} loss_diversity={self.current_loss_diversity}")
 
         #self.current_loss = np.mean(loss_lst)
