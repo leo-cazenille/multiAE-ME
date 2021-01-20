@@ -53,11 +53,13 @@ class SelfAdaptiveNoveltyArchive(Container):
 
     def __init__(self, iterable: Optional[Iterable] = None,
             rebalancing_period: int = 100,
+            compute_new_threshold_period: int = 0,
             k: int = 15, k_resolution: int = 60000,  # k_resolution: increase to have more capacity
             threshold_novelty: float = 0.01, novelty_distance: Union[str, Callable] = "euclidean",
             epsilon_dominance: bool = False, epsilon: float = 0.1,
             parents: Sequence[ContainerLike] = [], **kwargs: Any) -> None:
         self.rebalancing_period = rebalancing_period
+        self.compute_new_threshold_period = compute_new_threshold_period
         self.k = k
         self.k_resolution = k_resolution
         self.threshold_novelty = threshold_novelty
@@ -80,7 +82,10 @@ class SelfAdaptiveNoveltyArchive(Container):
 
     def _add_internal(self, individual: IndividualLike, raise_if_not_added_to_parents: bool, only_to_parents: bool) -> Optional[int]:
         self.items.features_score_names = self.features_score_names
-        if self.nb_operations + self.nb_rejected % self.rebalancing_period == 0 and len(self.items) > 1:
+        nb_op = self.nb_operations + self.nb_rejected
+        if self.compute_new_threshold_period != 0 and nb_op % self.compute_new_threshold_period == 0 and len(self.items) > 100:
+            self.compute_new_threshold()
+        if nb_op % self.rebalancing_period == 0 and len(self.items) > 1:
             self.items.rebalance()
         all_parents = self.all_parents_inds()
 
