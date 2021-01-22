@@ -190,7 +190,8 @@ class MultiAEExperiment(QDExperiment):
 
 
     def _fn_klc(self, algo):
-        return f"{kl_coverage(algo.container, self.klc_reference_container, self.klc_scores_names, self.klc_nb_bins, self.klc_epsilon):.3f}"
+        #return f"{kl_coverage(algo.container, self.klc_reference_container, self.klc_scores_names, self.klc_nb_bins, self.klc_epsilon):.3f}"
+        return f"{kl_coverage_stored_refs(algo.container, self.klc_density_refs, self.klc_refs_range, self.klc_scores_names, self.klc_nb_bins, self.klc_epsilon):.3f}"
 
     def load_ref_data(self):
         ref_file = self.config.get("reference_data_file", "")
@@ -207,7 +208,8 @@ class MultiAEExperiment(QDExperiment):
             self.klc_epsilon = self.config.get('klc_epsilon', 1e-20)
             with open(klc_reference_data_file, "rb") as f:
                 ref_data = pickle.load(f)
-            self.klc_reference_container = ref_data['container']
+            klc_reference_container = ref_data['container']
+            self.klc_density_refs, self.klc_refs_range = kl_coverage_prepare_stored_refs(klc_reference_container, self.klc_scores_names, self.klc_nb_bins, self.klc_epsilon)
             stat_klc = LoggerStat(f"klc", self._fn_klc, True)
             self.logger.register_stat(stat_klc)
 
