@@ -147,11 +147,10 @@ algorithms:
     mut_pb: 0.1 # 0.1         # The probability of mutating each value of the genome of a selected individual
     eta: 20. # 10           # The ETA parameter of the polynomial mutation (as defined in the origin NSGA-II paper by Deb.). It corresponds to the crowding degree of the mutation. A high ETA will produce mutants close to its parent, a small ETA will produce offspring with more changes.
 
-
     # Then, we use an evolutionary algorithm that perform random search and polynomial mutations. This algorithm makes a trade-off between quality (finding good performing solutions) and diversity (find solutions corresponding to each bin of the grid)
     algo1:
-        type: RandomSearchMutPolyBounded
-        #type: ScoreProportionateRouletteMutPolyBounded
+        #type: RandomSearchMutPolyBounded
+        type: ScoreProportionateRouletteMutPolyBounded
         container: cont1                  # The container to use to store individuals told to the optimisers
         budget: .inf       # The total number of allowed evaluations for this algorithm
 
