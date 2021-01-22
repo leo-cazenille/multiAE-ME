@@ -20,6 +20,14 @@ debug_features: False # set to True to determine feature domain bounds
 indv_eps: 5       # episodes per individual
 max_episode_length: 300
 
+
+# KLC
+klc_reference_data_file: data/bipedal-100000.p
+klc_scores_names: ["meanDistance", "meanHeadStability", "meanTorquePerStep", "meanJump", "meanLeg0HipAngle", "meanLeg1HipAngle", "meanLeg0KneeAngle", "meanLeg1KneeAngle"]
+klc_nb_bins: 30
+klc_epsilon: 1e-20
+
+
 fitness_type: "meanAvgReward"
 meanAvgRewardDomain: [-200., 350.]
 
