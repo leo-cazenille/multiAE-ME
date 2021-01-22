@@ -223,7 +223,7 @@ class ScoreProportionateRouletteMutPolyBounded(Evolution):
         # No deepcopy_on_selection, because we are already copying ``ind`` in the selection function
         super().__init__(container, budget, dimension=dimension, # type: ignore
                 select_or_initialise=select_or_initialise, deepcopy_on_selection=False, vary=vary,
-                base_ind_gen=GenNPArrayIndividuals(dimension),
+                #base_ind_gen=GenNPArrayIndividuals(dimension),
                 **kwargs) # type: ignore
 
 
