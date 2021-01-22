@@ -64,6 +64,7 @@ containers:
     epochs_avg_loss: 500
     validation_split: 0.25
     nb_training_sessions: 5
+    max_dataset_size: 30000
 
 
 

@@ -760,7 +760,8 @@ class NNTrainer(object):
             #train_only_on_last_inds: bool = False,
             reset_model_every_training: bool = True,
             diversity_loss_computation: str = "outputs",
-            div_coeff: float = 0.3
+            div_coeff: float = 0.3,
+            max_dataset_size: Optional[int] = None
             ):
         self.nn_models = nn_models
 #        self.base_scores = base_scores
@@ -774,6 +775,7 @@ class NNTrainer(object):
         self.reset_model_every_training = reset_model_every_training
         self.diversity_loss_computation = diversity_loss_computation
         self.div_coeff = div_coeff
+        self.max_dataset_size = max_dataset_size
 #        self.last_training_size = 0
         self.current_loss = 0.
         self.current_loss_reconstruction = 0.
@@ -962,9 +964,13 @@ class NNTrainer(object):
         #self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, 'min', patience=30, verbose=True)
 
         dataloader: Any = DataLoader(data, batch_size=self.batch_size, shuffle=True) # type: ignore
-        train_size = int(np.floor(len(dataloader) * (1. - self.validation_split)))
-        validation_size = int(np.ceil(len(dataloader) * self.validation_split))
-        train_dataset, validation_dataset = torch.utils.data.random_split(list(dataloader), [train_size, validation_size])
+        if self.max_dataset_size == None:
+            tot_size = len(dataloader)
+        else:
+            tot_size = min(self.max_dataset_size//self.batch_size, len(dataloader))
+        train_size = int(np.floor(tot_size * (1. - self.validation_split)))
+        validation_size = int(np.ceil(tot_size * self.validation_split))
+        train_dataset, validation_dataset = torch.utils.data.random_split(list(dataloader)[:tot_size], [train_size, validation_size])
 
         rv_loss_lst = []
         last_mean_rv_loss = np.inf
