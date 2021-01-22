@@ -75,7 +75,7 @@ containers:
     epsilon_dominance: True
     epsilon: 0.1
     rebalancing_period: 0
-    compute_new_threshold_period: 1000
+    compute_new_threshold_period: 50
 
     # Feature extraction decorator parameters
     model_type: ConvAE
@@ -161,7 +161,7 @@ algorithms:
         #type: SqAlgWrapper
 #        batch_size: 100     # The number of evaluations in each subsequent batch
         #batch_mode: True
-        budget: 1000
+        budget: 100
         tell_container_when_switching: False
         tell_all: True
         #tell_container_when_switching: True               # Whether to tell the next algorithm in the list all results of the previous algorithm
