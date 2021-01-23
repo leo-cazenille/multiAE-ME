@@ -110,7 +110,6 @@ def kl_coverage_prepare_stored_refs(refs: Sequence[IndividualLike], scores_names
     density_refs[np.where(density_refs == 0.)] = epsilon
     return density_refs, refs_range
 
-
 def kl_coverage_stored_refs(inds: Sequence[IndividualLike], density_refs, refs_range, scores_names, nb_bins=15, epsilon=1e-20):
     mat_inds = inds_to_scores_mat(inds, scores_names)
     # Compute histograms
@@ -118,6 +117,37 @@ def kl_coverage_stored_refs(inds: Sequence[IndividualLike], density_refs, refs_r
     density_inds[np.where(density_inds == 0.)] = epsilon
     # Compute KLC
     return np.sum(density_inds * np.log(density_inds / density_refs))
+
+
+
+
+def kl_coverage2_prepare_stored_refs(refs: Sequence[IndividualLike], scores_names, nb_bins=15, epsilon=1e-20):
+    mat_refs = inds_to_scores_mat(refs, scores_names)
+    # Compute refs extrema
+    refs_min = np.min(mat_refs, 0)
+    refs_max = np.max(mat_refs, 0)
+    refs_range = list(zip(refs_min, refs_max))
+    # Compute histograms
+    density_refs = []
+    for i in range(mat_refs.shape[1]):
+        h = (np.histogram(mat_refs[:,i], nb_bins, range=refs_range[i], density=False)[0] / len(mat_refs)).ravel()
+        h[np.where(h == 0.)] = epsilon
+        density_refs.append(h)
+    return density_refs, refs_range
+
+def kl_coverage2_stored_refs(inds: Sequence[IndividualLike], density_refs, refs_range, scores_names, nb_bins=15, epsilon=1e-20):
+    mat_inds = inds_to_scores_mat(inds, scores_names)
+    # Compute histograms
+    density_inds = []
+    klc_lst = []
+    # Compute KLC across all dimension
+    for i in range(mat_inds.shape[1]):
+        h = (np.histogram(mat_inds[:,i], nb_bins, range=refs_range[i], density=False)[0] / len(mat_inds)).ravel()
+        h[np.where(h == 0.)] = epsilon
+        klc_score = np.sum(h * np.log(h / density_refs[i]))
+        klc_lst.append(klc_score)
+    # Compute mean KLC
+    return np.mean(klc_lst)
 
 
 
