@@ -4,7 +4,7 @@
 #import pickle
 import numpy as np
 #import warnings
-#import random
+import random
 from typing import Optional, Tuple, List, Iterable, Iterator, Any, TypeVar, Generic, Union, Sequence, MutableSet, MutableSequence, Type, Callable, Generator, MutableMapping, Mapping, overload
 
 ## QDpy
@@ -49,7 +49,7 @@ def inds_to_scores_mat(inds: Sequence[IndividualLike], scores_names: Optional[Se
         scores_names = [x for x in inds[0].scores.keys() if x.startswith("extracted")]
     assert(len(scores_names) > 0), "At least one score name must be provided in Sequence ``scores_names``."
 
-    data = np.empty((len(inds), len(scores_names)))
+    data = np.empty((len(inds), len(scores_names)), dtype=np.float32)
     for i, ind in enumerate(inds):
         for j, s in enumerate(scores_names):
             if s in ind.scores:
@@ -99,7 +99,9 @@ def kl_coverage(inds: Sequence[IndividualLike], refs: Sequence[IndividualLike], 
     return np.sum(density_inds * np.log(density_inds / density_refs))
 
 
-def kl_coverage_prepare_stored_refs(refs: Sequence[IndividualLike], scores_names, nb_bins=15, epsilon=1e-20):
+def kl_coverage_prepare_stored_refs(refs: Sequence[IndividualLike], scores_names, nb_bins=15, epsilon=1e-20, max_ref_size = 20000):
+    if len(refs) > max_ref_size:
+        refs = random.sample(refs, k=max_ref_size)
     mat_refs = inds_to_scores_mat(refs, scores_names)
     # Compute refs extrema
     refs_min = np.min(mat_refs, 0)
