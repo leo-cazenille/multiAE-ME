@@ -349,6 +349,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
 
         #print("DEBUG add !", nb_training_inds, self.training_period, self._last_training_nb_inds)
         if do_recomputation:
+            self._training_id += 1
             do_training = nb_training_inds - last_training_nb_inds >= self.training_period or (self.train_at_first_it and last_training_nb_inds == 0 and self._training_id == 1)
             print(f"DEBUG {self.name} _train_and_recompute_if_needed: {nb_training_inds} {last_training_nb_inds} {self.training_period}")
             self._last_training_nb_inds = nb_training_inds
