@@ -124,7 +124,7 @@ containers:
         fitness_domain: [[-.inf, .inf]]                             # The domain of each fitness objective (here we only have one objective)
         #fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
         features_domain: [[-.inf, .inf], [-.inf, .inf], [-.inf, .inf], [-.inf, .inf], [-.inf, .inf], [-.inf, .inf], [-.inf, .inf], [-.inf, .inf]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
-        only_add_accepted_inds_to_parents: False
+        only_add_accepted_inds_to_parents: True
         storage_type: indexableset              # Faster than 'orderedset' but may have compatibility problems with pickle in some versions
 
 
