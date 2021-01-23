@@ -39,7 +39,7 @@ containers:
     epsilon_dominance: True
     epsilon: 0.1
     rebalancing_period: 0
-    compute_new_threshold_period: 10000
+    compute_new_threshold_period: 0
 
 
     # Feature extraction decorator parameters
