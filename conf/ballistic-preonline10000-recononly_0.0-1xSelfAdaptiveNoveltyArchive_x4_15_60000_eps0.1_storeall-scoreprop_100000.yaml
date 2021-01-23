@@ -62,6 +62,7 @@ containers:
     nb_channels: 2
     batch_norm_before_latent: True
     trainer_type: NNTrainer
+    train_at_first_it: True
 
     epochs_avg_loss: 500
     validation_split: 0.25
