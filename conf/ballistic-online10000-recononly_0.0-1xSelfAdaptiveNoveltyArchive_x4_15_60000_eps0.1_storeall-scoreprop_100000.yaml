@@ -4,6 +4,7 @@
 # The random seed
 #seed: 42
 
+save_parent: False
 batch_mode: True
 #send_several_suggestions_to_fn: True
 #max_nb_suggestions_per_call: 20
@@ -66,6 +67,7 @@ containers:
     nb_training_sessions: 5
     max_dataset_size: 30000
 
+    disable_parents_pickling: True
 
 
     parentContainer:                             # We create a container that will contain ALL tested individuals

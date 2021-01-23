@@ -4,6 +4,7 @@
 # The random seed
 #seed: 42
 
+save_parent: False
 batch_mode: True
 #send_several_suggestions_to_fn: True
 #max_nb_suggestions_per_call: 20
@@ -45,7 +46,7 @@ containers:
     # Feature extraction decorator parameters
     model_type: ConvAE
     initial_nb_epochs: 100                            # The number of epochs used the first time the model is optimised
-    nb_epochs: 1000                                     # The number of epochs used for subsequent training processes
+    nb_epochs: 200                                     # The number of epochs used for subsequent training processes
     learning_rate: 0.10 # 1.e-3                              # Learning rate of the training (by default, the Adam optimiser is used to train the model)
     training_period: 10000                             # Re-train the model every time `training_period` add operations are performed
     div_coeff: 0.0 # 0.01
@@ -63,8 +64,10 @@ containers:
 
     epochs_avg_loss: 10000
     validation_split: 0.25
-    nb_training_sessions: 1
+    nb_training_sessions: 5
     max_dataset_size: 30000
+
+    disable_parents_pickling: True
 
 
 

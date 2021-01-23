@@ -9,6 +9,7 @@
 # The random seed
 #seed: 42
 
+save_parent: False
 batch_mode: True
 send_several_suggestions_to_fn: True
 max_nb_suggestions_per_call: 10
@@ -23,7 +24,7 @@ max_episode_length: 300
 # KLC
 klc_reference_data_file: data/bipedal-100000.p
 klc_scores_names: ["meanDistance", "meanHeadStability", "meanTorquePerStep", "meanJump", "meanLeg0HipAngle", "meanLeg1HipAngle", "meanLeg0KneeAngle", "meanLeg1KneeAngle"]
-klc_nb_bins: 30
+klc_nb_bins: 10
 klc_epsilon: 1e-20
 
 
@@ -75,7 +76,7 @@ containers:
     epsilon_dominance: True
     epsilon: 0.1
     rebalancing_period: 0
-    compute_new_threshold_period: 10000
+    compute_new_threshold_period: 0
 
 
     # Feature extraction decorator parameters
@@ -101,6 +102,8 @@ containers:
     validation_split: 0.25
     nb_training_sessions: 5
     max_dataset_size: 30000
+
+    disable_parents_pickling: True
 
 
     parentContainer:                             # We create a container that will contain ALL tested individuals

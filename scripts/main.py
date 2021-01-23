@@ -180,7 +180,8 @@ class MultiAEExperiment(QDExperiment):
             self.parent_container = self.algo.algorithms[0].container.container.parents[0]
         except Exception as e:
             self.parent_container = None
-        self.logger.saved_dict['container'] = self.parent_container
+        if self.config.get("save_parent", True) == True:
+            self.logger.saved_dict['container'] = self.parent_container
 
 
 
