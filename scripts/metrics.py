@@ -99,9 +99,7 @@ def kl_coverage(inds: Sequence[IndividualLike], refs: Sequence[IndividualLike], 
     return np.sum(density_inds * np.log(density_inds / density_refs))
 
 
-def kl_coverage_prepare_stored_refs(refs: Sequence[IndividualLike], scores_names, nb_bins=15, epsilon=1e-20, max_ref_size = 20000):
-    if len(refs) > max_ref_size:
-        refs = random.sample(refs, k=max_ref_size)
+def kl_coverage_prepare_stored_refs(refs: Sequence[IndividualLike], scores_names, nb_bins=15, epsilon=1e-20):
     mat_refs = inds_to_scores_mat(refs, scores_names)
     # Compute refs extrema
     refs_min = np.min(mat_refs, 0)
