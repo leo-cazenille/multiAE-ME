@@ -201,6 +201,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
             train_only_on_last_inds: bool = False,
             training_budget: Optional[int] = None,
             training_period_type: str = "linear",
+            train_at_first_it: bool = False,
             tanh_encoder: bool = False,
             model_type: str = "AE",
             epochs_avg_loss: int = 50,
@@ -217,6 +218,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         self.train_only_on_last_inds = train_only_on_last_inds
         self.training_budget = training_budget
         self.training_period_type = training_period_type
+        self.train_at_first_it = train_at_first_it
         self.tanh_encoder = tanh_encoder
         self.model_type = model_type
         self.epochs_avg_loss = epochs_avg_loss
@@ -342,10 +344,12 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         else:
             raise ValueError(f"Unknown training_period_type: {self.training_period_type}.")
 
+        if self.train_at_first_it and last_training_nb_inds == 0 and self._training_id == 0:
+            do_recomputation = True
+
         #print("DEBUG add !", nb_training_inds, self.training_period, self._last_training_nb_inds)
         if do_recomputation:
-            self._training_id += 1
-            do_training = nb_training_inds - last_training_nb_inds >= self.training_period
+            do_training = nb_training_inds - last_training_nb_inds >= self.training_period or (self.train_at_first_it and last_training_nb_inds == 0 and self._training_id == 1)
             print(f"DEBUG {self.name} _train_and_recompute_if_needed: {nb_training_inds} {last_training_nb_inds} {self.training_period}")
             self._last_training_nb_inds = nb_training_inds
             try:
@@ -384,6 +388,15 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         #start_time = timer() # XXX
 
         training_inds = self._get_training_inds()
+        if len(training_inds) == 0:
+            return
+
+        if hasattr(self.container, 'compute_new_threshold'): # XXX
+            self.container.compute_new_threshold() # XXX
+        if hasattr(self.container, '_add_rescaling'): # XXX HACK
+            print(f"DEBUG {self.name} call _add_rescaling")
+            self.container._add_rescaling(training_inds) # XXX HACK
+
         self.compute_latent(training_inds)
         #elapsed = timer() - start_time # XXX
         #print(f"# Features recomputed for {len(training_inds)} inds.. Elapsed={elapsed}") # XXX
@@ -395,12 +408,6 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         #        self._orig_add(i)
         #    except Exception:
         #        pass
-
-        if hasattr(self.container, 'compute_new_threshold'): # XXX
-            self.container.compute_new_threshold() # XXX
-        if hasattr(self.container, '_add_rescaling'): # XXX HACK
-            print(f"DEBUG {self.name} call _add_rescaling")
-            self.container._add_rescaling(training_inds) # XXX HACK
 
         #elapsed = timer() - start_time # XXX
         #print(f"# Tried adding {len(training_inds)} inds back to the container: {len(self)} added.. Elapsed={elapsed}") # XXX

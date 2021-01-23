@@ -18,6 +18,13 @@ experiment_type: ballistic
 nb_features: 2
 
 
+# KLC
+klc_reference_data_file: data/ballistic-100000.p
+klc_scores_names: ["hardcoded0", "hardcoded1"]
+klc_nb_bins: 30
+klc_epsilon: 1e-20
+
+reference_data_file: "data/ballistic-100000.p"
 #reference_data_file: "data/ballistic-10000.p"
 
 # The name of the main algorithm (see below the description of 'algoQD')
@@ -45,17 +52,17 @@ containers:
     epsilon_dominance: True
     epsilon: 0.1
     rebalancing_period: 0
-    compute_new_threshold_period: 50
+    compute_new_threshold_period: 0
 
     # Feature extraction decorator parameters
     model_type: ConvAE
     initial_nb_epochs: 100                            # The number of epochs used the first time the model is optimised
-    nb_epochs: 300                                     # The number of epochs used for subsequent training processes
+    nb_epochs: 50                                     # The number of epochs used for subsequent training processes
     learning_rate: 0.10 # 1.e-3                              # Learning rate of the training (by default, the Adam optimiser is used to train the model)
     training_period: 5000                             # Re-train the model every time `training_period` add operations are performed
-    div_coeff: 0.1 # 0.01
+    div_coeff: 0.0 # 1.0
     batch_size: 1024
-    diversity_loss_computation: coveragelatent2 # corrlatent # coveragelatent # varlatent # covlatent # outputs # pwoutputs #outputs
+    diversity_loss_computation: none # coveragelatent2 # corrlatent # coveragelatent # varlatent # covlatent # outputs # pwoutputs #outputs
     #base_scores: ["0", "1"]
     reset_model_every_training: False
     train_only_on_last_inds: False
@@ -64,10 +71,11 @@ containers:
     nb_filters: 4
     batch_norm_before_latent: True
     trainer_type: NNTrainer
+    train_at_first_it: True
 
     epochs_avg_loss: 500
     validation_split: 0.25
-    nb_training_sessions: 5
+    nb_training_sessions: 1
 
 
     parentContainer:                             # We create a container that will contain ALL tested individuals
