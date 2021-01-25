@@ -489,8 +489,9 @@ class ConvEncoder2(nn.Module):
         if self.batch_norm_before_latent:
             self.enc_fc2 = nn.Sequential(
                 nn.Linear(latent_size*2+1, latent_size),
-                nn.Sigmoid(),
+                #nn.Sigmoid(),
                 #nn.ReLU(),
+                nn.ELU(),
                 nn.BatchNorm1d(num_features=latent_size, affine=False)
             )
             #batchnorm = list(self.enc_fc2.modules())[-1]
@@ -499,8 +500,9 @@ class ConvEncoder2(nn.Module):
         else:
             self.enc_fc2 = nn.Sequential(
                 nn.Linear(latent_size*2+1, latent_size),
-                nn.Sigmoid()
+                #nn.Sigmoid()
                 #nn.ReLU()
+                nn.ELU()
             )
 
 
@@ -576,8 +578,9 @@ class ConvDecoder2(nn.Module):
 
         self.dec_out = nn.Sequential(
             nn.Linear(input_size, input_size),
-            nn.Sigmoid()
+            #nn.Sigmoid()
             #nn.ReLU()
+            nn.ELU()
         )
 
         # Initialize weights
