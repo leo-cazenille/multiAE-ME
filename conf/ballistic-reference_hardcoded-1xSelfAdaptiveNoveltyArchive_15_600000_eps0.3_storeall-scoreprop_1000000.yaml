@@ -31,7 +31,7 @@ containers:
     # Novelty Archive parameters
     k: 15
     k_resolution: 600000 # 3000
-    threshold_novelty: 0.0075 # 0.01 # 0.1
+    threshold_novelty: 0.0001 # 0.01 # 0.1
     epsilon_dominance: True
     epsilon: 0.3
     rebalancing_period: 0
