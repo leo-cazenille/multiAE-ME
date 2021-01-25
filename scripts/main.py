@@ -305,8 +305,8 @@ class BallisticEnv(object):
         scores = {'gen0': gen0, 'gen1': gen1, 'hardcoded0': hardcoded0, 'hardcoded1': hardcoded1}
         #ind.observations = self.cart_traj.T
         scores['observations'] = self.cart_traj.T
-        #if self._dead:
-        #    fitness = -1.,
+        #if self._dead: # XXX
+        #    fitness = -1., # XXX
         #print(f"# DEBUG eval: {fitness} {features} {scores}")
         return fitness, features, scores
 

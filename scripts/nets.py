@@ -282,6 +282,7 @@ class ConvEncoder(nn.Module):
             self.enc_fc2 = nn.Sequential(
                 nn.Linear(latent_size*2+1, latent_size),
                 nn.Sigmoid(),
+                #nn.ELU(),
                 #nn.ReLU(),
                 nn.BatchNorm1d(num_features=latent_size, affine=False)
             )
@@ -293,6 +294,7 @@ class ConvEncoder(nn.Module):
                 nn.Linear(latent_size*2+1, latent_size),
                 nn.Sigmoid()
                 #nn.ReLU()
+                #nn.ELU()
             )
 
 
@@ -351,9 +353,9 @@ class ConvDecoder(nn.Module):
         # Decoder
         self.dec_fc2 = nn.Sequential(
             nn.Linear(latent_size, latent_size*2+1),
-            #nn.Sigmoid()
+            nn.Sigmoid()
             #nn.ReLU()
-            nn.ELU()
+            #nn.ELU()
         )
         self.dec_fc1 = nn.Sequential(
             #nn.Linear(latent_size*2+1, input_size),

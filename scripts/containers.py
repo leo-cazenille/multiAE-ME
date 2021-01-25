@@ -92,7 +92,7 @@ class SelfAdaptiveNoveltyArchive(Container):
         if self.rebalancing_period != 0 and nb_op % self.rebalancing_period == 0 and len(self.items) > 1 and nb_op - self._last_rebalancing >= self.rebalancing_period:
             self.items.rebalance() # XXX Bug ?
             self._last_rebalancing = nb_op
-        all_parents = self.all_parents_inds()
+        #all_parents = self.all_parents_inds()
 
         # Compute novelty
         if len(self) <= 1:
@@ -163,7 +163,7 @@ class SelfAdaptiveNoveltyArchive(Container):
         dist -= xy
         maxdist = np.sqrt(np.max(dist))
         self.threshold_novelty = max(min_threshold, maxdist / np.sqrt(self.k_resolution))
-        print(f"DEBUG compute_new_threshold: {self.threshold_novelty}")
+        print(f"DEBUG compute_new_threshold: {self.threshold_novelty} {maxdist}")
 
 
 #    def get_ind_features(self, individual: IndividualLike, *args, **kwargs) -> FeaturesLike:
