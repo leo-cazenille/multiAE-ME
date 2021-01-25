@@ -86,10 +86,11 @@ class SelfAdaptiveNoveltyArchive(Container):
         self.items.features_score_names = self.features_score_names
         nb_op = self.nb_operations + self.nb_rejected
         #print(f"DEBUG _add_internal {self.compute_new_threshold_period} {nb_op % self.compute_new_threshold_period} {len(self.items)}")
-        if self.compute_new_threshold_period != 0 and nb_op % self.compute_new_threshold_period == 0 and len(self.items) > 1 and nb_op - self._last_compute_new_threshold >= self.compute_new_threshold_period:
+        #if self.compute_new_threshold_period != 0 and nb_op % self.compute_new_threshold_period == 0 and len(self.items) > 1 and nb_op - self._last_compute_new_threshold >= self.compute_new_threshold_period:
+        if self.compute_new_threshold_period != 0 and len(self.items) > 1 and nb_op - self._last_compute_new_threshold >= self.compute_new_threshold_period:
             self.compute_new_threshold()
             self._last_compute_new_threshold = nb_op
-        if self.rebalancing_period != 0 and nb_op % self.rebalancing_period == 0 and len(self.items) > 1 and nb_op - self._last_rebalancing >= self.rebalancing_period:
+        if self.rebalancing_period != 0 and len(self.items) > 1 and nb_op - self._last_rebalancing >= self.rebalancing_period:
             self.items.rebalance() # XXX Bug ?
             self._last_rebalancing = nb_op
         #all_parents = self.all_parents_inds()
