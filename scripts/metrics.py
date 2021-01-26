@@ -96,8 +96,8 @@ def kl_coverage(inds: Sequence[IndividualLike], refs: Sequence[IndividualLike], 
     density_refs = (np.histogramdd(mat_refs, nb_bins, range=refs_range, density=False)[0] / len(mat_refs)).ravel()
     density_refs[np.where(density_refs == 0.)] = epsilon
     # Compute KLC
-    #return np.sum(density_inds * np.log(density_inds / density_refs))
-    return np.sum(density_refs * np.log(density_refs / density_inds))
+    return np.sum(density_inds * np.log(density_inds / density_refs))
+    #return np.sum(density_refs * np.log(density_refs / density_inds))
 
 
 def kl_coverage_prepare_stored_refs(refs: Sequence[IndividualLike], scores_names, nb_bins=15, epsilon=1e-20):
@@ -117,8 +117,8 @@ def kl_coverage_stored_refs(inds: Sequence[IndividualLike], density_refs, refs_r
     density_inds = (np.histogramdd(mat_inds, nb_bins, range=refs_range, density=False)[0] / len(mat_inds)).ravel()
     density_inds[np.where(density_inds == 0.)] = epsilon
     # Compute KLC
-    #return np.sum(density_inds * np.log(density_inds / density_refs))
-    return np.sum(density_refs * np.log(density_refs / density_inds))
+    return np.sum(density_inds * np.log(density_inds / density_refs))
+    #return np.sum(density_refs * np.log(density_refs / density_inds))
 
 
 
