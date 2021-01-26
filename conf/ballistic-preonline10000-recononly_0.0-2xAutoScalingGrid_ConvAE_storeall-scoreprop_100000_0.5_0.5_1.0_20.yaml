@@ -28,7 +28,7 @@ main_algorithm_name: algoTotal
 
 to_grid_parameters:
     max_items_per_bin: 1                              # The number of items in each bin of the grid
-    shape: [25, 25]                                   # The number of bins for each feature
+    shape: [100, 100]                                   # The number of bins for each feature
 
 
 # The list of all container.
@@ -48,7 +48,7 @@ containers:
     fitness_scaling: False                            # Whether to autoscale the fitness or not
     features_scaling: True                            # Whether to autoscale the features or not
     rescaling_period: 10000                            # When to perform the autoscaling operation. Here it's done every time 1000 individuals are added.
-    shape: [50, 50]                                   # The number of bins for each feature
+    shape: [100, 100]                                   # The number of bins for each feature
 
 
     # Feature extraction decorator parameters
@@ -57,9 +57,9 @@ containers:
     nb_epochs: 1000                                     # The number of epochs used for subsequent training processes
     learning_rate: 0.10 # 1.e-3                              # Learning rate of the training (by default, the Adam optimiser is used to train the model)
     training_period: 10000                             # Re-train the model every time `training_period` add operations are performed
-    div_coeff: 0.1 # 0.01
+    div_coeff: 0.0 # 0.01
     batch_size: 1024
-    diversity_loss_computation: coveragelatent2 # covlatent # outputs # pwoutputs #outputs
+    diversity_loss_computation: none # covlatent # outputs # pwoutputs #outputs
     #base_scores: ["0", "1"]
     reset_model_every_training: False
     train_only_on_last_inds: False
@@ -93,15 +93,33 @@ containers:
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
         fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
-        features_domain: [[-.inf, .inf], [-.inf, .inf], [-.inf, .inf], [-.inf, .inf]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        features_domain: [[-.inf, .inf], [-.inf, .inf]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         only_add_accepted_inds_to_parents: False
         storage_type: indexableset              # Faster than 'orderedset' but may have compatibility problems with pickle in some versions
+
+    grid2:                                                # The main grid container
+        #type: SelfAdaptiveNoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
+        scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
+        fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
+        features_domain: [[-.inf, .inf], [-.inf, .inf]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        only_add_accepted_inds_to_parents: False
+        storage_type: indexableset              # Faster than 'orderedset' but may have compatibility problems with pickle in some versions
+
 
 
     cont1:                                                # A feature-extracting container decorator applied to the main grid
         #type: ContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
         type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
         container: grid1                                  # The container this decorator is applied to
+        training_containers: [parentContainer]            # The list of containers used to train the autoencoder. If empty, will use the parents instead.
+        #features_domain: [[-2., 2.], [-2., 2.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+
+    cont2:                                                # A feature-extracting container decorator applied to the main grid
+        #type: ContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        container: grid2                                  # The container this decorator is applied to
         training_containers: [parentContainer]            # The list of containers used to train the autoencoder. If empty, will use the parents instead.
         #features_domain: [[-2., 2.], [-2., 2.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
@@ -128,6 +146,11 @@ algorithms:
         container: cont1                  # The container to use to store individuals told to the optimisers
         budget: .inf       # The total number of allowed evaluations for this algorithm
 
+    algo2:
+        type: ScoreProportionateRouletteMutPolyBounded
+        container: cont2                  # The container to use to store individuals told to the optimisers
+        budget: .inf       # The total number of allowed evaluations for this algorithm
+
     algoTotal:
         #type: MEMAPElitesUCB1
         type: AlternatingAlgWrapper
@@ -139,7 +162,7 @@ algorithms:
         tell_container_when_switching: False
         tell_all: True
         #tell_container_when_switching: True               # Whether to tell the next algorithm in the list all results of the previous algorithm
-        algorithms: ['algo1'] # The list of algorithms to execute
+        algorithms: ['algo1', 'algo2'] # The list of algorithms to execute
         #algorithms: # The dict of algorithms to execute
         #    algo1: 1
         #    algo2: 1
