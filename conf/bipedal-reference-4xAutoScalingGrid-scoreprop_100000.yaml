@@ -102,6 +102,7 @@ containers:
         features_score_names: ["meanDistance", "meanHeadStability"]
         features_domain: [[0., 50.], [0., 2.5]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         only_add_accepted_inds_to_parents: True
+        storage_type: indexableset              # Faster than 'orderedset' but may have compatibility problems with pickle in some versions
 
     grid2:                                                # The main grid container
         type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
@@ -111,6 +112,7 @@ containers:
         features_score_names: ["meanTorquePerStep", "meanJump"]
         features_domain: [[0., 25.], [0., 0.75]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         only_add_accepted_inds_to_parents: True
+        storage_type: indexableset              # Faster than 'orderedset' but may have compatibility problems with pickle in some versions
 
     grid3:                                                # The main grid container
         type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
@@ -120,6 +122,7 @@ containers:
         features_score_names: ["meanLeg0HipAngle", "meanLeg1HipAngle"]
         features_domain: [[0.0, 2.5], [0.0, 2.5]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         only_add_accepted_inds_to_parents: True
+        storage_type: indexableset              # Faster than 'orderedset' but may have compatibility problems with pickle in some versions
 
     grid4:                                                # The main grid container
         type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
@@ -129,6 +132,7 @@ containers:
         features_score_names: ["meanLeg0HipSpeed", "meanLeg1HipSpeed"]
         features_domain: [[0.0, 10.], [0.0, 10.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         only_add_accepted_inds_to_parents: True
+        storage_type: indexableset              # Faster than 'orderedset' but may have compatibility problems with pickle in some versions
 
     grid5:                                                # The main grid container
         type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
@@ -138,6 +142,7 @@ containers:
         features_score_names: ["meanLeg0KneeAngle", "meanLeg1KneeAngle"]
         features_domain: [[0.0, 2.5], [0.0, 2.5]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         only_add_accepted_inds_to_parents: True
+        storage_type: indexableset              # Faster than 'orderedset' but may have compatibility problems with pickle in some versions
 
     grid6:                                                # The main grid container
         type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
@@ -147,6 +152,7 @@ containers:
         features_score_names: ["meanLeg0KneeSpeed", "meanLeg1KneeSpeed"]
         features_domain: [[0.0, 10.], [0.0, 10.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         only_add_accepted_inds_to_parents: True
+        storage_type: indexableset              # Faster than 'orderedset' but may have compatibility problems with pickle in some versions
 
 
     cont1:                                                # A feature-extracting container decorator applied to the main grid
