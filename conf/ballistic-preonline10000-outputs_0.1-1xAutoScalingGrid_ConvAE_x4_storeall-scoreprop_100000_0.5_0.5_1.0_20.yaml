@@ -1,0 +1,154 @@
+---
+
+
+# The random seed
+#seed: 42
+
+save_parent: False
+batch_mode: True
+#send_several_suggestions_to_fn: True
+#max_nb_suggestions_per_call: 20
+
+# Type of experiment
+experiment_type: ballistic
+nb_features: 2
+
+
+# KLC
+klc_reference_data_file: data/ballistic-100000.p
+klc_scores_names: ["hardcoded0", "hardcoded1"]
+klc_nb_bins: 30
+klc_epsilon: 1e-20
+
+reference_data_file: "data/ballistic-random-10000.p"
+
+
+# The name of the main algorithm (see below the description of 'algoQD')
+main_algorithm_name: algoTotal
+
+to_grid_parameters:
+    max_items_per_bin: 1                              # The number of items in each bin of the grid
+    shape: [25, 25]                                   # The number of bins for each feature
+
+
+# The list of all container.
+containers:
+
+    # Novelty Archive parameters
+    k: 15
+    k_resolution: 60000 # 3000
+    threshold_novelty: 0.0001 # 0.01 # 0.1
+    epsilon_dominance: True
+    epsilon: 0.1
+    rebalancing_period: 0
+    compute_new_threshold_period: 0
+
+    # Grid parameters
+    max_items_per_bin: 1                              # The number of items in each bin of the grid
+    fitness_scaling: False                            # Whether to autoscale the fitness or not
+    features_scaling: True                            # Whether to autoscale the features or not
+    rescaling_period: 10000                            # When to perform the autoscaling operation. Here it's done every time 1000 individuals are added.
+    shape: [50, 50]                                   # The number of bins for each feature
+
+
+    # Feature extraction decorator parameters
+    model_type: ConvAE
+    initial_nb_epochs: 100                            # The number of epochs used the first time the model is optimised
+    nb_epochs: 1000                                     # The number of epochs used for subsequent training processes
+    learning_rate: 0.10 # 1.e-3                              # Learning rate of the training (by default, the Adam optimiser is used to train the model)
+    training_period: 10000                             # Re-train the model every time `training_period` add operations are performed
+    div_coeff: 0.1 # 0.01
+    batch_size: 1024
+    diversity_loss_computation: outputs # pwoutputs #outputs
+    #base_scores: ["0", "1"]
+    reset_model_every_training: False
+    train_only_on_last_inds: False
+    tanh_encoder: True
+    training_period_type: exp_decay
+    nb_filters: 4
+    nb_channels: 2
+    batch_norm_before_latent: False
+    trainer_type: NNTrainer
+    train_at_first_it: True
+
+    epochs_avg_loss: 10000
+    validation_split: 0.25
+    nb_training_sessions: 1
+    max_dataset_size: 30000
+
+    disable_parents_pickling: True
+
+
+    parentContainer:                             # We create a container that will contain ALL tested individuals
+        type: Container                          # A simple container, that will store ALL added individuals that are within bounds
+        name: parentContainer                    # The name of the container. Optional. Default to the parent key (here also 'cont0')
+        #storage_type: orderedset                 # Faster than 'list' for large container
+        storage_type: indexableset              # Faster than 'orderedset' but may have compatibility problems with pickle in some versions
+        fitness_domain:
+        features_domain:
+
+    grid1:                                                # The main grid container
+        #type: SelfAdaptiveNoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
+        scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
+        fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
+        features_domain: [[-.inf, .inf], [-.inf, .inf], [-.inf, .inf], [-.inf, .inf]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        only_add_accepted_inds_to_parents: False
+        storage_type: indexableset              # Faster than 'orderedset' but may have compatibility problems with pickle in some versions
+
+
+    cont1:                                                # A feature-extracting container decorator applied to the main grid
+        #type: ContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        type: TorchMultiFeatureExtractionContainerDecorator    # The type of the container. This decorator type uses PyTorch models (autoencoders) as a feature reduction method
+        container: grid1                                  # The container this decorator is applied to
+        training_containers: [parentContainer]            # The list of containers used to train the autoencoder. If empty, will use the parents instead.
+        #features_domain: [[-2., 2.], [-2., 2.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+
+
+
+# The list of all algorithms
+algorithms:
+    ## Default parameter values for each algorithm
+    #optimisation_task: minimisation   # We perform maximisation of all fitness objectives
+    #dimension: 5                      # The number of dimensions of the problem. For rastrigin, any dimension >= 2 can be chosen
+    #ind_domain: [0.1, 0.9]              # The domain of each value of the genome (optional)
+
+    # Evolution parameters
+    batch_size: 200     # The number of evaluations in each subsequent batch
+    sel_pb: 0.5 # 1.0         # The probability of performing selection+variation instead of initialising a new genome
+    init_pb: 0.5 # 0.0        # The probability of initiating a new genome instead of performing selection
+    mut_pb: 1.0 # 0.4         # The probability of mutating each value of the genome of a selected individual
+    eta: 20. # 20           # The ETA parameter of the polynomial mutation (as defined in the origin NSGA-II paper by Deb.). It corresponds to the crowding degree of the mutation. A high ETA will produce mutants close to its parent, a small ETA will produce offspring with more changes.
+
+
+    # Then, we use an evolutionary algorithm that perform random search and polynomial mutations. This algorithm makes a trade-off between quality (finding good performing solutions) and diversity (find solutions corresponding to each bin of the grid)
+    algo1:
+        type: ScoreProportionateRouletteMutPolyBounded
+        container: cont1                  # The container to use to store individuals told to the optimisers
+        budget: .inf       # The total number of allowed evaluations for this algorithm
+
+    algoTotal:
+        #type: MEMAPElitesUCB1
+        type: AlternatingAlgWrapper
+        #type: SqAlgWrapper
+#        batch_size: 100     # The number of evaluations in each subsequent batch
+        #batch_mode: True
+        #budget: 400
+        budget: 100000
+        tell_container_when_switching: False
+        tell_all: True
+        #tell_container_when_switching: True               # Whether to tell the next algorithm in the list all results of the previous algorithm
+        algorithms: ['algo1'] # The list of algorithms to execute
+        #algorithms: # The dict of algorithms to execute
+        #    algo1: 1
+        #    algo2: 1
+        #    algo3: 1
+        zeta: 0.0005
+        nb_active_emitters: 4
+        shuffle_emitters: True
+
+
+# MODELINE "{{{1
+# vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
+# vim:foldmethod=marker
