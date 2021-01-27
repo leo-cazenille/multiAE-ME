@@ -981,8 +981,11 @@ class NNTrainer(object):
             nb = 0.
             for i, c1 in enumerate(corr_lst):
                 for _, c2 in enumerate(corr_lst[i+1:]):
-                    loss_diversity += torch.linalg.norm(c1 - c2, ord='fro')
-                    nb += 1.
+                    dst = torch.linalg.norm(c1 - c2, ord='fro')
+                    if not torch.isnan(dst) and not torch.isinf(dst):
+                        loss_diversity += dst
+                        #loss_diversity += torch.linalg.norm(c1 - c2, ord='fro')
+                        nb += 1.
             if nb > 0:
                 loss_diversity /= nb
 
