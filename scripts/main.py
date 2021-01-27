@@ -43,6 +43,7 @@ from qdpy.containers import TorchAE, TorchFeatureExtractionContainerDecorator, C
 import qdpy.plots
 
 
+import sortedcollections
 import matplotlib.pyplot as plt
 
 import curiosity
@@ -132,12 +133,14 @@ class MultiAEExperiment(QDExperiment):
     def _fn_mean_originality(self, algo):
         return f"{mean_originality([a.container for a in algo.algorithms]):.3f}"
     def _fn_mean_corr(self, scores_names, algo):
-        return f"{corr_scores(algo.algorithms[0].container.container.parents[0], scores_names)[1]:.4f}"
+        #return f"{corr_scores(algo.algorithms[0].container.container.parents[0], scores_names)[1]:.4f}"
+        return f"{corr_scores(sortedcollections.IndexableSet(self._get_all_algs_inds()), scores_names)[1]:.4f}"
     def _fn_mean_cov(self, scores_names, algo):
-        return f"{cov_scores(algo.algorithms[0].container.container.parents[0], scores_names)[1]:.4f}"
+        #return f"{cov_scores(algo.algorithms[0].container.container.parents[0], scores_names)[1]:.4f}"
+        return f"{cov_scores(sortedcollections.IndexableSet(self._get_all_algs_inds()), scores_names)[1]:.4f}"
     def _fn_mean_abs_cov(self, scores_names, algo):
         #return f"{abs_cov_scores(algo.algorithms[0].container.container.parents[0], scores_names)[1]:.4f}"
-        return f"{abs_cov_scores(set(self._get_all_algs_inds()), scores_names)[1]:.4f}"
+        return f"{abs_cov_scores(sortedcollections.IndexableSet(self._get_all_algs_inds()), scores_names)[1]:.4f}"
 
 
     def reinit_loggers(self):

@@ -116,7 +116,7 @@ algorithms:
     #ind_domain: [0.1, 0.9]              # The domain of each value of the genome (optional)
 
     # Evolution parameters
-    batch_size: 200     # The number of evaluations in each subsequent batch
+    batch_size: 20 #0     # The number of evaluations in each subsequent batch
     sel_pb: 0.5 # 1.0         # The probability of performing selection+variation instead of initialising a new genome
     init_pb: 0.5 # 0.0        # The probability of initiating a new genome instead of performing selection
     mut_pb: 1.0 # 0.4         # The probability of mutating each value of the genome of a selected individual
