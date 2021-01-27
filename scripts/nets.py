@@ -976,7 +976,7 @@ class NNTrainer(object):
 
         elif self.diversity_loss_computation == "corrdistlatent":
             latent = model.encoders(d)
-            corr_lst = [cov_to_corr(cov(l, rowvar=False)) for l in latent]
+            corr_lst = [cov_to_corr(torch.abs(cov(l, rowvar=False))) for l in latent]
 
             nb = 0.
             for i, c1 in enumerate(corr_lst):
@@ -988,7 +988,7 @@ class NNTrainer(object):
 
         elif self.diversity_loss_computation == "cmdlatent":
             latent = model.encoders(d)
-            corr_lst = [cov_to_corr(cov(l, rowvar=False)) for l in latent]
+            corr_lst = [cov_to_corr(torch.abs(cov(l, rowvar=False))) for l in latent]
 
             nb = 0.
             for i, c1 in enumerate(corr_lst):
