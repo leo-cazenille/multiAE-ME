@@ -954,6 +954,34 @@ class NNTrainer(object):
 
 
 
+        # TODO
+        elif self.diversity_loss_computation == "coveragelatent3": # XXX ?
+            latent = model.encoders(d)
+            latent_flat = torch.cat([l for l in latent], 1)
+
+            #cov_mag = torch.zeros(1)
+            #for d in latent_flat:
+            #    for i in range(len(d)):
+            #        for j in range(len(d)):
+            #            if i == j:
+            #                continue
+            #            cov_mag += d[i] * d[j]
+            #cov_mag /= latent_flat.size(0)
+            #loss_diversity = cov_mag
+
+            c = torch.abs(cov(latent_flat, rowvar=False))
+            #print(f"DEBUG covlatent {c}")
+            loss_diversity = torch.zeros(1, device=device)
+            for i in range(c.size(0)):
+                for j in range(c.size(1)):
+                    if i != j:
+                        loss_diversity -= c[i,j]
+                    #else: # XXX ?
+                    #    loss_diversity += c[i,j] # XXX ?
+
+
+
+
         elif self.diversity_loss_computation == "none":
             loss_diversity = torch.zeros(1, device=device, requires_grad=True)
 
