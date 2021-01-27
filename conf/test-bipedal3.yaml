@@ -94,7 +94,7 @@ containers:
     training_period: 100                             # Re-train the model every time `training_period` add operations are performed
     div_coeff: 1.0 # 0.01
     batch_size: 1024
-    diversity_loss_computation: coveragelatent2 # covlatent # outputs # pwoutputs #outputs
+    diversity_loss_computation: corrdistlatent # coveragelatent2 # covlatent # outputs # pwoutputs #outputs
     #base_scores: ["0", "1"]
     reset_model_every_training: False
     train_only_on_last_inds: False

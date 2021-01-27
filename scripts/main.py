@@ -227,6 +227,14 @@ class MultiAEExperiment(QDExperiment):
             ref_cont = ref_data['container']
             self.parent_container.update(ref_cont)
 
+            # XXX dirty
+            # Create models
+            if len(ref_cont) > 0:
+                for alg in self.algo.algorithms:
+                    c = alg.container
+                    if hasattr(c, "_create_default_model"):
+                        c._create_default_model(ref_cont[0])
+
         klc_reference_data_file = self.config.get("klc_reference_data_file", "")
         if len(klc_reference_data_file) > 0:
             self.klc_scores_names = self.config['klc_scores_names']

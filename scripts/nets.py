@@ -53,6 +53,15 @@ def cov(m, rowvar=True, inplace=False):
     return fact * m.matmul(mt).squeeze()
 
 
+def cov_to_corr(c):
+    d = torch.sqrt(torch.diag(c))
+    r = c / d[:, None]
+    r /= d[None, :]
+    return r
+
+# CMD Measure, as defined in Herdin2005 "Correlation Matrix Distance, a Meaningful Measure for Evaluation of Non-Stationary MIMO Channels"
+def correlation_mat_dist(c1, c2):
+    return 1. - torch.trace(c1 * c2) / (torch.linalg.norm(c1, ord="fro") * torch.linalg.norm(c2, ord="fro"))
 
 
 ########## NN ########### {{{1
@@ -790,7 +799,7 @@ class NNTrainer(object):
         self.mean = 0.
         self.std = 1.
 
-        if not self.diversity_loss_computation in ['none', 'outputs', 'pwoutputs', 'latent', 'expcovlatent', 'covlatent', 'varlatent', 'corrlatent', 'coveragelatent', 'coveragelatent2']:
+        if not self.diversity_loss_computation in ['none', 'outputs', 'pwoutputs', 'latent', 'expcovlatent', 'covlatent', 'varlatent', 'corrlatent', 'corrlatent2', 'coveragelatent', 'coveragelatent2', 'corrdistlatent', 'cmdlatent']:
             raise ValueError(f"Unknown diversity_loss_computation type: {self.diversity_loss_computation}.")
 
         if nn_models != None:
@@ -800,6 +809,7 @@ class NNTrainer(object):
     def create_ensemble_model(self, nn_models):
         # Create an ensemble model
         self.model = EnsembleAE(list(nn_models.values()))
+        print(f"CREATED ENSEMBLE MODEL len={len(list(nn_models.values()))}")
 
 
     def compute_loss(self, data, model, device):
@@ -894,6 +904,16 @@ class NNTrainer(object):
             loss_diversity /= c.size(0) * c.size(1) - c.size(0)
 
 
+        elif self.diversity_loss_computation == "corrlatent2":
+            latent = model.encoders(d)
+            latent_flat = torch.cat([l for l in latent], 1)
+
+            c = cov(latent_flat, rowvar=False)
+            corr = torch.abs(cov_to_corr(c))
+            loss_diversity = corr.diag().sum() - corr.sum()
+            loss_diversity /= corr.size(0) * c.size(1)
+
+
         elif self.diversity_loss_computation == "varlatent":
             latent = model.encoders(d)
             latent_flat = torch.cat([l for l in latent], 1)
@@ -954,32 +974,29 @@ class NNTrainer(object):
 
 
 
-        # TODO
-        elif self.diversity_loss_computation == "coveragelatent3": # XXX ?
+        elif self.diversity_loss_computation == "corrdistlatent":
             latent = model.encoders(d)
-            latent_flat = torch.cat([l for l in latent], 1)
+            corr_lst = [cov_to_corr(cov(l, rowvar=False)) for l in latent]
 
-            #cov_mag = torch.zeros(1)
-            #for d in latent_flat:
-            #    for i in range(len(d)):
-            #        for j in range(len(d)):
-            #            if i == j:
-            #                continue
-            #            cov_mag += d[i] * d[j]
-            #cov_mag /= latent_flat.size(0)
-            #loss_diversity = cov_mag
+            nb = 0.
+            for i, c1 in enumerate(corr_lst):
+                for _, c2 in enumerate(corr_lst[i+1:]):
+                    loss_diversity += torch.linalg.norm(c1 - c2, ord='fro')
+                    nb += 1.
+            if nb > 0:
+                loss_diversity /= nb
 
-            c = torch.abs(cov(latent_flat, rowvar=False))
-            #print(f"DEBUG covlatent {c}")
-            loss_diversity = torch.zeros(1, device=device)
-            for i in range(c.size(0)):
-                for j in range(c.size(1)):
-                    if i != j:
-                        loss_diversity -= c[i,j]
-                    #else: # XXX ?
-                    #    loss_diversity += c[i,j] # XXX ?
+        elif self.diversity_loss_computation == "cmdlatent":
+            latent = model.encoders(d)
+            corr_lst = [cov_to_corr(cov(l, rowvar=False)) for l in latent]
 
-
+            nb = 0.
+            for i, c1 in enumerate(corr_lst):
+                for _, c2 in enumerate(corr_lst[i+1:]):
+                    loss_diversity += correlation_mat_dist(c1, c2)
+                    nb += 1.
+            if nb > 0:
+                loss_diversity /= nb
 
 
         elif self.diversity_loss_computation == "none":

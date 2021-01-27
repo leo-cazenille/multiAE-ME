@@ -72,7 +72,7 @@ containers:
 
     # Grid parameters
     max_items_per_bin: 1                              # The number of items in each bin of the grid
-    fitness_scaling: True                            # Whether to autoscale the fitness or not
+    fitness_scaling: False                            # Whether to autoscale the fitness or not
     features_scaling: True                            # Whether to autoscale the features or not
     rescaling_period: 10000                            # When to perform the autoscaling operation. Here it's done every time 1000 individuals are added.
     shape: [64, 64]                                   # The number of bins for each feature
