@@ -25,6 +25,7 @@ klc_scores_names: ["meanDistance", "meanHeadStability", "meanTorquePerStep", "me
 klc_nb_bins: 10
 klc_epsilon: 1e-20
 
+mean_corr_stat_scores_names: ["meanDistance", "meanHeadStability", "meanTorquePerStep", "meanJump", "meanLeg0HipAngle", "meanLeg1HipAngle", "meanLeg0KneeAngle", "meanLeg1KneeAngle"]
 
 
 fitness_type: "meanAvgReward"

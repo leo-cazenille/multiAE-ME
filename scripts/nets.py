@@ -790,7 +790,7 @@ class NNTrainer(object):
         self.mean = 0.
         self.std = 1.
 
-        if not self.diversity_loss_computation in ['none', 'outputs', 'pwoutputs', 'latent', 'covlatent', 'varlatent', 'corrlatent', 'coveragelatent', 'coveragelatent2']:
+        if not self.diversity_loss_computation in ['none', 'outputs', 'pwoutputs', 'latent', 'expcovlatent', 'covlatent', 'varlatent', 'corrlatent', 'coveragelatent', 'coveragelatent2']:
             raise ValueError(f"Unknown diversity_loss_computation type: {self.diversity_loss_computation}.")
 
         if nn_models != None:
@@ -866,6 +866,18 @@ class NNTrainer(object):
                         loss_diversity -= c[i,j]
                     #else: # XXX ?
                     #    loss_diversity += c[i,j] # XXX ?
+
+        elif self.diversity_loss_computation == "expcovlatent":
+            latent = model.encoders(d)
+            latent_flat = torch.cat([l for l in latent], 1)
+
+            c = torch.exp(cov(latent_flat, rowvar=False))
+            #print(f"DEBUG covlatent {c}")
+            loss_diversity = torch.zeros(1, device=device)
+            for i in range(c.size(0)):
+                for j in range(c.size(1)):
+                    if i != j:
+                        loss_diversity -= c[i,j]
 
         elif self.diversity_loss_computation == "corrlatent":
             latent = model.encoders(d)

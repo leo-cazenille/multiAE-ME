@@ -131,8 +131,12 @@ class MultiAEExperiment(QDExperiment):
         return f"{originality(algo.algorithms[i_alg].container, [a.container for a in algo.algorithms]):.3f}"
     def _fn_mean_originality(self, algo):
         return f"{mean_originality([a.container for a in algo.algorithms]):.3f}"
-    def _fn_mean_corr(self, algo):
-        return f"{corr_scores(algo.algorithms[0].container.container.parents[0])[1]:.4f}"
+    def _fn_mean_corr(self, scores_names, algo):
+        return f"{corr_scores(algo.algorithms[0].container.container.parents[0], scores_names)[1]:.4f}"
+    def _fn_mean_cov(self, scores_names, algo):
+        return f"{cov_scores(algo.algorithms[0].container.container.parents[0], scores_names)[1]:.4f}"
+    def _fn_mean_abs_cov(self, scores_names, algo):
+        return f"{abs_cov_scores(algo.algorithms[0].container.container.parents[0], scores_names)[1]:.4f}"
 
 
     def reinit_loggers(self):
@@ -153,14 +157,16 @@ class MultiAEExperiment(QDExperiment):
         # Create additional loggers
         if not hasattr(self.algo, 'algorithms'):
             return
-#        algos = self.algo.algorithms
-#        self.algs_loggers = []
-#        for algo in algos:
-#            iteration_filenames = os.path.join(self.log_base_path, f"iteration-{algo.name}-%i_" + self.instance_name + ".p")
-#            final_filename = os.path.join(self.log_base_path, f"final-{algo.name}_" + self.instance_name + ".p")
-#            logger = AlgorithmLogger(algo, verbose=False,
-#                    iteration_filenames=iteration_filenames, final_filename=final_filename, save_period=self.save_period)
-#            self.algs_loggers.append(logger)
+        algos = self.algo.algorithms
+        self.algs_loggers = []
+        for algo in algos:
+            #iteration_filenames = os.path.join(self.log_base_path, f"iteration-{algo.name}-%i_" + self.instance_name + ".p")
+            #final_filename = os.path.join(self.log_base_path, f"final-{algo.name}_" + self.instance_name + ".p")
+            iteration_filenames = None
+            final_filename = None
+            logger = AlgorithmLogger(algo, verbose=False,
+                    iteration_filenames=iteration_filenames, final_filename=final_filename, save_period=self.save_period)
+            self.algs_loggers.append(logger)
 
         if hasattr(self.algo, 'algorithms'):
             algos = self.algo.algorithms
@@ -172,8 +178,13 @@ class MultiAEExperiment(QDExperiment):
                 self.logger.register_stat(stat_originality)
             stat_mean_originality = LoggerStat(f"mean_orig", self._fn_mean_originality, True)
             self.logger.register_stat(stat_mean_originality)
-            stat_mean_corr = LoggerStat(f"mean_corr", self._fn_mean_corr, True)
-            self.logger.register_stat(stat_mean_corr)
+            mean_corr_stat_scores_names = self.config.get("mean_corr_stat_scores_names", None)
+            #stat_mean_corr = LoggerStat(f"mean_corr", partial(self._fn_mean_corr, mean_corr_stat_scores_names), True)
+            #self.logger.register_stat(stat_mean_corr)
+            #stat_mean_cov = LoggerStat(f"mean_cov", partial(self._fn_mean_cov, mean_corr_stat_scores_names), True)
+            #self.logger.register_stat(stat_mean_cov)
+            stat_mean_abs_cov = LoggerStat(f"mean_abs_cov", partial(self._fn_mean_abs_cov, mean_corr_stat_scores_names), True)
+            self.logger.register_stat(stat_mean_abs_cov)
 
         # Save parent container in the 'container' entry of the data pickle file
         try:
