@@ -136,7 +136,8 @@ class MultiAEExperiment(QDExperiment):
     def _fn_mean_cov(self, scores_names, algo):
         return f"{cov_scores(algo.algorithms[0].container.container.parents[0], scores_names)[1]:.4f}"
     def _fn_mean_abs_cov(self, scores_names, algo):
-        return f"{abs_cov_scores(algo.algorithms[0].container.container.parents[0], scores_names)[1]:.4f}"
+        #return f"{abs_cov_scores(algo.algorithms[0].container.container.parents[0], scores_names)[1]:.4f}"
+        return f"{abs_cov_scores(set(self._get_all_algs_inds()), scores_names)[1]:.4f}"
 
 
     def reinit_loggers(self):
@@ -204,12 +205,16 @@ class MultiAEExperiment(QDExperiment):
         for alg in self.algo.algorithms:
             alg.container.recompute_features_all_ind(update_params)
 
+    def _get_all_algs_inds(self):
+        for alg in self.algo.algorithms:
+            yield from alg.container
 
 
     def _fn_klc(self, algo):
-        #return f"{kl_coverage(algo.container, self.klc_reference_container, self.klc_scores_names, self.klc_nb_bins, self.klc_epsilon):.3f}"
-        return f"{kl_coverage_stored_refs(algo.container, self.klc_density_refs, self.klc_refs_range, self.klc_scores_names, self.klc_nb_bins, self.klc_epsilon):.3f}"
-        #return f"{kl_coverage2_stored_refs(algo.container, self.klc_density_refs, self.klc_refs_range, self.klc_scores_names, self.klc_nb_bins, self.klc_epsilon):.3f}"
+        return f"{kl_coverage_stored_refs(set(self._get_all_algs_inds()), self.klc_density_refs, self.klc_refs_range, self.klc_scores_names, self.klc_nb_bins, self.klc_epsilon):.3f}"
+        ##return f"{kl_coverage(algo.container, self.klc_reference_container, self.klc_scores_names, self.klc_nb_bins, self.klc_epsilon):.3f}"
+        #return f"{kl_coverage_stored_refs(algo.container, self.klc_density_refs, self.klc_refs_range, self.klc_scores_names, self.klc_nb_bins, self.klc_epsilon):.3f}"
+        ##return f"{kl_coverage2_stored_refs(algo.container, self.klc_density_refs, self.klc_refs_range, self.klc_scores_names, self.klc_nb_bins, self.klc_epsilon):.3f}"
 
     def load_ref_data(self):
         ref_file = self.config.get("reference_data_file", "")
