@@ -538,7 +538,8 @@ def launch_experiment(exp):
 def make_plots(exp):
     if hasattr(exp.algo, 'algorithms') and hasattr(exp, 'algs_loggers'):
         for logger in exp.algs_loggers:
-            logger.save(os.path.join(logger.log_base_path, logger.final_filename))
+            if logger.final_filename:
+                logger.save(os.path.join(logger.log_base_path, logger.final_filename))
             qdpy.plots.default_plots_grid(logger, exp.log_base_path, suffix=f"-{exp.instance_name}-{logger.algorithms[0].name}", to_grid_parameters={'features_domain': logger.algorithms[0].container.features_extrema})
 
     qdpy.plots.plot_iterations(exp.logger, os.path.join(exp.log_base_path, f"./iterations_loss-{exp.instance_name}.pdf"), "loss", ylabel="Loss")
