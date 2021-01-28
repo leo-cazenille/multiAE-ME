@@ -46,6 +46,26 @@ from nets import *
 clear_all_containers = None
 recompute_features_all_ind = None
 
+@registry.register
+class AutoScalingGrid2(AutoScalingGrid):
+    # XXX hack... and ignore "also_from_parents"
+    def clear(self, also_from_parents: bool = False) -> None:
+        self.items.clear()
+        self._init_grid()
+
+#        # Remove all individuals
+#        items = list(self) # Save individuals (cannot iterate a list while its items are deleted)
+#        for e in items:
+#            self.discard(e, also_from_parents)
+
+        # Clear recentness and best
+        self.recentness = []
+        self._best = None
+        self._best_fitness = None
+        self._best_features = None
+
+
+
 
 @registry.register
 class SelfAdaptiveNoveltyArchive(Container):
