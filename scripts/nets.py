@@ -72,6 +72,9 @@ last_training_size = 0
 current_loss = np.nan
 current_loss_reconstruction = np.nan
 current_loss_diversity = np.nan
+data_min = torch.zeros(1)
+data_max = torch.ones(1)
+ensemble_model = None
 
 
 #num_epochs = 100
@@ -808,7 +811,10 @@ class NNTrainer(object):
 
     def create_ensemble_model(self, nn_models):
         # Create an ensemble model
-        self.model = EnsembleAE(list(nn_models.values()))
+        #self.model = EnsembleAE(list(nn_models.values()))
+        global ensemble_model
+        ensemble_model = EnsembleAE(list(nn_models.values()))
+        self.model = ensemble_model
         print(f"CREATED ENSEMBLE MODEL len={len(list(nn_models.values()))}")
 
 
@@ -1152,6 +1158,9 @@ class NNTrainer(object):
         self.min = data.min()
         self.max = data.max()
         data = (data - self.min) / (self.max - self.min)
+        global data_min, data_max
+        data_min = self.min
+        data_max = self.max
 #        # Normalize dataset (mean-0 / std-1 scaling)
 #        self.mean = data.mean()
 #        self.std = data.std()
@@ -1217,6 +1226,11 @@ class NNTrainer(object):
         obs = torch.empty(len(inds), *inds[0].scores['observations'].shape)
         for i, ind in enumerate(inds):
             obs[i] = torch.Tensor(ind.scores['observations'])
+
+        global data_min, data_max
+        self.min = data_min
+        self.max = data_max
+
         obs = (obs - self.min) / (self.max - self.min) # Min-max scaling
         #obs = (obs - self.mean) / (self.std) # (mean-0 / std-1 scaling)
         _model.eval()

@@ -348,10 +348,10 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         else:
             raise ValueError(f"Unknown model_type: {self.model_type}.")
         # Register model in global dict
-        global nn_models
-        nn_models[self.name] = self.model
+        #global nn_models
+        nets.nn_models[self.name] = self.model
         # Create ensemble model
-        self.trainer.create_ensemble_model(nn_models)
+        self.trainer.create_ensemble_model(nets.nn_models)
 
     def _train_and_recompute_if_needed(self, update_params=()):
         global last_training_nb_inds
@@ -446,7 +446,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
 
 
     def train(self) -> None:
-        global nn_models
+        #global nn_models
         global last_training_size
         #print("###########  DEBUG: training.. ###########")
         #start_time = timer() # XXX
@@ -470,7 +470,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         print(f" training size: {len(training_inds)}")
 
         # Train !
-        self.trainer.create_ensemble_model(nn_models)
+        self.trainer.create_ensemble_model(nets.nn_models)
         self.trainer.train(training_inds)
 
 #        # Identify base scores
@@ -490,7 +490,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
 #        data = (data - data.min()) / (data.max() - data.min())
 #
 #        # Create an ensemble model
-#        model = EnsembleAE(list(nn_models.values()))
+#        model = EnsembleAE(list(nets.nn_models.values()))
 #
 #        # Reset model, if needed
 #        if self.reset_model_every_training:

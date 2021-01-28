@@ -164,6 +164,17 @@ def kl_coverage2_stored_refs(inds: Sequence[IndividualLike], density_refs, refs_
 
 
 
+# TODO
+def kl_originality(c, conts, nb_bins=15, epsilon=1e-20):
+    scores_names_lst = []
+    for c2 in conts:
+        sn = [f"extracted_{id(c2)}_{j}" for j in range(len(c2.features_domain))]
+        scores_names_lst.append(sn)
+    res = 0.
+    # TODO XXX
+
+
+
 # MODELINE  "{{{1
 # vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
 # vim:foldmethod=marker

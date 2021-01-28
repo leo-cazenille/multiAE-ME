@@ -32,6 +32,15 @@ from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
+# PyTorch hack to be able to unpickle GPU models to a CPU-only computer
+import torch.serialization
+def _torch_hack_cpu_tag(obj):
+    if type(obj).__module__ == 'torch':
+        return 'cpu'
+def _torch_hack_cpu_deserialize(obj, location):
+    return obj
+torch.serialization.register_package(1, _torch_hack_cpu_tag, _torch_hack_cpu_deserialize)
+
 
 # QDpy
 import qdpy
