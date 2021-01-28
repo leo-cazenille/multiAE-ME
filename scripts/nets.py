@@ -878,8 +878,9 @@ class NNTrainer(object):
             loss_diversity = torch.zeros(1, device=device)
             for i in range(c.size(0)):
                 for j in range(c.size(1)):
-                    if i != j:
-                        loss_diversity -= c[i,j]
+                    covij = c[i, j]
+                    if i != j and not torch.isnan(covij) and not torch.isinf(covij):
+                        loss_diversity -= covij
                     #else: # XXX ?
                     #    loss_diversity += c[i,j] # XXX ?
 
@@ -892,8 +893,9 @@ class NNTrainer(object):
             loss_diversity = torch.zeros(1, device=device)
             for i in range(c.size(0)):
                 for j in range(c.size(1)):
-                    if i != j:
-                        loss_diversity -= c[i,j]
+                    covij = c[i, j]
+                    if i != j and not torch.isnan(covij) and not torch.isinf(covij):
+                        loss_diversity -= covij
 
         elif self.diversity_loss_computation == "corrlatent":
             latent = model.encoders(d)
@@ -905,7 +907,7 @@ class NNTrainer(object):
             for i in range(c.size(0)):
                 for j in range(c.size(1)):
                     corrcoef = c[i,j] / torch.sqrt(c[i,i] * c[j,j])
-                    if i != j:
+                    if i != j and not torch.isnan(corrcoef) and not torch.isinf(corrcoef):
                         loss_diversity -= corrcoef
             loss_diversity /= c.size(0) * c.size(1) - c.size(0)
 
