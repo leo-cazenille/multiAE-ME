@@ -74,7 +74,7 @@ containers:
     max_items_per_bin: 1                              # The number of items in each bin of the grid
     fitness_scaling: False                            # Whether to autoscale the fitness or not
     features_scaling: True                            # Whether to autoscale the features or not
-    rescaling_period: 10000                            # When to perform the autoscaling operation. Here it's done every time 1000 individuals are added.
+    rescaling_period: 0                            # When to perform the autoscaling operation. Here it's done every time 1000 individuals are added.
     shape: [64, 64]                                   # The number of bins for each feature
 
     # Novelty Archive parameters
@@ -92,7 +92,7 @@ containers:
     initial_nb_epochs: 100                            # The number of epochs used the first time the model is optimised
     nb_epochs: 10                                     # The number of epochs used for subsequent training processes
     learning_rate: 0.10 # 1.e-3                              # Learning rate of the training (by default, the Adam optimiser is used to train the model)
-    training_period: 1000                             # Re-train the model every time `training_period` add operations are performed
+    training_period: 300                             # Re-train the model every time `training_period` add operations are performed
     div_coeff: 1.0 # 0.01
     batch_size: 1024
     diversity_loss_computation: corrdistlatent # covlatent # covlatent # outputs # pwoutputs #outputs
@@ -100,7 +100,7 @@ containers:
     reset_model_every_training: False
     train_only_on_last_inds: False
     tanh_encoder: True
-    training_period_type: exp_decay
+    training_period_type: linear # exp_decay
     nb_filters: 4
     nb_channels: 12
     batch_norm_before_latent: False
@@ -127,7 +127,7 @@ containers:
         #type: NoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         #type: SelfAdaptiveNoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         #type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-        type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        type: AutoScalingGrid2                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
         fitness_domain: [[-200., 350.]]
@@ -143,7 +143,7 @@ containers:
         #type: NoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         #type: SelfAdaptiveNoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         #type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-        type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        type: AutoScalingGrid2                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
         fitness_domain: [[-200., 350.]]
@@ -159,7 +159,7 @@ containers:
         #type: NoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         #type: SelfAdaptiveNoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         #type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-        type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        type: AutoScalingGrid2                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
         fitness_domain: [[-200., 350.]]
@@ -175,7 +175,7 @@ containers:
         #type: NoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         #type: SelfAdaptiveNoveltyArchive                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         #type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
-        type: AutoScalingGrid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
+        type: AutoScalingGrid2                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
         fitness_domain: [[-200., 350.]]

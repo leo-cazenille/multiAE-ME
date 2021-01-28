@@ -297,6 +297,11 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         self._init_methods_hooks()
 
 
+    # XXX hack
+    def clear(self, also_from_parents: bool = False) -> None:
+        self.container.clear()
+
+
     def compute_latent(self, inds: Sequence[IndividualLike]) -> Sequence[FeaturesLike]:
         assert(len(inds) > 0)
         if self.model == None:
