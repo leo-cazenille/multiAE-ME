@@ -425,7 +425,7 @@ class BallisticExperiment(MultiAEExperiment):
 
 class BipedalWalkerEval(object):
 
-    def __init__(self, env_name, sim_model, indv_eps, max_episode_length, fitness_type, features_list, render_mode=False):
+    def __init__(self, env_name, sim_model, indv_eps, max_episode_length, fitness_type, features_list, render_mode=False, scores_type=None):
         self.env_name = env_name
         self.sim_model = sim_model
         self.indv_eps = indv_eps
@@ -433,6 +433,7 @@ class BipedalWalkerEval(object):
         self.fitness_type = fitness_type
         self.features_list = features_list
         self.render_mode = render_mode
+        self.scores_type = scores_type
 
     def eval_fn(self, ind, render_mode = False):
         #print(f"DEBUG ind len={len(ind)}")
@@ -443,7 +444,8 @@ class BipedalWalkerEval(object):
                 env,
                 render_mode=render_mode,
                 num_episode=self.indv_eps, 
-                max_episode_length=self.max_episode_length)
+                max_episode_length=self.max_episode_length,
+                scores_type=self.scores_type)
         ind.fitness.values = scores[self.fitness_type],
         ind.features.values = [scores[x] for x in self.features_list]
         ind.scores.update(scores)
@@ -482,7 +484,8 @@ class BipedalWalkerExperiment(MultiAEExperiment):
                 self.config.get('max_episode_length', 3000),
                 self.fitness_type,
                 self.features_list,
-                render_mode = self.config.get('render_mode', False)
+                render_mode = self.config.get('render_mode', False),
+                scores_type = self.config.get('bipedal_scores_type', None)
         )
         self.eval_fn = self.evalobj.eval_fn
         self.several_eval_fn = self.evalobj.several_eval_fn

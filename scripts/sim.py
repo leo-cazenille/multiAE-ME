@@ -76,15 +76,22 @@ class QDBipedalWalkerHardcore(QDBipedalWalker, BipedalWalkerHardcore):
 
 ########## Simulation functions ########### {{{1
 
-def simulate(model, env, render_mode=False, num_episode=5, max_episode_length=3000, save_all_features=True):
+def simulate(model, env, render_mode=False, num_episode=5, max_episode_length=3000, save_all_features=True, scores_type=None):
     #reward_list = []
     #t_list = []
     episodes_reward_sum = 0
     episodes_feature_sum = (0,) * 12
     total_reward = 0.0
-    total_features = (0,) * 12
-    if save_all_features:
-        all_features = np.zeros((num_episode, max_episode_length, 12), dtype=np.float32)
+    if scores_type== "normal" or scores_type== None:
+        total_features = (0,) * 12
+        if save_all_features:
+            all_features = np.zeros((num_episode, max_episode_length, 12), dtype=np.float32)
+    elif scores_type== "mean30":
+        total_features = (0,) * 12
+        if save_all_features:
+            all_features = np.zeros((num_episode, 12, max_episode_length), dtype=np.float32)
+    else:
+        raise ValueError(f"Unknown scores_type: {scores_type}.")
 
     for episode in range(num_episode):
         #start_time = timer()
@@ -102,7 +109,10 @@ def simulate(model, env, render_mode=False, num_episode=5, max_episode_length=30
             prev_obs = obs
             obs, reward, features, done, info = env.step(action)
             if save_all_features:
-                all_features[episode, t] = features[:12]
+                if scores_type == "normal" or scores_type == None:
+                    all_features[episode, t] = features[:12]
+                elif scores_type == "mean30":
+                    all_features[episode, :, t] = features[:12]
 
             if render_mode:
                 pass
@@ -153,8 +163,15 @@ def simulate(model, env, render_mode=False, num_episode=5, max_episode_length=30
             "meanLeg1KneeSpeed": episode_avg_features[11]
     }
     if save_all_features:
-        robs = all_features.reshape(-1, all_features.shape[-1]).T
-        scores['observations'] = robs
+        if scores_type == "normal" or scores_type == None:
+            robs = all_features.reshape(-1, all_features.shape[-1]).T
+            scores['observations'] = robs
+        elif scores_type == "mean30":
+            robs = np.vstack(all_features)
+            robs_lst = np.split(robs, range(30, robs.shape[1], 30), 1)
+            robs_mean = np.array([np.mean(b, 1) for b in robs_lst]).T
+            robs_std = np.array([np.std(b, 1) for b in robs_lst]).T
+            scores['observations'] = np.concatenate((robs_mean, robs_std), 1)
 
     #return (episode_avg_reward,), tuple(episode_avg_features)
     return scores
