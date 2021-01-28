@@ -351,7 +351,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         #global nn_models
         nets.nn_models[self.name] = self.model
         # Create ensemble model
-        self.trainer.create_ensemble_model(nets.nn_models)
+        #self.trainer.create_ensemble_model(nets.nn_models)
 
     def _train_and_recompute_if_needed(self, update_params=()):
         global last_training_nb_inds
@@ -401,6 +401,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
                 print("Training failed !")
                 traceback.print_exc()
                 raise e
+            self.trainer.model = nets.ensemble_model
 
 #        elif self.last_recomputed < last_training_nb_inds:
 ##            self.clear() # type: ignore
