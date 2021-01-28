@@ -104,7 +104,7 @@ containers:
     nb_filters: 4
     nb_channels: 12
     batch_norm_before_latent: False
-    trainer_type: NNTrainer
+    trainer_type: IterativeNNTrainer # NNTrainer
     train_at_first_it: True
 
     epochs_avg_loss: 500

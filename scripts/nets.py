@@ -1247,15 +1247,18 @@ class NNTrainer(object):
 
 
 class IterativeNNTrainer(NNTrainer):
-    def train(self, training_inds) -> None:
+    def train(self, training_inds, device = None) -> None:
         #print("###########  DEBUG: training.. ###########")
         #start_time = timer() # XXX
 
         assert(len(training_inds) > 0)
 
-        global nn_models
-        self.create_ensemble_model(nn_models) # XXX HACK
-        assert(len(self.model.ae_list) == len(nn_models)) # XXX HACK
+        if device == None:
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+        #global nn_models
+        #self.create_ensemble_model(nn_models) # XXX HACK
+        #assert(len(self.model.ae_list) == len(nn_models)) # XXX HACK
 
         # Build dataset
         data = torch.empty(len(training_inds), *training_inds[0].scores['observations'].shape)
@@ -1264,10 +1267,17 @@ class IterativeNNTrainer(NNTrainer):
             #for j, s in enumerate(base_scores):
             #    data[i,j] = ind.scores[s]
 
-        # Normalize dataset
+        # Normalize dataset (min-max scaling)
         self.min = data.min()
         self.max = data.max()
         data = (data - self.min) / (self.max - self.min)
+        global data_min, data_max
+        data_min = self.min
+        data_max = self.max
+#        # Normalize dataset (mean-0 / std-1 scaling)
+#        self.mean = data.mean()
+#        self.std = data.std()
+#        data = (data - self.mean) / (self.std)
 
         # Reset model, if needed
         if self.reset_model_every_training:
@@ -1287,12 +1297,14 @@ class IterativeNNTrainer(NNTrainer):
             loss_lst = []
             loss_reconstruction_lst = []
             loss_diversity_lst = []
+            self.model.to(device)
             for _ in range(self.nb_training_sessions):
-                l, r, d = self.training_session(data, self.model)
+                l, r, d = self.training_session(data, self.model, device)
                 loss_lst.append(l)
                 loss_reconstruction_lst.append(r)
                 loss_diversity_lst.append(d)
                 print(f"Finished session: loss={l} loss_reconstruction={r} loss_diversity={d}")
+            self.model.cpu()
 
         # Unfreeze all models
         for i in range(len(self.model.ae_list)):
@@ -1304,7 +1316,7 @@ class IterativeNNTrainer(NNTrainer):
         self.current_loss = np.mean(loss_lst)
         self.current_loss_reconstruction = np.mean(loss_reconstruction_lst)
         self.current_loss_diversity = np.mean(loss_diversity_lst)
-
+        print(f"Trained model: loss={self.current_loss} loss_reconstruction={self.current_loss_reconstruction} loss_diversity={self.current_loss_diversity}")
 
         #elapsed = timer() - start_time # XXX
         #print(f"# Training: final loss: {loss}  elapsed: {elapsed}")
