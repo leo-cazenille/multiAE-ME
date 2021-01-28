@@ -151,7 +151,7 @@ class MultiAEExperiment(QDExperiment):
         #return f"{abs_cov_scores(algo.algorithms[0].container.container.parents[0], scores_names)[1]:.4f}"
         return f"{abs_cov_scores(sortedcollections.IndexableSet(self._get_all_algs_inds()), scores_names)[1]:.4f}"
     def _fn_mean_cmd(self, scores_names, algo):
-        return f"{cmd_scores(sortedcollections.IndexableSet(self._get_all_algs_inds()), scores_names)[1]:.4f}"
+        return f"{cmd_scores(sortedcollections.IndexableSet(self._get_all_algs_inds()), scores_names):.4f}"
 
 
 
