@@ -22,11 +22,11 @@ indv_eps: 5       # episodes per individual
 max_episode_length: 300
 bipedal_scores_type: mean30
 
-# KLC
-klc_reference_data_file: data/bipedalM30-100000.p
-klc_scores_names: ["meanDistance", "meanHeadStability", "meanTorquePerStep", "meanJump", "meanLeg0HipAngle", "meanLeg1HipAngle", "meanLeg0KneeAngle", "meanLeg1KneeAngle"]
-klc_nb_bins: 10
-klc_epsilon: 1e-20
+## KLC
+#klc_reference_data_file: data/bipedalM30-100000.p
+#klc_scores_names: ["meanDistance", "meanHeadStability", "meanTorquePerStep", "meanJump", "meanLeg0HipAngle", "meanLeg1HipAngle", "meanLeg0KneeAngle", "meanLeg1KneeAngle"]
+#klc_nb_bins: 10
+#klc_epsilon: 1e-20
 
 reference_data_file: "data/bipedalM30-random-10000.p"
 
