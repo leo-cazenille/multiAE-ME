@@ -72,12 +72,12 @@ def cov_scores(inds: Sequence[IndividualLike], scores_names: Optional[Sequence] 
 
 def abs_cov_scores(inds: Sequence[IndividualLike], scores_names: Optional[Sequence] = None):
     data = inds_to_scores_mat(inds, scores_names)
-    cov_mat = np.cov(data, rowvar=False)
+    cov_mat = np.abs(np.cov(data, rowvar=False))
     mean_cov = 0.
     for i in range(cov_mat.shape[0]):
         for j in range(cov_mat.shape[1]):
             if i != j and not np.isnan(cov_mat[i, j]):
-                mean_cov += np.abs(cov_mat[i, j])
+                mean_cov += cov_mat[i, j]
     mean_cov /= cov_mat.shape[0] * cov_mat.shape[1] - cov_mat.shape[0]
     return cov_mat, mean_cov
 
