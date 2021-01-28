@@ -67,7 +67,7 @@ containers:
     reset_model_every_training: False
     train_only_on_last_inds: False
     tanh_encoder: True
-    training_period_type: exp_decay
+    training_period_type: linear # exp_decay
     nb_filters: 4
     nb_channels: 2
     batch_norm_before_latent: False

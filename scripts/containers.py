@@ -50,6 +50,7 @@ recompute_features_all_ind = None
 class AutoScalingGrid2(AutoScalingGrid):
     # XXX hack... and ignore "also_from_parents"
     def clear(self, also_from_parents: bool = False) -> None:
+        print("DEBUG AutoScalingGrid2: clear")
         self.items.clear()
         self._init_grid()
 
@@ -60,6 +61,7 @@ class AutoScalingGrid2(AutoScalingGrid):
 
         # Clear recentness and best
         self.recentness = []
+        self._size = 0
         self._best = None
         self._best_fitness = None
         self._best_features = None
