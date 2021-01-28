@@ -401,7 +401,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
                 print("Training failed !")
                 traceback.print_exc()
                 raise e
-            self.trainer.model = nets.ensemble_model
+        self.trainer.model = nets.ensemble_model
 
 #        elif self.last_recomputed < last_training_nb_inds:
 ##            self.clear() # type: ignore

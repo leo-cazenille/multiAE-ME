@@ -150,6 +150,9 @@ class MultiAEExperiment(QDExperiment):
     def _fn_mean_abs_cov(self, scores_names, algo):
         #return f"{abs_cov_scores(algo.algorithms[0].container.container.parents[0], scores_names)[1]:.4f}"
         return f"{abs_cov_scores(sortedcollections.IndexableSet(self._get_all_algs_inds()), scores_names)[1]:.4f}"
+    def _fn_mean_cmd(self, scores_names, algo):
+        return f"{cmd_scores(sortedcollections.IndexableSet(self._get_all_algs_inds()), scores_names)[1]:.4f}"
+
 
 
     def reinit_loggers(self):
@@ -198,6 +201,8 @@ class MultiAEExperiment(QDExperiment):
             #self.logger.register_stat(stat_mean_cov)
             stat_mean_abs_cov = LoggerStat(f"mean_abs_cov", partial(self._fn_mean_abs_cov, mean_corr_stat_scores_names), True)
             self.logger.register_stat(stat_mean_abs_cov)
+            stat_mean_cmd = LoggerStat(f"mean_cmd", partial(self._fn_mean_cmd, mean_corr_stat_scores_names), True)
+            self.logger.register_stat(stat_mean_cmd)
 
         # Save parent container in the 'container' entry of the data pickle file
         try:

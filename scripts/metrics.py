@@ -174,6 +174,45 @@ def kl_originality(c, conts, nb_bins=15, epsilon=1e-20):
     # TODO XXX
 
 
+def corr_dist_scores(inds: Sequence[IndividualLike], scores_names: Optional[Sequence] = None, split_nb=2):
+    data = inds_to_scores_mat(inds, scores_names)
+    split_data = np.split(data, range(split_nb, data.shape[1], split_nb), 1)
+    corr_lst = [np.abs(np.corrcoef(x, rowvar=False)) for x in split_data]
+    corr_dist = 0.
+    nb = 0.
+    for i, c1 in enumerate(corr_lst):
+        for _, c2 in enumerate(corr_lst[i+1:]):
+            dst = np.linalg.norm(c1 - c2, ord='fro')
+            if not np.isnan(dst) and not np.isinf(dst):
+                corr_dist += dst
+                nb += 1.
+    if nb > 0:
+        corr_dist /= nb
+    return corr_dist
+
+
+# CMD Measure, as defined in Herdin2005 "Correlation Matrix Distance, a Meaningful Measure for Evaluation of Non-Stationary MIMO Channels"
+def numpy_correlation_mat_dist(c1, c2):
+    return 1. - np.trace(c1 * c2) / (np.linalg.norm(c1, ord="fro") * np.linalg.norm(c2, ord="fro"))
+
+def cmd_scores(inds: Sequence[IndividualLike], scores_names: Optional[Sequence] = None, split_nb=2):
+    data = inds_to_scores_mat(inds, scores_names)
+    split_data = np.split(data, range(split_nb, data.shape[1], split_nb), 1)
+    corr_lst = [np.abs(np.corrcoef(x, rowvar=False)) for x in split_data]
+    corr_dist = 0.
+    nb = 0.
+    for i, c1 in enumerate(corr_lst):
+        for _, c2 in enumerate(corr_lst[i+1:]):
+            dst = numpy_correlation_mat_dist(c1, c2)
+            if not np.isnan(dst) and not np.isinf(dst):
+                corr_dist += dst
+                nb += 1.
+    if nb > 0:
+        corr_dist /= nb
+    return corr_dist
+
+
+
 
 # MODELINE  "{{{1
 # vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
