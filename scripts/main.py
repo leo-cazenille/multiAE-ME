@@ -169,6 +169,21 @@ class MultiAEExperiment(QDExperiment):
                     score += (v - bounds[0]) / (d)
         return f"{score:.3f}"
 
+    # XXX quick and dirty hack to compute qd score over all containers
+    def _fn_parent_qd_score(self, algo):
+        all_inds = algo.algorithms[0].container.container.parents[0]
+        cont0 = algo.algorithms[0].container
+        score: float = 0.
+        for ind in all_inds:
+            ind_fit = cont0.get_ind_fitness(ind)
+            for v, w, bounds in zip(ind_fit.values, ind_fit.weights, cont0.fitness_domain):
+                d = (bounds[1] - bounds[0]) if bounds[1] > bounds[0] else 1
+                if w < 0.:
+                    score += (bounds[1] - v) / (d)
+                else:
+                    score += (v - bounds[0]) / (d)
+        return f"{score:.3f}"
+
 
     def reinit_loggers(self):
         # Update stats
@@ -204,8 +219,10 @@ class MultiAEExperiment(QDExperiment):
             for i_alg, alg in enumerate(algos):
                 stat_qd_score = LoggerStat(f"qd_score-{alg.name}", partial(self._fn_qd_score, i_alg), True)
                 self.logger.register_stat(stat_qd_score)
-            stat_all_qd_score = LoggerStat(f"all_qd_score", self._fn_all_qd_score, True)
-            self.logger.register_stat(stat_all_qd_score)
+            #stat_all_qd_score = LoggerStat(f"all_qd_score", self._fn_all_qd_score, True)
+            #self.logger.register_stat(stat_all_qd_score)
+            stat_parent_qd_score = LoggerStat(f"parent_qd_score", self._fn_parent_qd_score, True)
+            self.logger.register_stat(stat_parent_qd_score)
             for i_alg, alg in enumerate(algos):
                 stat_originality = LoggerStat(f"orig-{alg.name}", partial(self._fn_originality, i_alg), True)
                 self.logger.register_stat(stat_originality)
