@@ -154,6 +154,21 @@ class MultiAEExperiment(QDExperiment):
         return f"{cmd_scores(sortedcollections.IndexableSet(self._get_all_algs_inds()), scores_names):.4f}"
 
 
+    # XXX quick and dirty hack to compute qd score over all containers
+    def _fn_all_qd_score(self, algo):
+        all_inds = sortedcollections.IndexableSet(self._get_all_algs_inds())
+        cont0 = algo.algorithms[0].container
+        score: float = 0.
+        for ind in all_inds:
+            ind_fit = cont0.get_ind_fitness(ind)
+            for v, w, bounds in zip(ind_fit.values, ind_fit.weights, cont0.fitness_domain):
+                d = (bounds[1] - bounds[0]) if bounds[1] > bounds[0] else 1
+                if w < 0.:
+                    score += (bounds[1] - v) / (d)
+                else:
+                    score += (v - bounds[0]) / (d)
+        return f"{score:.3f}"
+
 
     def reinit_loggers(self):
         # Update stats
@@ -189,6 +204,8 @@ class MultiAEExperiment(QDExperiment):
             for i_alg, alg in enumerate(algos):
                 stat_qd_score = LoggerStat(f"qd_score-{alg.name}", partial(self._fn_qd_score, i_alg), True)
                 self.logger.register_stat(stat_qd_score)
+            stat_all_qd_score = LoggerStat(f"all_qd_score", self._fn_all_qd_score, True)
+            self.logger.register_stat(stat_all_qd_score)
             for i_alg, alg in enumerate(algos):
                 stat_originality = LoggerStat(f"orig-{alg.name}", partial(self._fn_originality, i_alg), True)
                 self.logger.register_stat(stat_originality)
@@ -199,8 +216,8 @@ class MultiAEExperiment(QDExperiment):
             #self.logger.register_stat(stat_mean_corr)
             #stat_mean_cov = LoggerStat(f"mean_cov", partial(self._fn_mean_cov, mean_corr_stat_scores_names), True)
             #self.logger.register_stat(stat_mean_cov)
-            stat_mean_abs_cov = LoggerStat(f"mean_abs_cov", partial(self._fn_mean_abs_cov, mean_corr_stat_scores_names), True)
-            self.logger.register_stat(stat_mean_abs_cov)
+            #stat_mean_abs_cov = LoggerStat(f"mean_abs_cov", partial(self._fn_mean_abs_cov, mean_corr_stat_scores_names), True)
+            #self.logger.register_stat(stat_mean_abs_cov)
             stat_mean_cmd = LoggerStat(f"mean_cmd", partial(self._fn_mean_cmd, mean_corr_stat_scores_names), True)
             self.logger.register_stat(stat_mean_cmd)
 

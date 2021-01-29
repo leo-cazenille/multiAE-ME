@@ -172,6 +172,9 @@ class SelfAdaptiveNoveltyArchive(Container):
 
     # Inspired from original code of Cully2019 "Autonomous skill discovery with Quality-Diversity and Unsupervised Descriptors"
     def compute_new_threshold(self, max_nb_inds = 50000, min_threshold = 1e-30) -> None:
+        if self.k_resolution <= 0.:
+            print(f"DEBUG compute_new_threshold: keep old threshold {self.threshold_novelty}")
+            return
         # Randomly selects individual and regroup their features descriptors into a matrix
         parents_inds = self.all_parents_inds()
         if len(parents_inds) > max_nb_inds:
