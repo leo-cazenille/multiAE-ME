@@ -235,8 +235,8 @@ class MultiAEExperiment(QDExperiment):
             #self.logger.register_stat(stat_mean_cov)
             #stat_mean_abs_cov = LoggerStat(f"mean_abs_cov", partial(self._fn_mean_abs_cov, mean_corr_stat_scores_names), True)
             #self.logger.register_stat(stat_mean_abs_cov)
-            stat_mean_cmd = LoggerStat(f"mean_cmd", partial(self._fn_mean_cmd, mean_corr_stat_scores_names), True)
-            self.logger.register_stat(stat_mean_cmd)
+            #stat_mean_cmd = LoggerStat(f"mean_cmd", partial(self._fn_mean_cmd, mean_corr_stat_scores_names), True)
+            #self.logger.register_stat(stat_mean_cmd)
 
         # Save parent container in the 'container' entry of the data pickle file
         try:
@@ -283,18 +283,18 @@ class MultiAEExperiment(QDExperiment):
                     if hasattr(c, "_create_default_model"):
                         c._create_default_model(ref_cont[0])
 
-        klc_reference_data_file = self.config.get("klc_reference_data_file", "")
-        if len(klc_reference_data_file) > 0:
-            self.klc_scores_names = self.config['klc_scores_names']
-            self.klc_nb_bins = self.config['klc_nb_bins']
-            self.klc_epsilon = self.config.get('klc_epsilon', 1e-20)
-            with open(klc_reference_data_file, "rb") as f:
-                ref_data = pickle.load(f)
-            klc_reference_container = ref_data['container']
-            self.klc_density_refs, self.klc_refs_range = kl_coverage_prepare_stored_refs(klc_reference_container, self.klc_scores_names, self.klc_nb_bins, self.klc_epsilon)
-            #self.klc_density_refs, self.klc_refs_range = kl_coverage2_prepare_stored_refs(klc_reference_container, self.klc_scores_names, self.klc_nb_bins, self.klc_epsilon)
-            stat_klc = LoggerStat(f"klc", self._fn_klc, True)
-            self.logger.register_stat(stat_klc)
+#        klc_reference_data_file = self.config.get("klc_reference_data_file", "")
+#        if len(klc_reference_data_file) > 0:
+#            self.klc_scores_names = self.config['klc_scores_names']
+#            self.klc_nb_bins = self.config['klc_nb_bins']
+#            self.klc_epsilon = self.config.get('klc_epsilon', 1e-20)
+#            with open(klc_reference_data_file, "rb") as f:
+#                ref_data = pickle.load(f)
+#            klc_reference_container = ref_data['container']
+#            self.klc_density_refs, self.klc_refs_range = kl_coverage_prepare_stored_refs(klc_reference_container, self.klc_scores_names, self.klc_nb_bins, self.klc_epsilon)
+#            #self.klc_density_refs, self.klc_refs_range = kl_coverage2_prepare_stored_refs(klc_reference_container, self.klc_scores_names, self.klc_nb_bins, self.klc_epsilon)
+#            stat_klc = LoggerStat(f"klc", self._fn_klc, True)
+#            self.logger.register_stat(stat_klc)
 
 
 
