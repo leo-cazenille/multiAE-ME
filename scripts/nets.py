@@ -1221,7 +1221,7 @@ class NNTrainer(object):
 #        res = [r[0].tolist() for r in res]
 #        return res
 
-    def eval(self, inds, model = None):
+    def eval(self, inds, model = None, update_latent_normalization = False):
         assert(len(inds) > 0)
         _model = self.model if model == None else model
         _model.cpu()

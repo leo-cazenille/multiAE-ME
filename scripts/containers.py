@@ -24,6 +24,7 @@ import copy
 import numpy as np
 import warnings
 import random
+from sklearn.preprocessing import QuantileTransformer
 
 # QDpy
 import qdpy
@@ -234,6 +235,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
             nb_channels: int = 2,
             batch_norm_before_latent: bool = True,
             trainer_type: str = "NNTrainer",
+            latent_normalisation: str = "none",
             **kwargs: Any) -> None:
         self.div_coeff = div_coeff
         self.diversity_loss_computation = diversity_loss_computation
@@ -250,6 +252,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         self.nb_filters = nb_filters
         self.nb_channels = nb_channels
         self.batch_norm_before_latent = batch_norm_before_latent
+        self.latent_normalisation = latent_normalisation
         super().__init__(container, **kwargs)
 
         self.last_recomputed = 0
@@ -270,6 +273,9 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
                 learning_rate=self.learning_rate, batch_size=self.batch_size, epochs_avg_loss=self.epochs_avg_loss,
                 validation_split=self.validation_split, reset_model_every_training=self.reset_model_every_training,
                 diversity_loss_computation=self.diversity_loss_computation, div_coeff=self.div_coeff)
+
+        if self.latent_normalisation == "quartile":
+            self.latent_quartile_transform = QuantileTransformer(n_quantiles=1000, random_state=0)
 
 
     def _init_methods_hooks(self):
@@ -304,7 +310,7 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         self.container.clear()
 
 
-    def compute_latent(self, inds: Sequence[IndividualLike]) -> Sequence[FeaturesLike]:
+    def compute_latent(self, inds: Sequence[IndividualLike], update_latent_normalisation = False) -> Sequence[FeaturesLike]:
         assert(len(inds) > 0)
         if self.model == None:
             self._create_default_model(inds[0])
@@ -313,8 +319,16 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         latent_scores = self.trainer.eval(inds, self.model)[0]
         #print(f"DEBUG compute_latent {len(inds)} {latent_scores} {self.model}")
 
+        if update_latent_normalisation:
+            if self.latent_normalisation == "quartile":
+                self.latent_quartile_transform.fit(latent_scores)
+
+        normalised_latent_scores = latent_scores
+        if self.latent_normalisation == "quartile":
+            normalised_latent_scores = self.latent_quartile_transform.transform(latent_scores)
+
         # Store latent scores into each individual
-        for ls, ind in zip(latent_scores, inds):
+        for ls, ind in zip(normalised_latent_scores, inds):
             for j, s in enumerate(ls):
                 ind.scores[f"extracted_{id(self)}_{j}"] = s
 
@@ -423,16 +437,17 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
         if len(training_inds) == 0:
             return
 
+        self.compute_latent(training_inds, update_latent_normalisation=True)
+        #elapsed = timer() - start_time # XXX
+        #print(f"# Features recomputed for {len(training_inds)} inds.. Elapsed={elapsed}") # XXX
+        #start_time = timer() # XXX
+
         if hasattr(self.container, 'compute_new_threshold'): # XXX
             self.container.compute_new_threshold() # XXX
         if hasattr(self.container, '_add_rescaling'): # XXX HACK
             print(f"DEBUG {self.name} call _add_rescaling")
             self.container._add_rescaling(training_inds) # XXX HACK
 
-        self.compute_latent(training_inds)
-        #elapsed = timer() - start_time # XXX
-        #print(f"# Features recomputed for {len(training_inds)} inds.. Elapsed={elapsed}") # XXX
-        #start_time = timer() # XXX
         self.container.update(training_inds, **update_params)
         #for i in training_inds:
         #    try:
