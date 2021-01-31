@@ -94,29 +94,19 @@ def corr_scores(inds: Sequence[IndividualLike], scores_names: Optional[Sequence]
 
 
 
-def kl_coverage(inds: Sequence[IndividualLike], refs: Sequence[IndividualLike], scores_names, nb_bins=15, epsilon=1e-20):
-    mat_inds = inds_to_scores_mat(inds, scores_names)
+
+def kl_coverage_prepare_stored_refs(refs: Sequence[IndividualLike], scores_names, nb_bins=15, epsilon=1e-20, ranges=None):
     mat_refs = inds_to_scores_mat(refs, scores_names)
     # Compute refs extrema
-    refs_min = np.min(mat_refs, 0)
-    refs_max = np.max(mat_refs, 0)
-    refs_range = list(zip(refs_min, refs_max))
-    # Compute histograms
-    density_inds = (np.histogramdd(mat_inds, nb_bins, range=refs_range, density=False)[0] / len(mat_inds)).ravel()
-    density_inds[np.where(density_inds == 0.)] = epsilon
-    density_refs = (np.histogramdd(mat_refs, nb_bins, range=refs_range, density=False)[0] / len(mat_refs)).ravel()
-    density_refs[np.where(density_refs == 0.)] = epsilon
-    # Compute KLC
-    return np.sum(density_inds * np.log(density_inds / density_refs))
-    #return np.sum(density_refs * np.log(density_refs / density_inds))
-
-
-def kl_coverage_prepare_stored_refs(refs: Sequence[IndividualLike], scores_names, nb_bins=15, epsilon=1e-20):
-    mat_refs = inds_to_scores_mat(refs, scores_names)
-    # Compute refs extrema
-    refs_min = np.min(mat_refs, 0)
-    refs_max = np.max(mat_refs, 0)
-    refs_range = list(zip(refs_min, refs_max))
+    if ranges == None:
+        refs_min = np.min(mat_refs, 0)
+        refs_max = np.max(mat_refs, 0)
+        refs_range = list(zip(refs_min, refs_max))
+    else:
+        if len(ranges) == 2 and not isinstance(ranges[0], Sequence):
+            refs_range = [list(ranges)] * int(mat_refs.shape[1])
+        else:
+            refs_range = list(ranges)
     # Compute histograms
     density_refs = (np.histogramdd(mat_refs, nb_bins, range=refs_range, density=False)[0] / len(mat_refs)).ravel()
     density_refs[np.where(density_refs == 0.)] = epsilon
@@ -131,6 +121,16 @@ def kl_coverage_stored_refs(inds: Sequence[IndividualLike], density_refs, refs_r
     return np.sum(density_inds * np.log(density_inds / density_refs))
     #return np.sum(density_refs * np.log(density_refs / density_inds))
 
+
+def kl_coverage(inds: Sequence[IndividualLike], refs: Sequence[IndividualLike], scores_names, nb_bins=15, epsilon=1e-20, ranges=None):
+    density_refs, refs_range = kl_coverage_prepare_stored_refs(refs, scores_names, nb_bins, epsilon, ranges)
+    mat_inds = inds_to_scores_mat(inds, scores_names)
+    # Compute histograms
+    density_inds = (np.histogramdd(mat_inds, nb_bins, range=refs_range, density=False)[0] / len(mat_inds)).ravel()
+    density_inds[np.where(density_inds == 0.)] = epsilon
+    # Compute KLC
+    return np.sum(density_inds * np.log(density_inds / density_refs))
+    #return np.sum(density_refs * np.log(density_refs / density_inds))
 
 
 

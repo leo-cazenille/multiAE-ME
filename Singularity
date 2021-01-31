@@ -51,3 +51,6 @@ From: lcazenille/multiae
     wait
 
 
+%apprun stats
+    exec ./scripts/stats.py $@
+
