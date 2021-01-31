@@ -261,6 +261,7 @@ def compute_ref_density(config, case_name):
         inds = get_added_inds(config, data_file, max_inds, remove_extracted_scores=False)
         mat_inds = metrics.inds_to_scores_mat(inds)
         futures.append(_compute_klc_density.remote(mat_inds, nb_bins, epsilon, conf_ranges))
+    assert(len(futures) > 0)
 
     # Compute density and ranges
     #futures = [_compute_klc_density.remote(sc_mat, nb_bins, epsilon, conf_ranges) for sc_mat in ref_sc_lst]
