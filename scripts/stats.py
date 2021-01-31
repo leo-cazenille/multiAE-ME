@@ -94,7 +94,7 @@ def get_added_inds(config, data_file, max_inds = None, remove_extracted_scores =
     else:
         remaining_inds = max_inds
         for a in data_file['algorithms']:
-            for i in a.container:
+            for i in a.container.container:
                 if remaining_inds <= 0:
                     return added_inds
                 if remove_extracted_scores:
