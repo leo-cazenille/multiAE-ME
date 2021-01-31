@@ -94,7 +94,7 @@ def get_added_inds(config, data_file, max_inds = None, remove_extracted_scores =
     else:
         remaining_inds = max_inds
         for a in data_file['algorithms']:
-            for i in a.container.container:
+            for i in a.container:
                 if remaining_inds <= 0:
                     return added_inds
                 if remove_extracted_scores:
@@ -304,10 +304,8 @@ def relative_kl_coverage_btw_two_cases(config, ref_case_name, comp_case_name, re
     print(f"DEBUG1 klcs: {len(klcs)} {np.array(klcs).shape}")
     print(f"DEBUG2 klcs: {klcs}")
     print(f"DEBUG3 klcs: {np.mean(klcs)} {np.std(klcs)}")
-    mean_klc_mat[i,j] = np.mean(klcs)
-    std_klc_mat[i,j] = np.std(klcs)
     gc.collect()
-    return mean_klc_mat, std_klc_mat
+    return klcs
 
 
 
@@ -329,7 +327,9 @@ def compute_relative_kl_coverage(config):
         print(f"Computing KL coverages using case '{ref_case_name}' as reference.")
         density_refs, refs_range = compute_ref_density(config, ref_case_name)
         for j, comp_case_name in enumerate(folders.keys()):
-            mean_klc_mat[i,j], std_klc_mat[i,j] = relative_kl_coverage_btw_two_cases(config, ref_case_name, comp_case_name, density_refs, refs_range)
+            klcs = relative_kl_coverage_btw_two_cases(config, ref_case_name, comp_case_name, density_refs, refs_range)
+            mean_klc_mat[i,j] = np.mean(klcs)
+            std_klc_mat[i,j] = np.std(klcs)
         gc.collect()
     gc.collect()
     return {"mean": mean_klc_mat, "std": std_klc_mat}
