@@ -1,0 +1,22 @@
+---
+
+
+klc:
+    nb_bins: 15
+    epsilon: 1e-20
+
+    data_dirs:
+        - "bipedalM30-reference-4xGrid-scoreprop_100000/"
+        - "bipedalM30-preonline5000_100-recononly_0.0-4xAutoScalingGrid2x25x25-scoreprop_100000/"
+        - "bipedalM30-preonline5000_100_quartile-recononly_0.0-1xGridx50x50-scoreprop_100000/"
+        - "bipedalM30-preonline5000_100_quartile-recononly_0.0-4xGridx25x25-scoreprop_100000/"
+        - "bipedalM30-preonline5000_100_quartile-recononly_0.0-6xGridx20x20-scoreprop_100000/"
+        - "bipedalM30-preonline5000_100_quartile-recononly_0.0-9xGridx14x14-scoreprop_100000/"
+        - "bipedalM30-preonline5000_100_quartile-recononly_0.0-25xGridx10x10-scoreprop_100000/"
+        - "bipedalM30-preonline5000_100_quartile-outputs_1.0-4xGridx25x25-scoreprop_100000/"
+        - "bipedalM30-preonline5000_100_quartile-covlatent_1.0-4xGridx25x25-scoreprop_100000/"
+
+
+# MODELINE "{{{1
+# vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
+# vim:foldmethod=marker
