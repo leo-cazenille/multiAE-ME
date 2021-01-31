@@ -5,7 +5,7 @@ klc:
     nb_bins: 15
     epsilon: 1e-20
     max_data_files: 1
-    max_inds: 10
+    #max_inds: 10
 
     data_dirs:
 #        ref: "bipedalM30-reference-4xGrid-scoreprop_100000/"
