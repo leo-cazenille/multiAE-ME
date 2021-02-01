@@ -48,7 +48,7 @@ import containers
 #from containers import *
 #import sim
 import main
-import ray
+#import ray
 
 
 #import warnings
@@ -119,10 +119,197 @@ def get_empty_containers(config, data_file):
             a.container._best = None
             a.container._best_fitness = None
             a.container._best_features = None
-        print(f"DEBUG container len: {len(a.container)}")
+        #print(f"DEBUG container len: {len(a.container)}")
         containers.append(a.container)
     return containers
 
+
+
+
+
+##def recompute_latent(config, containers_case_name, inds_case_name, ):
+#def recompute_latent(config, ref_stats, inds_case_name):
+#    folders = config['klc']["data_dirs"]
+#    max_data_files = config['klc'].get('max_data_files', None)
+#    max_inds = config['klc'].get('max_inds', None)
+#
+#    # Create loaders
+#    inds_folder = folders[inds_case_name]
+#    loader_inds = data_files_loader(config, inds_folder, max_data_files)
+#
+#    # Recompute latent for all inds
+#    all_scores_mats = []
+#    for i, inds_data_file in enumerate(loader_inds):
+#        cont_scores_mats = []
+#        for j, cont in enumerate(ref_stats['containers']):
+#            print(f"Recomputing latent scores of '{inds_case_name}'/{i} using containers of '{ref_stats['name']}'/{j}...")
+#            orig_inds = get_added_inds(config, inds_data_file, max_inds, remove_extracted_scores=True)
+#            added_inds = sortedcollections.IndexableSet()
+#            # Add all inds to all containers:
+#            for c in containers:
+#                try:
+#                    c.update(orig_inds)
+#                    added_inds |= c
+#                except Exception as e:
+#                    print("Container UPDATE failed !")
+#                    traceback.print_exc()
+#                    #raise e
+#            # Retrieve score matrix
+#            scores_mat = metrics.inds_to_scores_mat(added_inds)
+#            cont_scores_mats.append(scores_mat)
+#        all_scores_mats.append(cont_scores_mats)
+#
+#    return all_scores_mats
+
+def recompute_latent(config, inds_data_file, base_containers):
+    max_inds = config['klc'].get('max_inds', None)
+    containers = copy.deepcopy(base_containers)
+
+    orig_inds = get_added_inds(config, inds_data_file, max_inds, remove_extracted_scores=True)
+    added_inds = sortedcollections.IndexableSet()
+    # Add all inds to all containers:
+    for c in containers:
+        try:
+            c.update(orig_inds)
+            added_inds |= c
+        except Exception as e:
+            print("Container UPDATE failed !")
+            traceback.print_exc()
+            #raise e
+    # Retrieve score matrix
+    scores_mat = metrics.inds_to_scores_mat(added_inds)
+
+    return scores_mat
+
+
+
+
+#@ray.remote
+def _compute_klc_density(mat_refs, nb_bins, epsilon, ranges):
+    # Compute refs extrema
+    if ranges == None:
+        refs_min = np.min(mat_refs, 0)
+        refs_max = np.max(mat_refs, 0)
+        refs_range = list(zip(refs_min, refs_max))
+    else:
+        if len(ranges) == 2 and not isinstance(ranges[0], Sequence):
+            refs_range = [list(ranges)] * int(mat_refs.shape[1])
+        else:
+            refs_range = list(ranges)
+    # Compute histograms
+    density_refs = (np.histogramdd(mat_refs, nb_bins, range=refs_range, density=False)[0] / len(mat_refs)).ravel()
+    density_refs[np.where(density_refs == 0.)] = epsilon
+    return density_refs, refs_range
+
+
+
+
+
+
+#@ray.remote
+def _compute_klc(mat_inds, density_refs, refs_range, nb_bins, epsilon):
+    print(f"DEBUG _compute_klc mat_inds: {mat_inds}")
+    print(f"DEBUG _compute_klc density_refs: {density_refs}")
+    print(f"DEBUG _compute_klc refs_range: {refs_range}")
+    print(f"DEBUG _compute_klc nb_bins: {nb_bins}")
+    # Compute histograms
+    density_inds = (np.histogramdd(mat_inds, nb_bins, range=refs_range, density=False)[0] / len(mat_inds)).ravel()
+    density_inds[np.where(density_inds == 0.)] = epsilon
+    # Compute KLC
+    return np.sum(density_inds * np.log(density_inds / density_refs))
+    #return np.sum(density_refs * np.log(density_refs / density_inds))
+
+
+def relative_kl_coverage_btw_two_cases(config, ref_stats, inds_case_name):
+    nb_bins = config['klc'].get('nb_bins', 15)
+    epsilon = config['klc'].get('epsilon', 1e-20)
+    print(f"Computing KL coverage of case '{inds_case_name}' using case '{ref_stats['name']}' as reference.")
+
+#    # Recompute latent scores
+#    comp_scores_mats = recompute_latent(config, ref_stats, inds_case_name)
+#    # Compute KL coverage for each score_mat
+#    futures = []
+#    for refs_d, refs_r, cont_scores_mat in zip(refs_density, refs_range, comp_scores_mats):
+#        for sc_mat in cont_scores_mat:
+#            futures.append(_compute_klc.remote(sc_mat, refs_d, refs_r, nb_bins, epsilon))
+
+    # Create loaders
+    folders = config['klc']["data_dirs"]
+    max_data_files = config['klc'].get('max_data_files', None)
+    max_inds = config['klc'].get('max_inds', None)
+    inds_folder = folders[inds_case_name]
+    loader_inds = data_files_loader(config, inds_folder, max_data_files)
+
+    # Recompute latent scores
+    klcs = []
+    for i, inds_data_file in enumerate(loader_inds):
+        for j, cont in enumerate(ref_stats['containers']):
+            print(f"Recomputing latent scores of '{inds_case_name}'/{i} using containers of '{ref_stats['name']}'/{j}...")
+            scores_mat = recompute_latent(config, inds_data_file, cont)
+            klcs.append(_compute_klc(scores_mat, ref_stats['density'], ref_stats['range'], nb_bins, epsilon))
+            gc.collect()
+
+
+    #futures2 = [_compute_klc.remote(sc_mat, refs_d, refs_r, nb_bins, epsilon) for sc_mat in comp_scores_mats for refs_d, refs_r in zip(density_refs, refs_range)]
+    #klcs = list(ray.get(futures))
+    print(f"DEBUG1 klcs: {len(klcs)} {np.array(klcs).shape}")
+    print(f"DEBUG2 klcs: {klcs}")
+    print(f"DEBUG3 klcs: {np.mean(klcs)} {np.std(klcs)}")
+    gc.collect()
+    return klcs
+
+
+
+def compute_relative_kl_coverage(config, ref_stats):
+    dirs = config['klc']["data_dirs"]
+    # Compute klc between each all cases
+    mean_klc_mat = np.zeros(len(dirs))
+    std_klc_mat = np.zeros(len(dirs))
+    for i, comp_case_name in enumerate(dirs.keys()):
+        klcs = relative_kl_coverage_btw_two_cases(config, ref_stats, comp_case_name)
+        mean_klc_mat[i] = np.mean(klcs)
+        std_klc_mat[i] = np.std(klcs)
+        gc.collect()
+    return {"mean": mean_klc_mat, "std": std_klc_mat}
+
+
+
+
+
+def compute_ref(config):
+    ref_name = config['klc']['refs']['name']
+    ref_dir = config['klc']['refs']['dir']
+    ref_ranges = config['klc']['refs'].get('ranges', None)
+    print(f"Computing KL densities of reference case '{ref_name}'...", end=" ")
+
+    max_data_files = config['klc'].get('max_data_files', None)
+    max_inds = config['klc'].get('max_inds', None)
+    nb_bins = config['klc'].get('nb_bins', 15)
+    epsilon = config['klc'].get('epsilon', 1e-20)
+
+    #density_refs, refs_range = compute_ref_density(config, ref_dir, ref_ranges)
+    # Compute densities and extract emptied containers
+    loader = data_files_loader(config, ref_dir, max_data_files)
+    futures = []
+    containers = []
+    density_refs = []
+    refs_range = []
+    for data_file in loader:
+        inds = get_added_inds(config, data_file, max_inds, remove_extracted_scores=False)
+        mat_inds = metrics.inds_to_scores_mat(inds)
+        #futures.append(_compute_klc_density.remote(mat_inds, nb_bins, epsilon, ref_ranges))
+        r = _compute_klc_density(mat_inds, nb_bins, epsilon, ref_ranges)
+        density_refs.append(r[0])
+        refs_range.append(r[1])
+        containers.append(get_empty_containers(config, data_file))
+    #assert(len(futures) > 0)
+
+    # Compute density and ranges
+    #futures = [_compute_klc_density.remote(sc_mat, nb_bins, epsilon, ref_ranges) for sc_mat in ref_sc_lst]
+    #density_refs, refs_range = list(zip(*(ray.get(futures))))
+
+    res = {"name": ref_name, "dir": ref_dir, "density": density_refs, "range": refs_range, "containers": containers}
+    return res
 
 
 #def gather_conts(config):
@@ -172,171 +359,30 @@ def get_empty_containers(config, data_file):
 
 
 
-def recompute_latent(config, containers_case_name, inds_case_name, ):
-    folders = config['klc']["data_dirs"]
-    max_data_files = config['klc'].get('max_data_files', None)
-    max_inds = config['klc'].get('max_inds', None)
-
-    # Create loaders
-    containers_folder = folders[containers_case_name]
-    loader_containers = data_files_loader(config, containers_folder, max_data_files)
-    inds_folder = folders[inds_case_name]
-    loader_inds = data_files_loader(config, inds_folder, max_data_files)
-
-#    # Retrieve empty containers
-#    containers_folder = folders[containers_case_name]
-#    loader_containers = data_files_loader(config, containers_folder, max_data_files)
-#    containers = [get_empty_containers(config, data_file) for data_file in loader_containers]
+#def compute_relative_kl_coverage(config):
+#    nb_bins = config['klc'].get('nb_bins', 15)
+#    epsilon = config['klc'].get('epsilon', 1e-20)
+#    conf_ranges = config['klc'].get('ranges', None)
 #
-#    # Create loader for inds
-#    inds_folder = folders[inds_case_name]
-#    loader_inds = data_files_loader(config, inds_folder, max_data_files)
-#    inds = []
-#    for data in loader_inds:
-#        added_inds = sortedcollections.IndexableSet()
-#        for a in data['algorithms']:
-#            added_inds |= a.container
-#        inds.append(added_inds)
-
-    # Recompute latent for all inds
-    all_scores_mats = []
-    for i, cont_data_file in enumerate(loader_containers):
-        containers = get_empty_containers(config, cont_data_file)
-        cont_scores_mats = []
-        for j, inds_data_file in enumerate(loader_inds):
-            print(f"Recomputing latent scores of '{inds_case_name}'/{j} using containers of '{containers_case_name}'/{i}...")
-            orig_inds = get_added_inds(config, inds_data_file, max_inds, remove_extracted_scores=True)
-            added_inds = sortedcollections.IndexableSet()
-            # Add all inds to all containers:
-            for c in containers:
-                try:
-                    c.update(orig_inds)
-                    added_inds |= c
-                except Exception as e:
-                    print("Container UPDATE failed !")
-                    traceback.print_exc()
-                    #raise e
-            # Retrieve score matrix
-            scores_mat = metrics.inds_to_scores_mat(added_inds)
-            cont_scores_mats.append(scores_mat)
-        all_scores_mats.append(cont_scores_mats)
-
-    return all_scores_mats
-
-
-
-
-@ray.remote
-def _compute_klc_density(mat_refs, nb_bins, epsilon, ranges):
-    # Compute refs extrema
-    if ranges == None:
-        refs_min = np.min(mat_refs, 0)
-        refs_max = np.max(mat_refs, 0)
-        refs_range = list(zip(refs_min, refs_max))
-    else:
-        if len(ranges) == 2 and not isinstance(ranges[0], Sequence):
-            refs_range = [list(ranges)] * int(mat_refs.shape[1])
-        else:
-            refs_range = list(ranges)
-    # Compute histograms
-    density_refs = (np.histogramdd(mat_refs, nb_bins, range=refs_range, density=False)[0] / len(mat_refs)).ravel()
-    density_refs[np.where(density_refs == 0.)] = epsilon
-    return density_refs, refs_range
-
-
-
-def compute_ref_density(config, case_name):
-    folders = config['klc']["data_dirs"]
-    max_data_files = config['klc'].get('max_data_files', None)
-    max_inds = config['klc'].get('max_inds', None)
-    nb_bins = config['klc'].get('nb_bins', 15)
-    epsilon = config['klc'].get('epsilon', 1e-20)
-    conf_ranges = config['klc'].get('ranges', None)
-
-    # Create loaders
-    case_folder = folders[case_name]
-    loader = data_files_loader(config, case_folder, max_data_files)
-    futures = []
-    for data_file in loader:
-        inds = get_added_inds(config, data_file, max_inds, remove_extracted_scores=False)
-        mat_inds = metrics.inds_to_scores_mat(inds)
-        futures.append(_compute_klc_density.remote(mat_inds, nb_bins, epsilon, conf_ranges))
-    assert(len(futures) > 0)
-
-    # Compute density and ranges
-    #futures = [_compute_klc_density.remote(sc_mat, nb_bins, epsilon, conf_ranges) for sc_mat in ref_sc_lst]
-    density_refs, refs_range = list(zip(*(ray.get(futures))))
-    return density_refs, refs_range
-
-
-
-
-@ray.remote
-def _compute_klc(mat_inds, density_refs, refs_range, nb_bins, epsilon):
-    print(f"DEBUG _compute_klc mat_inds: {mat_inds}")
-    print(f"DEBUG _compute_klc density_refs: {density_refs}")
-    print(f"DEBUG _compute_klc refs_range: {refs_range}")
-    print(f"DEBUG _compute_klc nb_bins: {nb_bins}")
-    # Compute histograms
-    density_inds = (np.histogramdd(mat_inds, nb_bins, range=refs_range, density=False)[0] / len(mat_inds)).ravel()
-    density_inds[np.where(density_inds == 0.)] = epsilon
-    # Compute KLC
-    return np.sum(density_inds * np.log(density_inds / density_refs))
-    #return np.sum(density_refs * np.log(density_refs / density_inds))
-
-
-def relative_kl_coverage_btw_two_cases(config, ref_case_name, comp_case_name, refs_density, refs_range):
-    nb_bins = config['klc'].get('nb_bins', 15)
-    epsilon = config['klc'].get('epsilon', 1e-20)
-    conf_ranges = config['klc'].get('ranges', None)
-    print(f"Computing KL coverage of case '{comp_case_name}' using case '{ref_case_name}' as reference.")
-
-    # Recompute latent scores
-    comp_scores_mats = recompute_latent(config, ref_case_name, comp_case_name)
-    # Compute KL coverage for each score_mat
-    futures = []
-    for refs_d, refs_r, cont_scores_mat in zip(refs_density, refs_range, comp_scores_mats):
-        for sc_mat in cont_scores_mat:
-            futures.append(_compute_klc.remote(sc_mat, refs_d, refs_r, nb_bins, epsilon))
-
-    #futures2 = [_compute_klc.remote(sc_mat, refs_d, refs_r, nb_bins, epsilon) for sc_mat in comp_scores_mats for refs_d, refs_r in zip(density_refs, refs_range)]
-    klcs = list(ray.get(futures))
-    print(f"DEBUG1 klcs: {len(klcs)} {np.array(klcs).shape}")
-    print(f"DEBUG2 klcs: {klcs}")
-    print(f"DEBUG3 klcs: {np.mean(klcs)} {np.std(klcs)}")
-    gc.collect()
-    return klcs
-
-
-
-def compute_relative_kl_coverage(config):
-    nb_bins = config['klc'].get('nb_bins', 15)
-    epsilon = config['klc'].get('epsilon', 1e-20)
-    conf_ranges = config['klc'].get('ranges', None)
-
-    folders = config['klc']["data_dirs"]
-    #scores_names = config['klc'].get('scores_names', None)
-    #if isinstance(scores_names, Sized) and len(scores_names) == 0:
-    #    scores_names = None
-    max_data_files = config['klc'].get('max_data_files', None)
-
-    # Compute klc between each all cases
-    mean_klc_mat = np.zeros((len(folders), len(folders)))
-    std_klc_mat = np.zeros((len(folders), len(folders)))
-    for i, ref_case_name in enumerate(folders.keys()):
-        print(f"Computing KL coverages using case '{ref_case_name}' as reference.")
-        density_refs, refs_range = compute_ref_density(config, ref_case_name)
-        for j, comp_case_name in enumerate(folders.keys()):
-            klcs = relative_kl_coverage_btw_two_cases(config, ref_case_name, comp_case_name, density_refs, refs_range)
-            mean_klc_mat[i,j] = np.mean(klcs)
-            std_klc_mat[i,j] = np.std(klcs)
-        gc.collect()
-    gc.collect()
-    return {"mean": mean_klc_mat, "std": std_klc_mat}
-
-
-
-
+#    folders = config['klc']["data_dirs"]
+#    #scores_names = config['klc'].get('scores_names', None)
+#    #if isinstance(scores_names, Sized) and len(scores_names) == 0:
+#    #    scores_names = None
+#    max_data_files = config['klc'].get('max_data_files', None)
+#
+#    # Compute klc between each all cases
+#    mean_klc_mat = np.zeros((len(folders), len(folders)))
+#    std_klc_mat = np.zeros((len(folders), len(folders)))
+#    for i, ref_case_name in enumerate(folders.keys()):
+#        print(f"Computing KL coverages using case '{ref_case_name}' as reference.")
+#        density_refs, refs_range = compute_ref_density(config, folders[ref_case_name])
+#        for j, comp_case_name in enumerate(folders.keys()):
+#            klcs = relative_kl_coverage_btw_two_cases(config, ref_case_name, comp_case_name, density_refs, refs_range)
+#            mean_klc_mat[i,j] = np.mean(klcs)
+#            std_klc_mat[i,j] = np.std(klcs)
+#        gc.collect()
+#    gc.collect()
+#    return {"mean": mean_klc_mat, "std": std_klc_mat}
 
 #
 #def gather_added_inds_and_conts(config):
@@ -466,21 +512,21 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--configFilename', type=str, default='conf/stats/all.yaml', help = "Path of configuration file")
-    parser.add_argument('-o', '--resultsBaseDir', type=str, default='results/', help = "Path of results files")
+    parser.add_argument('-o', '--resultsFilename', type=str, default='results/stats.p', help = "Path of results file")
     parser.add_argument('-v', '--verbose', default=False, action='store_true', help = "Enable verbose mode")
     parser.add_argument('-r', '--recompute', default=False, action='store_true', help = "Recompute everything, don't use cached data")
     return parser.parse_args()
 
 def create_config(args):
     config = yaml.safe_load(open(args.configFilename))
-    if len(args.resultsBaseDir) > 0:
-        config['resultsBaseDir'] = args.resultsBaseDir
+    if len(args.resultsFilename) > 0:
+        config['resultsFilename'] = args.resultsFilename
     config['verbose'] = args.verbose
     config['recompute'] = args.recompute
     return config
 
 def create_or_open_stats_file(config):
-    stats_filename = os.path.join(config['resultsBaseDir'], "stats.p")
+    stats_filename = config['resultsFilename']
     if not os.path.exists(stats_filename):
         data = {}
         with open(stats_filename, "wb") as f:
@@ -502,8 +548,8 @@ if __name__ == "__main__":
     config = create_config(args)
     recompute = config.get('recompute', False)
 
-    # Init ray
-    ray.init()
+#    # Init ray
+#    ray.init()
 
     # Create or retrieve stats
     stats_data, stats_filename = create_or_open_stats_file(config)
@@ -524,10 +570,15 @@ if __name__ == "__main__":
 #        stats_data['klc'] = compute_relative_kl_coverage(config, stats_data['scores_mats'])
 #    save_stats_file(config, stats_filename, stats_data)
 
+    if recompute or not 'ref' in stats_data:
+        stats_data['ref'] = compute_ref(config)
+    save_stats_file(config, stats_filename, stats_data)
+    gc.collect()
 
     if recompute or not 'klc' in stats_data:
-        stats_data['klc'] = compute_relative_kl_coverage(config)
+        stats_data['klc'] = compute_relative_kl_coverage(config, stats_data['ref'])
     save_stats_file(config, stats_filename, stats_data)
+    gc.collect()
 
     #exp = create_experiment(args, base_config)
     #launch_experiment(exp)
