@@ -246,10 +246,10 @@ def relative_kl_coverage_btw_two_cases(config, ref_stats, inds_case_name):
     # Recompute latent scores
     klcs = []
     for i, inds_data_file in enumerate(loader_inds):
-        for j, cont in enumerate(ref_stats['containers']):
+        for j, cont, density, ranges in enumerate(zip(ref_stats['containers'], ref_stats['density'], ref_stats['range'])):
             print(f"Recomputing latent scores of '{inds_case_name}'/{i} using containers of '{ref_stats['name']}'/{j}...")
             scores_mat = recompute_latent(config, inds_data_file, cont)
-            klcs.append(_compute_klc(scores_mat, ref_stats['density'], ref_stats['range'], nb_bins, epsilon))
+            klcs.append(_compute_klc(scores_mat, density, ranges, nb_bins, epsilon))
             gc.collect()
 
 
@@ -309,6 +309,7 @@ def compute_ref(config):
         refs_range.append(r[1])
         containers.append(get_empty_containers(config, data_file))
     #assert(len(futures) > 0)
+    print(f"Found {len(containers)} data files.")
 
     # Compute density and ranges
     #futures = [_compute_klc_density.remote(sc_mat, nb_bins, epsilon, ref_ranges) for sc_mat in ref_sc_lst]
