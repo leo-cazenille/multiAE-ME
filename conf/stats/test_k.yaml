@@ -8,6 +8,9 @@ klc:
     max_data_files: 1
     max_inds: 10
 
+    scores_names: ["meanDistance", "meanHeadStability", "meanTorquePerStep", "meanJump", "meanLeg0HipAngle", "meanLeg1HipAngle", "meanLeg0KneeAngle", "meanLeg1KneeAngle"]
+
+
     refs:
         name: hardcoded
         dir: "bipedalM30-reference-4xGrid-scoreprop_100000/"

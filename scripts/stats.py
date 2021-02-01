@@ -163,8 +163,11 @@ def get_empty_containers(config, data_file):
 
 def recompute_latent(config, inds_data_file, base_containers):
     max_inds = config['klc'].get('max_inds', None)
-    containers = copy.deepcopy(base_containers)
+    scores_names = config['klc'].get('scores_names', None)
+    if isinstance(scores_names, Sized) and len(scores_names) == 0:
+        scores_names = None
 
+    containers = copy.deepcopy(base_containers)
     orig_inds = get_added_inds(config, inds_data_file, max_inds, remove_extracted_scores=True)
     added_inds = sortedcollections.IndexableSet()
     # Add all inds to all containers:
@@ -177,7 +180,7 @@ def recompute_latent(config, inds_data_file, base_containers):
             traceback.print_exc()
             #raise e
     # Retrieve score matrix
-    scores_mat = metrics.inds_to_scores_mat(added_inds)
+    scores_mat = metrics.inds_to_scores_mat(added_inds, scores_names)
 
     return scores_mat
 
@@ -286,6 +289,9 @@ def compute_ref(config):
     max_inds = config['klc'].get('max_inds', None)
     nb_bins = config['klc'].get('nb_bins', 15)
     epsilon = config['klc'].get('epsilon', 1e-20)
+    scores_names = config['klc'].get('scores_names', None)
+    if isinstance(scores_names, Sized) and len(scores_names) == 0:
+        scores_names = None
 
     #density_refs, refs_range = compute_ref_density(config, ref_dir, ref_ranges)
     # Compute densities and extract emptied containers
@@ -296,7 +302,7 @@ def compute_ref(config):
     refs_range = []
     for data_file in loader:
         inds = get_added_inds(config, data_file, max_inds, remove_extracted_scores=False)
-        mat_inds = metrics.inds_to_scores_mat(inds)
+        mat_inds = metrics.inds_to_scores_mat(inds, scores_names)
         #futures.append(_compute_klc_density.remote(mat_inds, nb_bins, epsilon, ref_ranges))
         r = _compute_klc_density(mat_inds, nb_bins, epsilon, ref_ranges)
         density_refs.append(r[0])
