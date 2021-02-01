@@ -199,6 +199,7 @@ class SelfAdaptiveNoveltyArchive(Container):
 
 
 
+
 # Unbound get_ind_features method of the ``DebugTorchFeatureExtractionContainerDecorator`` class
 def _TorchMultiFeatureExtractionContainerDecorator_get_ind_features(self, individual: IndividualLike, *args, **kwargs) -> FeaturesLike:
     #print("DEBUG _TorchMultiFeatureExtractionContainerDecorator_get_ind_features")
