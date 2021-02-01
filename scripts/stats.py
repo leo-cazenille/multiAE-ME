@@ -246,7 +246,7 @@ def relative_kl_coverage_btw_two_cases(config, ref_stats, inds_case_name):
     # Recompute latent scores
     klcs = []
     for i, inds_data_file in enumerate(loader_inds):
-        for j, cont, density, ranges in enumerate(zip(ref_stats['containers'], ref_stats['density'], ref_stats['range'])):
+        for j, (cont, density, ranges) in enumerate(zip(ref_stats['containers'], ref_stats['density'], ref_stats['range'])):
             print(f"Recomputing latent scores of '{inds_case_name}'/{i} using containers of '{ref_stats['name']}'/{j}...")
             scores_mat = recompute_latent(config, inds_data_file, cont)
             klcs.append(_compute_klc(scores_mat, density, ranges, nb_bins, epsilon))
