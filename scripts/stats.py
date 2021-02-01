@@ -182,7 +182,13 @@ def recompute_latent(config, inds_data_file, base_containers):
     # Retrieve score matrix
     scores_mat = metrics.inds_to_scores_mat(added_inds, scores_names)
 
-    return scores_mat
+    # Compute total fullness (container size / container capacity)
+    fullness = 0.
+    for c in containers:
+        fullness += float(c.size) / float(c.capacity)
+    fullness /= len(containers)
+
+    return scores_mat, fullness
 
 
 
@@ -211,10 +217,10 @@ def _compute_klc_density(mat_refs, nb_bins, epsilon, ranges):
 
 #@ray.remote
 def _compute_klc(mat_inds, density_refs, refs_range, nb_bins, epsilon):
-    print(f"DEBUG _compute_klc mat_inds: {mat_inds}")
-    print(f"DEBUG _compute_klc density_refs: {density_refs}")
-    print(f"DEBUG _compute_klc refs_range: {refs_range}")
-    print(f"DEBUG _compute_klc nb_bins: {nb_bins}")
+##    print(f"DEBUG _compute_klc mat_inds: {mat_inds}")
+#    print(f"DEBUG _compute_klc density_refs: {density_refs}")
+#    print(f"DEBUG _compute_klc refs_range: {refs_range}")
+#    print(f"DEBUG _compute_klc nb_bins: {nb_bins}")
     # Compute histograms
     density_inds = (np.histogramdd(mat_inds, nb_bins, range=refs_range, density=False)[0] / len(mat_inds)).ravel()
     density_inds[np.where(density_inds == 0.)] = epsilon
@@ -245,21 +251,21 @@ def relative_kl_coverage_btw_two_cases(config, ref_stats, inds_case_name):
 
     # Recompute latent scores
     klcs = []
+    fullness = []
     for i, inds_data_file in enumerate(loader_inds):
         for j, (cont, density, ranges) in enumerate(zip(ref_stats['containers'], ref_stats['density'], ref_stats['range'])):
-            print(f"Recomputing latent scores of '{inds_case_name}'/{i} using containers of '{ref_stats['name']}'/{j}...")
-            scores_mat = recompute_latent(config, inds_data_file, cont)
+            print(f"Recomputing latent scores of '{inds_case_name}'-{i} using containers of '{ref_stats['name']}'-{j}...")
+            scores_mat, fulln = recompute_latent(config, inds_data_file, cont)
             klcs.append(_compute_klc(scores_mat, density, ranges, nb_bins, epsilon))
+            fullness.append(fulln)
             gc.collect()
 
 
     #futures2 = [_compute_klc.remote(sc_mat, refs_d, refs_r, nb_bins, epsilon) for sc_mat in comp_scores_mats for refs_d, refs_r in zip(density_refs, refs_range)]
     #klcs = list(ray.get(futures))
-    print(f"DEBUG1 klcs: {len(klcs)} {np.array(klcs).shape}")
-    print(f"DEBUG2 klcs: {klcs}")
-    print(f"DEBUG3 klcs: {np.mean(klcs)} {np.std(klcs)}")
+    print(f"klcs: {np.mean(klcs)} {np.std(klcs)}  fullness: {np.mean(fullness)}")
     gc.collect()
-    return klcs
+    return klcs, fullness
 
 
 
@@ -268,12 +274,14 @@ def compute_relative_kl_coverage(config, ref_stats):
     # Compute klc between each all cases
     mean_klc_mat = np.zeros(len(dirs))
     std_klc_mat = np.zeros(len(dirs))
+    mean_fullness = np.zeros(len(dirs))
     for i, comp_case_name in enumerate(dirs.keys()):
-        klcs = relative_kl_coverage_btw_two_cases(config, ref_stats, comp_case_name)
+        klcs, fullness = relative_kl_coverage_btw_two_cases(config, ref_stats, comp_case_name)
         mean_klc_mat[i] = np.mean(klcs)
         std_klc_mat[i] = np.std(klcs)
+        mean_fullness[i] = np.mean(fullness)
         gc.collect()
-    return {"mean": mean_klc_mat, "std": std_klc_mat}
+    return {"mean": mean_klc_mat, "std": std_klc_mat, "fullness": mean_fullness}
 
 
 
