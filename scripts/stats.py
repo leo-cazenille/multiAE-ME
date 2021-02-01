@@ -272,16 +272,23 @@ def relative_kl_coverage_btw_two_cases(config, ref_stats, inds_case_name):
 def compute_relative_kl_coverage(config, ref_stats):
     dirs = config['klc']["data_dirs"]
     # Compute klc between each all cases
-    mean_klc_mat = np.zeros(len(dirs))
-    std_klc_mat = np.zeros(len(dirs))
-    mean_fullness = np.zeros(len(dirs))
+    #mean_klc_mat = np.zeros(len(dirs))
+    #std_klc_mat = np.zeros(len(dirs))
+    #mean_fullness = np.zeros(len(dirs))
+    mean_klc = {}
+    std_klc = {}
+    mean_fullness = {}
     for i, comp_case_name in enumerate(dirs.keys()):
         klcs, fullness = relative_kl_coverage_btw_two_cases(config, ref_stats, comp_case_name)
-        mean_klc_mat[i] = np.mean(klcs)
-        std_klc_mat[i] = np.std(klcs)
-        mean_fullness[i] = np.mean(fullness)
+        #mean_klc_mat[i] = np.mean(klcs)
+        #std_klc_mat[i] = np.std(klcs)
+        #mean_fullness[i] = np.mean(fullness)
+        mean_klc[comp_case_name] = np.mean(klcs)
+        std_klc[comp_case_name] = np.std(klcs)
+        mean_fullness[comp_case_name] = np.mean(fullness)
         gc.collect()
-    return {"mean": mean_klc_mat, "std": std_klc_mat, "fullness": mean_fullness}
+    #return {"mean": mean_klc_mat, "std": std_klc_mat, "fullness": mean_fullness}
+    return {"mean": mean_klc, "std": std_klc, "fullness": mean_fullness}
 
 
 

@@ -3,10 +3,10 @@
 resultsBaseDir: results/
 
 klc:
-    nb_bins: 10
+    nb_bins: 5
     epsilon: 1e-20
-    max_data_files: 1
-    max_inds: 10
+#    max_data_files: 1
+#    max_inds: 10
 
     scores_names: ["meanDistance", "meanHeadStability", "meanTorquePerStep", "meanJump", "meanLeg0HipAngle", "meanLeg1HipAngle", "meanLeg0KneeAngle", "meanLeg1KneeAngle"]
 
@@ -14,7 +14,7 @@ klc:
     refs:
         name: hardcoded
         dir: "bipedalM30-reference-4xGrid-scoreprop_100000/"
-        #ranges: [0., 1.]
+        ranges: [[0., 50.], [0., 2.5], [0., 25.], [0., 0.75], [0.0, 2.5], [0.0, 2.5], [0.0, 2.5], [0.0, 2.5]]
 
 
     data_dirs:
