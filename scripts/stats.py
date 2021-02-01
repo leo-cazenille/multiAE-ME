@@ -298,7 +298,6 @@ def compute_ref(config):
     ref_name = config['klc']['refs']['name']
     ref_dir = config['klc']['refs']['dir']
     ref_ranges = config['klc']['refs'].get('ranges', None)
-    print(f"Computing KL densities of reference case '{ref_name}'...", end=" ")
 
     max_data_files = config['klc'].get('max_data_files', None)
     max_inds = config['klc'].get('max_inds', None)
@@ -315,7 +314,8 @@ def compute_ref(config):
     containers = []
     density_refs = []
     refs_range = []
-    for data_file in loader:
+    for i, data_file in enumerate(loader):
+        print(f"Computing KL densities of reference case '{ref_name}'-{i}...")
         inds = get_added_inds(config, data_file, max_inds, remove_extracted_scores=False)
         mat_inds = metrics.inds_to_scores_mat(inds, scores_names)
         #futures.append(_compute_klc_density.remote(mat_inds, nb_bins, epsilon, ref_ranges))
@@ -324,7 +324,7 @@ def compute_ref(config):
         refs_range.append(r[1])
         containers.append(get_empty_containers(config, data_file))
     #assert(len(futures) > 0)
-    print(f"Found {len(containers)} data files.")
+    print(f"Reference case: found {len(containers)} data files.")
 
     # Compute density and ranges
     #futures = [_compute_klc_density.remote(sc_mat, nb_bins, epsilon, ref_ranges) for sc_mat in ref_sc_lst]
