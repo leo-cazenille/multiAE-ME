@@ -154,6 +154,10 @@ class MultiAEExperiment(QDExperiment):
         return f"{cmd_scores(sortedcollections.IndexableSet(self._get_all_algs_inds()), scores_names):.4f}"
 
 
+    def _fn_all_size(self, algo):
+        all_inds = sortedcollections.IndexableSet(self._get_all_algs_inds())
+        return f"{len(all_inds)}"
+
     # XXX quick and dirty hack to compute qd score over all containers
     def _fn_all_qd_score(self, algo):
         all_inds = sortedcollections.IndexableSet(self._get_all_algs_inds())
@@ -221,6 +225,8 @@ class MultiAEExperiment(QDExperiment):
                 self.logger.register_stat(stat_qd_score)
             stat_all_qd_score = LoggerStat(f"all_qd_score", self._fn_all_qd_score, True)
             self.logger.register_stat(stat_all_qd_score)
+            stat_all_size = LoggerStat(f"all_size", self._fn_all_size, True)
+            self.logger.register_stat(stat_all_size)
             #stat_parent_qd_score = LoggerStat(f"parent_qd_score", self._fn_parent_qd_score, True)
             #self.logger.register_stat(stat_parent_qd_score)
             #for i_alg, alg in enumerate(algos):
