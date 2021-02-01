@@ -20,6 +20,7 @@ import gc
 import copy
 import pickle
 import numpy as np
+import pandas as pd
 import warnings
 import yaml
 import glob
@@ -309,9 +310,10 @@ def compute_relative_kl_coverage(config, ref_stats):
         std_qdscore[comp_case_name] = np.std(qdscores)
         gc.collect()
     #return {"mean": mean_klc_mat, "std": std_klc_mat, "fullness": mean_fullness}
-    return {"mean_klc": mean_klc, "std_klc": std_klc, "mean_fullness": mean_fullness, "std_fullness": std_fullness, "mean_qdscore": mean_qdscore, "std_qdscore": std_qdscore}
 
-
+    res_dict = {"mean_klc": mean_klc, "std_klc": std_klc, "mean_fullness": mean_fullness, "std_fullness": std_fullness, "mean_qdscore": mean_qdscore, "std_qdscore": std_qdscore}
+    res_df = pd.DataFrame.from_dict(res_dict)
+    return res_df
 
 
 
@@ -596,6 +598,8 @@ if __name__ == "__main__":
 
     # Create or retrieve stats
     stats_data, stats_filename = create_or_open_stats_file(config)
+    # Update config
+    stats_data['config'] = config
 
 #    if recompute or not 'container' in stats_data:
 #        stats_data['containers'] = gather_conts(config)
@@ -618,8 +622,8 @@ if __name__ == "__main__":
     save_stats_file(config, stats_filename, stats_data)
     gc.collect()
 
-    if recompute or not 'klc' in stats_data:
-        stats_data['klc'] = compute_relative_kl_coverage(config, stats_data['ref'])
+    if recompute or not 'compare' in stats_data:
+        stats_data['compare'] = compute_relative_kl_coverage(config, stats_data['ref'])
     save_stats_file(config, stats_filename, stats_data)
     gc.collect()
 
