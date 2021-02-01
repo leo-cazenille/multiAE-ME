@@ -182,14 +182,24 @@ def recompute_latent(config, inds_data_file, base_containers):
     # Retrieve score matrix
     scores_mat = metrics.inds_to_scores_mat(added_inds, scores_names)
 
-    # Compute total fullness (container size / container capacity) and normalized qdscore
+    # Compute total fullness (container size / container capacity)
     fullness = 0.
-    qdscore = 0.
     for c in containers:
         fullness += float(c.size) / float(c.capacity)
-        qdscore += float(c.qdscore())
     fullness /= len(containers)
-    qdscore /= len(containers)
+
+    # Compute total QD-Score
+    # XXX quick and dirty hack to compute qd score over all containers
+    qdscore = 0.
+    cont0 = containers[0]
+    for ind in added_inds:
+        ind_fit = cont0.get_ind_fitness(ind)
+        for v, w, bounds in zip(ind_fit.values, ind_fit.weights, cont0.fitness_domain):
+            d = (bounds[1] - bounds[0]) if bounds[1] > bounds[0] else 1
+            if w < 0.:
+                qdscore += (bounds[1] - v) / (d)
+            else:
+                qdscore += (v - bounds[0]) / (d)
 
     return scores_mat, fullness, qdscore
 
@@ -268,7 +278,7 @@ def relative_kl_coverage_btw_two_cases(config, ref_stats, inds_case_name):
 
     #futures2 = [_compute_klc.remote(sc_mat, refs_d, refs_r, nb_bins, epsilon) for sc_mat in comp_scores_mats for refs_d, refs_r in zip(density_refs, refs_range)]
     #klcs = list(ray.get(futures))
-    print(f"klcs: {np.mean(klcs)} {np.std(klcs)}  fullness: {np.mean(fullness)}  qdscores: {np.mean(qdscores)}")
+    print(f"klcs: {np.mean(klcs)} {np.std(klcs)}  fullness: {np.mean(fullness)} {np.std(fullness)}  qdscores: {np.mean(qdscores)} {np.std(qdscores)}")
     gc.collect()
     return klcs, fullness, qdscores
 
