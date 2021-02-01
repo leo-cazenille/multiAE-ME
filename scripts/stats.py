@@ -182,13 +182,16 @@ def recompute_latent(config, inds_data_file, base_containers):
     # Retrieve score matrix
     scores_mat = metrics.inds_to_scores_mat(added_inds, scores_names)
 
-    # Compute total fullness (container size / container capacity)
+    # Compute total fullness (container size / container capacity) and normalized qdscore
     fullness = 0.
+    qdscore = 0.
     for c in containers:
         fullness += float(c.size) / float(c.capacity)
+        qdscore += float(c.qdscore())
     fullness /= len(containers)
+    qdscore /= len(containers)
 
-    return scores_mat, fullness
+    return scores_mat, fullness, qdscore
 
 
 
@@ -252,20 +255,22 @@ def relative_kl_coverage_btw_two_cases(config, ref_stats, inds_case_name):
     # Recompute latent scores
     klcs = []
     fullness = []
+    qdscores = []
     for i, inds_data_file in enumerate(loader_inds):
         for j, (cont, density, ranges) in enumerate(zip(ref_stats['containers'], ref_stats['density'], ref_stats['range'])):
             print(f"Recomputing latent scores of '{inds_case_name}'-{i} using containers of '{ref_stats['name']}'-{j}...")
-            scores_mat, fulln = recompute_latent(config, inds_data_file, cont)
+            scores_mat, fulln, qds = recompute_latent(config, inds_data_file, cont)
             klcs.append(_compute_klc(scores_mat, density, ranges, nb_bins, epsilon))
             fullness.append(fulln)
+            qdscores.append(qds)
             gc.collect()
 
 
     #futures2 = [_compute_klc.remote(sc_mat, refs_d, refs_r, nb_bins, epsilon) for sc_mat in comp_scores_mats for refs_d, refs_r in zip(density_refs, refs_range)]
     #klcs = list(ray.get(futures))
-    print(f"klcs: {np.mean(klcs)} {np.std(klcs)}  fullness: {np.mean(fullness)}")
+    print(f"klcs: {np.mean(klcs)} {np.std(klcs)}  fullness: {np.mean(fullness)}  qdscores: {np.mean(qdscores)}")
     gc.collect()
-    return klcs, fullness
+    return klcs, fullness, qdscores
 
 
 
@@ -278,17 +283,23 @@ def compute_relative_kl_coverage(config, ref_stats):
     mean_klc = {}
     std_klc = {}
     mean_fullness = {}
+    std_fullness = {}
+    mean_qdscore = {}
+    std_qdscore = {}
     for i, comp_case_name in enumerate(dirs.keys()):
-        klcs, fullness = relative_kl_coverage_btw_two_cases(config, ref_stats, comp_case_name)
+        klcs, fullness, qdscores = relative_kl_coverage_btw_two_cases(config, ref_stats, comp_case_name)
         #mean_klc_mat[i] = np.mean(klcs)
         #std_klc_mat[i] = np.std(klcs)
         #mean_fullness[i] = np.mean(fullness)
         mean_klc[comp_case_name] = np.mean(klcs)
         std_klc[comp_case_name] = np.std(klcs)
         mean_fullness[comp_case_name] = np.mean(fullness)
+        std_fullness[comp_case_name] = np.std(fullness)
+        mean_qdscore[comp_case_name] = np.mean(qdscores)
+        std_qdscore[comp_case_name] = np.std(qdscores)
         gc.collect()
     #return {"mean": mean_klc_mat, "std": std_klc_mat, "fullness": mean_fullness}
-    return {"mean": mean_klc, "std": std_klc, "fullness": mean_fullness}
+    return {"mean_klc": mean_klc, "std_klc": std_klc, "mean_fullness": mean_fullness, "std_fullness": std_fullness, "mean_qdscore": mean_qdscore, "std_qdscore": std_qdscore}
 
 
 
