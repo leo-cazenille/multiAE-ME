@@ -219,8 +219,8 @@ class MultiAEExperiment(QDExperiment):
             for i_alg, alg in enumerate(algos):
                 stat_qd_score = LoggerStat(f"qd_score-{alg.name}", partial(self._fn_qd_score, i_alg), True)
                 self.logger.register_stat(stat_qd_score)
-            #stat_all_qd_score = LoggerStat(f"all_qd_score", self._fn_all_qd_score, True)
-            #self.logger.register_stat(stat_all_qd_score)
+            stat_all_qd_score = LoggerStat(f"all_qd_score", self._fn_all_qd_score, True)
+            self.logger.register_stat(stat_all_qd_score)
             #stat_parent_qd_score = LoggerStat(f"parent_qd_score", self._fn_parent_qd_score, True)
             #self.logger.register_stat(stat_parent_qd_score)
             #for i_alg, alg in enumerate(algos):
