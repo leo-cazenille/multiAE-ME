@@ -1,0 +1,36 @@
+---
+
+resultsBaseDir: results/
+
+klc:
+    nb_bins: 5
+    epsilon: 1e-20
+#    max_data_files: 1
+#    max_inds: 10
+
+
+    refs:
+        name: online-reco-1
+        dir: "bipedalM30-preonline5000_100-recononly_0.0-1xAutoScalingGrid2x50x50-scoreprop_100000"
+
+
+    data_dirs:
+        hardcoded: "bipedalM30-reference-4xGrid-scoreprop_100000/"
+        pt-reco-1: "bipedalM30-pretrained_100-recononly_0.0-1xAutoScalingGrid2x50x50-scoreprop_100000"
+        pt-reco-4: "bipedalM30-pretrained_100-recononly_0.0-4xAutoScalingGrid2x25x25-scoreprop_100000"
+        online-reco-1: "bipedalM30-preonline5000_100-recononly_0.0-1xAutoScalingGrid2x50x50-scoreprop_100000"
+        online-reco-4: "bipedalM30-preonline5000_100-recononly_0.0-4xAutoScalingGrid2x25x25-scoreprop_100000"
+        pt-qt-reco-1: "bipedalM30-pretrained_100_quartile-recononly_0.0-1xGridx50x50-scoreprop_100000"
+        pt-qt-reco-4: "bipedalM30-pretrained_100_quartile-recononly_0.0-4xGridx25x25-scoreprop_100000"
+        online-qt-reco-1: "bipedalM30-preonline5000_100_quartile-recononly_0.0-1xGridx50x50-scoreprop_100000"
+        online-qt-reco-4: "bipedalM30-preonline5000_100_quartile-recononly_0.0-4xGridx25x25-scoreprop_100000"
+        online-qt-reco-6: "bipedalM30-preonline5000_100_quartile-recononly_0.0-6xGridx20x20-scoreprop_100000"
+        online-qt-reco-9: "bipedalM30-preonline5000_100_quartile-recononly_0.0-9xGridx14x14-scoreprop_100000"
+        online-qt-outputs-4: "bipedalM30-preonline5000_100_quartile-outputs_1.0-4xGridx25x25-scoreprop_100000"
+        online-qt-cov-4: "bipedalM30-preonline5000_100_quartile-covlatent_1.0-4xGridx25x25-scoreprop_100000"
+        online-qt-cmd-4: "bipedalM30-preonline5000_100_quartile-cmdlatent_1.0-4xGridx25x25-scoreprop_100000"
+
+
+# MODELINE "{{{1
+# vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
+# vim:foldmethod=marker

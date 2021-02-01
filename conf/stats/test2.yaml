@@ -1,0 +1,25 @@
+---
+
+resultsBaseDir: results/
+
+klc:
+    nb_bins: 5
+    epsilon: 1e-20
+#    max_data_files: 1
+#    max_inds: 10
+
+    scores_names: ["meanDistance", "meanHeadStability", "meanTorquePerStep", "meanJump", "meanLeg0HipAngle", "meanLeg1HipAngle", "meanLeg0KneeAngle", "meanLeg1KneeAngle"]
+
+    refs:
+        name: testM30_4
+        dir: "test-bipedalM30_4"
+        ranges: [[0., 50.], [0., 2.5], [0., 25.], [0., 0.75], [0.0, 2.5], [0.0, 2.5], [0.0, 2.5], [0.0, 2.5]]
+
+
+    data_dirs:
+        testM30_4: "test-bipedalM30_4"
+
+
+# MODELINE "{{{1
+# vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
+# vim:foldmethod=marker
