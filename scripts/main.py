@@ -119,6 +119,8 @@ class MultiAEExperiment(QDExperiment):
 
 
     def reinit_curiosity(self):
+        if self.config.get("disable_curiosity", False) == True:
+            return
         # Create `tell` callbacks to all algos, to compute curiosity
         #for alg in self.algo.algorithms:
         #    alg.add_callback("tell", self._tell_curiosity)
