@@ -8,12 +8,11 @@ klc:
 #    max_data_files: 1
 #    max_inds: 10
 
-    scores_names_if_none_exists: ["meanDistance", "meanHeadStability", "meanTorquePerStep", "meanJump", "meanLeg0HipAngle", "meanLeg1HipAngle", "meanLeg0KneeAngle", "meanLeg1KneeAngle"]
+#    scores_names_if_none_exists: ["meanDistance", "meanHeadStability", "meanTorquePerStep", "meanJump", "meanLeg0HipAngle", "meanLeg1HipAngle", "meanLeg0KneeAngle", "meanLeg1KneeAngle"]
 
     refs:
         name: testM30_5
         dir: "test-bipedalM30_5"
-        ranges: [[0., 50.], [0., 2.5], [0., 25.], [0., 0.75], [0.0, 2.5], [0.0, 2.5], [0.0, 2.5], [0.0, 2.5]]
 
 
     data_dirs:
