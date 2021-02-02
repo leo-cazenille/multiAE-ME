@@ -126,6 +126,8 @@ def get_empty_containers(config, data_file):
             a.container._best_features = None
         #print(f"DEBUG container len: {len(a.container)}")
         a.parents = []
+        a.training_containers = []
+        a.scaling_containers = []
         containers.append(a.container)
     return containers
 
