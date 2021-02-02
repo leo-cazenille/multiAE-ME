@@ -866,7 +866,7 @@ class NNTrainer(object):
         else:
             d = Variable(data)
 
-        print(f"DEBUG training2: {d} {d.shape}")
+        #print(f"DEBUG training2: {d} {d.shape}")
         output = model(d) # type: ignore
 
 
