@@ -181,8 +181,6 @@ def recompute_latent(config, inds_data_file, base_containers):
             traceback.print_exc()
             #raise e
     # Retrieve score matrix
-    if scores_names == None and len([x for x in added_inds[0].scores.keys() if x.startswith("extracted")]) == 0:
-        scores_names = config['klc']['scores_names_if_none_exists']
     scores_mat = metrics.inds_to_scores_mat(added_inds, scores_names)
 
     # Compute total fullness (container size / container capacity)
