@@ -65,7 +65,7 @@ main_algorithm_name: algoTotal
 
 to_grid_parameters:
     max_items_per_bin: 1                              # The number of items in each bin of the grid
-    shape: [25, 25]                                   # The number of bins for each feature
+    #shape: [25, 25]                                   # The number of bins for each feature
 
 
 # The list of all container.

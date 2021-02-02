@@ -65,7 +65,7 @@ main_algorithm_name: algoTotal
 
 to_grid_parameters:
     max_items_per_bin: 1                              # The number of items in each bin of the grid
-    shape: [20, 20]                                   # The number of bins for each feature
+#    shape: [20, 20]                                   # The number of bins for each feature
 
 
 # The list of all container.
@@ -171,7 +171,7 @@ containers:
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
         fitness_domain: [[-200., 350.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
-        shape: [10, 10]                                   # The number of bins for each feature
+        shape: [20, 25]                                   # The number of bins for each feature
 
 
 
