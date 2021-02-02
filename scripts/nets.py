@@ -839,7 +839,7 @@ class NNTrainer(object):
         self.mean = 0.
         self.std = 1.
 
-        if not self.diversity_loss_computation in ['none', 'outputs', 'pwoutputs', 'latent', 'expcovlatent', 'covlatent', 'varlatent', 'corrlatent', 'corrlatent2', 'coveragelatent', 'coveragelatent2', 'corrdistlatent', 'cmdlatent']:
+        if not self.diversity_loss_computation in ['none', 'outputs', 'pwoutputs', 'latent', 'expcovlatent', 'covlatent', 'covlatentfit', 'varlatent', 'corrlatent', 'corrlatent2', 'coveragelatent', 'coveragelatent2', 'corrdistlatent', 'cmdlatent']:
             raise ValueError(f"Unknown diversity_loss_computation type: {self.diversity_loss_computation}.")
 
         if nn_models != None:
@@ -855,13 +855,20 @@ class NNTrainer(object):
         print(f"CREATED ENSEMBLE MODEL len={len(list(nn_models.values()))}")
 
 
-    def compute_loss(self, data, model, device):
+    def compute_loss(self, data, model, device, fitness_channels = 0):
         criterion_reconstruction = nn.L1Loss() # nn.MSELoss()
         criterion_diversity = nn.L1Loss() # nn.MSELoss()
 
-        d = Variable(data)
-        #print(f"DEBUG training2: {d} {d.shape}")
+        if fitness_channels > 0:
+            # TODO
+            fitness = Variable(fitness)
+            d = Variable(data) # TODO
+        else:
+            d = Variable(data)
+
+        print(f"DEBUG training2: {d} {d.shape}")
         output = model(d) # type: ignore
+
 
         # Compute reconstruction loss
         loss_reconstruction = torch.zeros(1, device=device)
@@ -921,6 +928,21 @@ class NNTrainer(object):
                     #else: # XXX ?
                     #    loss_diversity += c[i,j] # XXX ?
 
+
+        elif self.diversity_loss_computation == "covlatentfit":
+            latent = model.encoders(d)
+            latent_flat = torch.cat([fitness] + [l for l in latent], 1)
+
+            c = torch.abs(cov(latent_flat, rowvar=False))
+            loss_diversity = torch.zeros(1, device=device)
+            fitness_channels = fitness.size(1)
+            for i in range(fitness_channels):
+                for j in range(c.size(1)):
+                    covij = c[i, j]
+                    if i != j and not torch.isnan(covij) and not torch.isinf(covij):
+                        loss_diversity += covij
+
+
         elif self.diversity_loss_computation == "expcovlatent":
             latent = model.encoders(d)
             latent_flat = torch.cat([l for l in latent], 1)
@@ -957,6 +979,7 @@ class NNTrainer(object):
             corr = torch.abs(cov_to_corr(c))
             loss_diversity = corr.diag().sum() - corr.sum()
             loss_diversity /= corr.size(0) * c.size(1)
+
 
 
         elif self.diversity_loss_computation == "varlatent":
