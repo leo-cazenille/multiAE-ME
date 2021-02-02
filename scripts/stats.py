@@ -169,6 +169,21 @@ def get_empty_containers(config, data_file):
 #
 #    return all_scores_mats
 
+
+# XXX quick and dirty hack to compute qd score over all containers
+def compute_qdscore(inds, cont0):
+    qdscore = 0.
+    for ind in inds:
+        ind_fit = cont0.get_ind_fitness(ind)
+        for v, w, bounds in zip(ind_fit.values, ind_fit.weights, cont0.fitness_domain):
+            d = (bounds[1] - bounds[0]) if bounds[1] > bounds[0] else 1
+            if w < 0.:
+                qdscore += (bounds[1] - v) / (d)
+            else:
+                qdscore += (v - bounds[0]) / (d)
+    return qdscore
+
+
 def recompute_latent(config, inds_data_file, base_containers):
     max_inds = config['klc'].get('max_inds', None)
     scores_names = config['klc'].get('scores_names', None)
@@ -192,26 +207,16 @@ def recompute_latent(config, inds_data_file, base_containers):
 #        scores_names = config['klc']['scores_names_if_none_exists']
     scores_mat = metrics.inds_to_scores_mat(added_inds, scores_names)
 
-    # Compute total fullness (container size / container capacity)
-    fullness = 0.
+    # Compute total coverage (container size / container capacity)
+    coverage = 0.
     for c in containers:
-        fullness += float(c.size) / float(c.capacity)
-    fullness /= len(containers)
+        coverage += float(c.size) / float(c.capacity)
+    coverage /= len(containers)
 
     # Compute total QD-Score
-    # XXX quick and dirty hack to compute qd score over all containers
-    qdscore = 0.
-    cont0 = containers[0]
-    for ind in added_inds:
-        ind_fit = cont0.get_ind_fitness(ind)
-        for v, w, bounds in zip(ind_fit.values, ind_fit.weights, cont0.fitness_domain):
-            d = (bounds[1] - bounds[0]) if bounds[1] > bounds[0] else 1
-            if w < 0.:
-                qdscore += (bounds[1] - v) / (d)
-            else:
-                qdscore += (v - bounds[0]) / (d)
+    qdscore = compute_qdscore(added_inds, containers[0])
 
-    return scores_mat, fullness, qdscore
+    return scores_mat, coverage, qdscore
 
 
 
@@ -274,23 +279,23 @@ def relative_kl_coverage_btw_two_cases(config, ref_stats, inds_case_name):
 
     # Recompute latent scores
     klcs = []
-    fullness = []
+    coverage = []
     qdscores = []
     for i, inds_data_file in enumerate(loader_inds):
         for j, (cont, density, ranges) in enumerate(zip(ref_stats['containers'], ref_stats['density'], ref_stats['range'])):
             print(f"Recomputing latent scores of '{inds_case_name}'-{i} using containers of '{ref_stats['name']}'-{j}...")
             scores_mat, fulln, qds = recompute_latent(config, inds_data_file, cont)
             klcs.append(_compute_klc(scores_mat, density, ranges, nb_bins, epsilon))
-            fullness.append(fulln)
+            coverage.append(fulln)
             qdscores.append(qds)
             gc.collect()
 
 
     #futures2 = [_compute_klc.remote(sc_mat, refs_d, refs_r, nb_bins, epsilon) for sc_mat in comp_scores_mats for refs_d, refs_r in zip(density_refs, refs_range)]
     #klcs = list(ray.get(futures))
-    print(f"klcs: {np.mean(klcs)} {np.std(klcs)}  fullness: {np.mean(fullness)} {np.std(fullness)}  qdscores: {np.mean(qdscores)} {np.std(qdscores)}")
+    print(f"klcs: {np.mean(klcs)} {np.std(klcs)}  coverage: {np.mean(coverage)} {np.std(coverage)}  qdscores: {np.mean(qdscores)} {np.std(qdscores)}")
     gc.collect()
-    return klcs, fullness, qdscores
+    return klcs, coverage, qdscores
 
 
 
@@ -299,30 +304,49 @@ def compute_relative_kl_coverage(config, ref_stats):
     # Compute klc between each all cases
     #mean_klc_mat = np.zeros(len(dirs))
     #std_klc_mat = np.zeros(len(dirs))
-    #mean_fullness = np.zeros(len(dirs))
+    #mean_coverage = np.zeros(len(dirs))
     mean_klc = {}
     std_klc = {}
-    mean_fullness = {}
-    std_fullness = {}
+    mean_coverage = {}
+    std_coverage = {}
     mean_qdscore = {}
     std_qdscore = {}
     for i, comp_case_name in enumerate(dirs.keys()):
-        klcs, fullness, qdscores = relative_kl_coverage_btw_two_cases(config, ref_stats, comp_case_name)
+        klcs, coverage, qdscores = relative_kl_coverage_btw_two_cases(config, ref_stats, comp_case_name)
         #mean_klc_mat[i] = np.mean(klcs)
         #std_klc_mat[i] = np.std(klcs)
-        #mean_fullness[i] = np.mean(fullness)
+        #mean_coverage[i] = np.mean(coverage)
         mean_klc[comp_case_name] = np.mean(klcs)
         std_klc[comp_case_name] = np.std(klcs)
-        mean_fullness[comp_case_name] = np.mean(fullness)
-        std_fullness[comp_case_name] = np.std(fullness)
+        mean_coverage[comp_case_name] = np.mean(coverage)
+        std_coverage[comp_case_name] = np.std(coverage)
         mean_qdscore[comp_case_name] = np.mean(qdscores)
         std_qdscore[comp_case_name] = np.std(qdscores)
         gc.collect()
-    #return {"mean": mean_klc_mat, "std": std_klc_mat, "fullness": mean_fullness}
+    #return {"mean": mean_klc_mat, "std": std_klc_mat, "coverage": mean_coverage}
 
-    res_dict = {"mean_klc": mean_klc, "std_klc": std_klc, "mean_fullness": mean_fullness, "std_fullness": std_fullness, "mean_qdscore": mean_qdscore, "std_qdscore": std_qdscore}
+    res_dict = {"mean_klc": mean_klc, "std_klc": std_klc, "mean_coverage": mean_coverage, "std_coverage": std_coverage, "mean_qdscore": mean_qdscore, "std_qdscore": std_qdscore}
     res_df = pd.DataFrame.from_dict(res_dict)
     return res_df
+
+
+
+def compute_stats_last_iteration(config, data_file):
+#    added_inds_qdscores = compute_qdscore(added_inds, containers[0])
+#    added_inds_coverage = 
+    last_entry = data_file['iterations'].iloc[-1]
+    algos = data_file['algorithms']
+    all_unique_qd_score = float(last_entry['all_qd_score'])
+    qd_score_lst = [float(last_entry[f"qd_score-algo{i+1}"]) for i in range(len(algos))]
+    mean_qd_score = np.mean(qd_score_lst)
+    all_unique_size = int(data_file['iterations'].iloc[-1]['all_size'])
+    all_capacity = np.sum([a.container.capacity for a in data_file['algorithms']])
+    all_unique_coverage = all_unique_size / float(all_capacity)
+    bests = [a.container.best_fitness[0] for a in data_file['algorithms']]
+    max_best = np.max(bests)
+    mean_best = np.mean(bests)
+    std_best = np.std(bests)
+    return {'all_unique_qd_score': all_unique_qd_score, 'mean_qd_score': mean_qd_score, 'all_unique_coverage': all_unique_coverage, 'max_best': max_best, 'mean_best': mean_best, 'std_best': std_best}
 
 
 
@@ -340,14 +364,15 @@ def compute_ref(config):
         scores_names = None
 
     #density_refs, refs_range = compute_ref_density(config, ref_dir, ref_ranges)
-    # Compute densities and extract emptied containers
+    # Compute densities, extract emptied containers and compute stats over last iteration
     loader = data_files_loader(config, ref_dir, max_data_files)
     futures = []
     containers = []
     density_refs = []
     refs_range = []
+    stats_last_it = []
     for i, data_file in enumerate(loader):
-        print(f"Computing KL densities of reference case '{ref_name}'-{i}...")
+        print(f"Computing KL densities and stats of reference case '{ref_name}'-{i}...")
         inds = get_added_inds(config, data_file, max_inds, remove_extracted_scores=False)
         mat_inds = metrics.inds_to_scores_mat(inds, scores_names)
         #futures.append(_compute_klc_density.remote(mat_inds, nb_bins, epsilon, ref_ranges))
@@ -355,6 +380,7 @@ def compute_ref(config):
         density_refs.append(r[0])
         refs_range.append(r[1])
         containers.append(get_empty_containers(config, data_file))
+        stats_last_it.append(compute_stats_last_iteration(config, data_file))
     #assert(len(futures) > 0)
     print(f"Reference case: found {len(containers)} data files.")
 
@@ -362,7 +388,25 @@ def compute_ref(config):
     #futures = [_compute_klc_density.remote(sc_mat, nb_bins, epsilon, ref_ranges) for sc_mat in ref_sc_lst]
     #density_refs, refs_range = list(zip(*(ray.get(futures))))
 
-    res = {"name": ref_name, "dir": ref_dir, "density": density_refs, "range": refs_range, "containers": containers}
+    # Compute means of last iteration stats
+    last_it_stats = {}
+    all_unique_qd_score = [s['all_unique_qd_score'] for s in stats_last_it]
+    last_it_stats['mean_all_unique_qd_score'] = np.mean(all_unique_qd_score)
+    last_it_stats['std_all_unique_qd_score'] = np.std(all_unique_qd_score)
+    mean_qd_score = [s['mean_qd_score'] for s in stats_last_it]
+    last_it_stats['mean_mean_qd_score'] = np.mean(mean_qd_score)
+    last_it_stats['std_mean_qd_score'] = np.std(mean_qd_score)
+    all_unique_coverage = [s['all_unique_coverage'] for s in stats_last_it]
+    last_it_stats['mean_all_unique_coverage'] = np.mean(all_unique_coverage)
+    last_it_stats['std_all_unique_coverage'] = np.std(all_unique_coverage)
+    max_best = [s['max_best'] for s in stats_last_it]
+    last_it_stats['mean_max_best'] = np.mean(max_best)
+    last_it_stats['std_max_best'] = np.std(max_best)
+    mean_best = [s['mean_best'] for s in stats_last_it]
+    last_it_stats['mean_mean_best'] = np.mean(mean_best)
+    last_it_stats['std_mean_best'] = np.std(mean_best)
+
+    res = {"name": ref_name, "dir": ref_dir, "density": density_refs, "range": refs_range, "containers": containers, "last_it_stats": last_it_stats}
     return res
 
 

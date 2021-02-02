@@ -123,7 +123,7 @@ if __name__ == "__main__":
 
     # Create tables
     create_table(comparisons, os.path.join(args.resultsDir, "table-klc.tex"), "mean_klc", "std_klc")
-    create_table(comparisons, os.path.join(args.resultsDir, "table-fullness.tex"), "mean_fullness", "std_fullness")
+    create_table(comparisons, os.path.join(args.resultsDir, "table-coverage.tex"), "mean_coverage", "std_coverage")
     create_table(comparisons, os.path.join(args.resultsDir, "table-qdscore.tex"), "mean_qdscore", "std_qdscore")
 
 
