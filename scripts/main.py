@@ -614,10 +614,13 @@ def make_plots(exp):
     if hasattr(exp.algo, 'algorithms') and hasattr(exp, 'algs_loggers'):
         to_grid_parameters = exp.config.get("to_grid_parameters", {})
         for logger in exp.algs_loggers:
-            if logger.final_filename:
-                logger.save(os.path.join(logger.log_base_path, logger.final_filename))
-            #qdpy.plots.default_plots_grid(logger, exp.log_base_path, suffix=f"-{exp.instance_name}-{logger.algorithms[0].name}", to_grid_parameters={'features_domain': logger.algorithms[0].container.features_extrema, **to_grid_parameters})
-            qdpy.plots.default_plots_grid(logger, exp.log_base_path, suffix=f"-{exp.instance_name}-{logger.algorithms[0].name}", to_grid_parameters= to_grid_parameters)
+            try:
+                if logger.final_filename:
+                    logger.save(os.path.join(logger.log_base_path, logger.final_filename))
+                #qdpy.plots.default_plots_grid(logger, exp.log_base_path, suffix=f"-{exp.instance_name}-{logger.algorithms[0].name}", to_grid_parameters={'features_domain': logger.algorithms[0].container.features_extrema, **to_grid_parameters})
+                qdpy.plots.default_plots_grid(logger, exp.log_base_path, suffix=f"-{exp.instance_name}-{logger.algorithms[0].name}", to_grid_parameters= to_grid_parameters)
+            except Exception as e:
+                warnings.warn(f"Plotting failed: {str(e)}")
 
     qdpy.plots.plot_iterations(exp.logger, os.path.join(exp.log_base_path, f"./iterations_loss-{exp.instance_name}.pdf"), "loss", ylabel="Loss")
 
