@@ -405,6 +405,7 @@ def compute_ref(config):
     mean_best = [s['mean_best'] for s in stats_last_it]
     last_it_stats['mean_mean_best'] = np.mean(mean_best)
     last_it_stats['std_mean_best'] = np.std(mean_best)
+    print(f"last_it_stats: {last_it_stats}")
 
     res = {"name": ref_name, "dir": ref_dir, "density": density_refs, "range": refs_range, "containers": containers, "last_it_stats": last_it_stats}
     return res
