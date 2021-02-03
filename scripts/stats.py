@@ -382,6 +382,15 @@ def compute_stats_last_iteration(config, data_file):
 
 
 
+def compute_corr_fd(config, mat_inds):
+    cov = np.cov(mat_inds, rowvar=False)
+    corr = np.corrcoef(mat_inds, rowvar=False)
+    mean_abs_cov = (np.sum(np.abs(cov)) - np.abs(np.diag(cov)).sum()) / (cov.shape[0] * cov.shape[1] - cov.shape[0])
+    mean_abs_corr = (np.sum(np.abs(corr)) - np.abs(np.diag(corr)).sum()) / (corr.shape[0] * corr.shape[1] - corr.shape[0])
+    return mean_abs_cov, mean_abs_corr
+
+
+
 def compute_ref(config):
     ref_name = config['klc']['refs']['name']
     ref_dir = config['klc']['refs']['dir']
@@ -405,12 +414,14 @@ def compute_ref(config):
     density_refs = []
     refs_range = []
     stats_last_it = []
+    stats_corr = []
     for i, data_file in enumerate(loader):
         print(f"Computing KL densities and stats of reference case '{ref_name}'-{i}...")
         stats_last_it.append(compute_stats_last_iteration(config, data_file))
         inds = get_added_inds(config, data_file, max_inds, remove_extracted_scores=False, including_parents=including_parents)
         mat_inds = metrics.inds_to_scores_mat(inds, scores_names)
         #futures.append(_compute_klc_density.remote(mat_inds, nb_bins, epsilon, ref_ranges))
+        stats_corr.append(compute_corr_fd(config, mat_inds))
         r = _compute_klc_density(mat_inds, nb_bins, epsilon, ref_ranges)
         density_refs.append(r[0])
         refs_range.append(r[1])
@@ -441,7 +452,14 @@ def compute_ref(config):
     last_it_stats['std_mean_best'] = np.std(mean_best)
     print(f"last_it_stats: {last_it_stats}")
 
-    res = {"name": ref_name, "dir": ref_dir, "density": density_refs, "range": refs_range, "containers": containers, "last_it_stats": last_it_stats}
+    # Compute correlation stats
+    corr_stats = {}
+    corr_stats_np = np.array(stats_corr)
+    corr_stats['mean_mean_abs_cov'], corr_stats['mean_mean_abs_corr'] = np.mean(corr_stats_np, 0)
+    corr_stats['std_mean_abs_cov'], corr_stats['std_mean_abs_corr'] = np.std(corr_stats_np, 0)
+    print(f"corr_stats: {corr_stats}")
+
+    res = {"name": ref_name, "dir": ref_dir, "density": density_refs, "range": refs_range, "containers": containers, "last_it_stats": last_it_stats, "corr_stats": corr_stats}
     return res
 
 

@@ -290,10 +290,12 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
 
     def __getstate__(self):
         odict = self.__dict__.copy()
-        del odict['_orig_get_ind_features']
+        if '_orig_get_ind_features' in odict:
+            del odict['_orig_get_ind_features']
 #        if 'get_ind_features' in odict['container'].__dict__:
 #            del odict['container'].__dict__['get_ind_features']
-        del odict['get_ind_features']
+        if 'get_ind_features' in odict:
+            del odict['get_ind_features']
         #del odict['trainer'] # XXX
         return odict
 
