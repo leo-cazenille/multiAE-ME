@@ -144,6 +144,7 @@ def get_empty_containers(config, data_file, shape = None):
 #            a.container._best_features = None
 
         # XXX horrible hack... and ignore "also_from_parents"
+        a.container.training_period_type = "none"
         a.container.items.clear()
         if shape != None:
             a.container.shape = shape

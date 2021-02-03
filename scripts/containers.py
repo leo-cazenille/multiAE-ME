@@ -391,10 +391,12 @@ class TorchMultiFeatureExtractionContainerDecorator(TorchFeatureExtractionContai
             if do_recomputation:
                 print(f"DEBUG _train_and_recompute_if_needed exp_decay {nb_training_inds} {self._last_training_nb_inds2} {self.training_period} {self._training_id} {self._last_training_nb_inds2 + self.training_period * 2**(self._training_id)}")
                 self._last_training_nb_inds2 = self._last_training_nb_inds2 + self.training_period * 2**(self._training_id)
+        elif self.training_period_type == "none":
+            do_recomputation = False
         else:
             raise ValueError(f"Unknown training_period_type: {self.training_period_type}.")
 
-        if self.train_at_first_it and last_training_nb_inds == 0 and self._training_id == 0:
+        if self.training_period_type != "none" and self.train_at_first_it and last_training_nb_inds == 0 and self._training_id == 0:
             do_recomputation = True
 
         #print("DEBUG add !", nb_training_inds, self.training_period, self._last_training_nb_inds)
