@@ -533,7 +533,7 @@ class BipedalWalkerExperiment(MultiAEExperiment):
         self.several_eval_fn = self.evalobj.several_eval_fn
 
         #self.eval_fn = self._eval
-        self.optimisation_task = "minimisation"
+        self.optimisation_task = "max"
         super().reinit_globals()
         super().reinit_curiosity()
         super().reinit_loggers()
