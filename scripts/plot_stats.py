@@ -16,6 +16,10 @@
 
 
 ########## IMPORTS ########### {{{1
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+
 import os
 import copy
 import pickle
@@ -41,7 +45,11 @@ import tabulate
 #import qdpy.plots
 
 
-#import matplotlib.pyplot as plt
+import scipy.constants
+import pandas as pd
+import seaborn as sns
+import matplotlib.ticker as ticker
+sns.set_style("ticks")
 
 #import curiosity
 #import nets
@@ -63,16 +71,19 @@ import stats
 ########## PLOT FUNCTIONS ########### {{{1
 
 
-def create_table(comparisons, output_file, mean_key = "mean_klc", std_key = "std_klc"):
+def create_table_pairwise(all_stats, output_file, mean_key = "mean_klc", std_key = "std_klc"):
     vals_dict = {}
-    for c_name, c_df in comparisons.items():
+    for c_stats in all_stats.values():
+        c_df = c_stats['compare']
+        c_case_name = c_stats['case_name']
         mean_series = c_df[mean_key]
         std_series = c_df[std_key]
         idx = c_df.index
+        idx_case_names = [all_stats[n]['case_name'] if n in all_stats else n for n in idx]
         entries = {}
-        for n, m, s in zip(idx, mean_series, std_series):
+        for n, m, s in zip(idx_case_names, mean_series, std_series):
             entries[n] = f"${m:.3f} \pm {s:.3f}$"
-        vals_dict[c_name] = entries
+        vals_dict[c_case_name] = entries
     vals_df = pd.DataFrame.from_dict(vals_dict)
 
     table_str = tabulate.tabulate(vals_df, headers="keys", tablefmt="latex_raw")
@@ -85,6 +96,81 @@ def create_table(comparisons, output_file, mean_key = "mean_klc", std_key = "std
 
 
 
+
+def create_table_last_it_stats(all_stats, output_file):
+    vals_dict = {}
+    for c_stats in all_stats.values():
+        c_case_name = c_stats['case_name']
+        last_it_stats = c_stats['ref']['last_it_stats']
+        corr_stats = c_stats['ref']['corr_stats']
+        entries = {}
+        entries['QD-Score'] = f"${last_it_stats['mean_all_unique_qd_score']:.3f} \pm {last_it_stats['std_all_unique_qd_score']:.3f}$"
+        entries['Coverage (%)'] = f"${last_it_stats['mean_all_unique_coverage']:.3f} \pm {last_it_stats['std_all_unique_coverage']:.3f}$"
+        entries['Best Fitness'] = f"${last_it_stats['mean_max_best']:.3f} \pm {last_it_stats['std_max_best']:.3f}$"
+        entries['FD Abs. Corr.'] = f"${corr_stats['mean_mean_abs_corr']:.3f} \pm {corr_stats['std_mean_abs_corr']:.3f}$"
+        vals_dict[c_case_name] = entries
+
+    vals_df = pd.DataFrame.from_dict(vals_dict, orient="index")
+    table_str = tabulate.tabulate(vals_df, headers="keys", tablefmt="latex_raw")
+    print(f"Creating table of last iteration statis to file '{output_file}':")
+    print(table_str)
+    print()
+    with open(output_file, "w") as f:
+        f.write(table_str)
+    return table_str
+
+
+
+
+# https://stackoverflow.com/questions/47581672/replacement-for-deprecated-tsplot
+def tsplot(ax, data, **kw):
+    x = np.arange(data.shape[1])
+    med = np.median(data, axis=0)
+    min_ = np.min(data, axis=0)
+    max_ = np.max(data, axis=0)
+    q25 = np.percentile(data, 25, axis=0)
+    q75 = np.percentile(data, 75, axis=0)
+    #sd = np.std(data, axis=0)
+    #ax.fill_between(x, cis[0], cis[1], alpha=0.4, **kw)
+    ax.fill_between(x,min_,max_,alpha=0.2, **kw)
+    ax.fill_between(x,q25,q75,alpha=0.4, **kw)
+    ax.plot(x, med, **kw)
+    ax.margins(x=0)
+
+
+def create_plot_it(all_stats, output_file, stats_key, y_label, cmap=plt.cm.jet):
+    y_all = [s['ref']['all_it_stats'][stats_key].T for s in all_stats.values()]
+
+    fig = plt.figure(figsize=(5.*scipy.constants.golden, 5.))
+    ax = fig.add_subplot(111)
+    fig.subplots_adjust(bottom=0.3)
+
+    colors = cmap(np.linspace(0., 1., len(y_all)))
+    for y, c in zip(y_all, colors):
+        print(y.shape)
+        tsplot(ax, y, color=c)
+
+    plt.xlabel("Iteration", fontsize=18)
+    plt.xticks(fontsize=18)
+    #plt.xticks(x, fontsize=18)
+    #ax.set_xticklabels([str(i * args.nbEvalsPerIt) for i in x])
+    plt.ylabel(y_label, fontsize=18)
+    plt.yticks(fontsize=18)
+
+    ##ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
+    ##ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
+    #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+    #ax.yaxis.set_major_formatter(ticker.ScalarFormatter())
+
+    sns.despine()
+    #plt.tight_layout(rect=[0, 0, 1.0, 0.95])
+    plt.tight_layout()
+    fig.savefig(output_file)
+    plt.close(fig)
+
+
+
+
 ########## BASE FUNCTIONS ########### {{{1
 
 def parse_args():
@@ -94,18 +180,25 @@ def parse_args():
     #parser.add_argument('-i', '--inputFilename', type=str, default='results/stats.p', help = "Path of input stats file")
     parser.add_argument('-o', '--resultsDir', type=str, default='plots/figs/', help = "Path of results file")
     #parser.add_argument('-v', '--verbose', default=False, action='store_true', help = "Enable verbose mode")
+    parser.add_argument('-t', '--type', type=str, default='all', help = "Type of plots to create")
+    parser.add_argument('-n', '--names', type=str, default=None, help = "Names of the input data files")
     parser.add_argument('input_files', nargs=argparse.REMAINDER)
     return parser.parse_args()
 
 
-def load_stats_files(filenames):
-    comparisons = {}
-    for filename in filenames:
+def load_stats_files(filenames, case_names):
+    all_stats = {}
+    if case_names == None:
+        case_names_lst = [None for _ in range(len(filenames))]
+    else:
+        case_names_lst = case_names.split(",")
+    for filename, case_name in zip(filenames, case_names_lst):
         with open(filename, "rb") as f:
             stats = pickle.load(f)
         stats_name = stats['ref']['name']
-        comparisons[stats_name] = stats['compare']
-    return comparisons
+        stats['case_name'] = case_name if case_name != None else stats_name
+        all_stats[stats_name] = stats
+    return all_stats
 
 
 
@@ -119,12 +212,22 @@ if __name__ == "__main__":
     pathlib.Path(args.resultsDir).mkdir(parents=True, exist_ok=True)
 
     # Create or retrieve stats
-    comparisons = load_stats_files(args.input_files)
+    all_stats = load_stats_files(args.input_files, args.names)
 
     # Create tables
-    create_table(comparisons, os.path.join(args.resultsDir, "table-klc.tex"), "mean_klc", "std_klc")
-    create_table(comparisons, os.path.join(args.resultsDir, "table-coverage.tex"), "mean_coverage", "std_coverage")
-    create_table(comparisons, os.path.join(args.resultsDir, "table-qdscore.tex"), "mean_qdscore", "std_qdscore")
+    if args.type == "table_last_it" or args.type == "all":
+        create_table_last_it_stats(all_stats, os.path.join(args.resultsDir, "table-last_it.tex"))
+    if args.type == "table_pairwise" or args.type == "all":
+        create_table_pairwise(all_stats, os.path.join(args.resultsDir, "table-klc.tex"), "mean_klc", "std_klc")
+        create_table_pairwise(all_stats, os.path.join(args.resultsDir, "table-coverage.tex"), "mean_coverage", "std_coverage")
+        create_table_pairwise(all_stats, os.path.join(args.resultsDir, "table-qdscore.tex"), "mean_qdscore", "std_qdscore")
+
+    # Create plots
+    if args.type == "plots_it" or args.type == "all":
+        create_plot_it(all_stats, os.path.join(args.resultsDir, "qd-score.pdf"), "all_unique_qd_score", "QD-Score")
+        create_plot_it(all_stats, os.path.join(args.resultsDir, "coverage.pdf"), "all_unique_coverage", "Coverage (%)")
+        create_plot_it(all_stats, os.path.join(args.resultsDir, "training-size.pdf"), "training_size", "Training size")
+        create_plot_it(all_stats, os.path.join(args.resultsDir, "best.pdf"), "best", "Best Fitness")
 
 
 

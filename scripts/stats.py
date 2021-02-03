@@ -373,13 +373,24 @@ def compute_stats_last_iteration(config, data_file):
     mean_qd_score = np.mean(qd_score_lst)
     all_unique_size = int(data_file['iterations'].iloc[-1]['all_size'])
     all_capacity = np.sum([a.container.capacity for a in data_file['algorithms']])
-    all_unique_coverage = all_unique_size / float(all_capacity)
+    all_unique_coverage = all_unique_size / float(all_capacity) * 100.
     bests = [a.container.best_fitness[0] for a in data_file['algorithms']]
     max_best = np.max(bests)
     mean_best = np.mean(bests)
     std_best = np.std(bests)
+
     return {'all_unique_qd_score': all_unique_qd_score, 'mean_qd_score': mean_qd_score, 'all_unique_coverage': all_unique_coverage, 'max_best': max_best, 'mean_best': mean_best, 'std_best': std_best}
 
+
+def compute_stats_all_iterations(config, data_file):
+    res = {}
+    all_capacity = np.sum([a.container.capacity for a in data_file['algorithms']])
+    res['all_unique_qd_score'] = np.array([float(x) for x in data_file['iterations']['all_qd_score']])
+    res['all_unique_size'] = np.array([int(x) for x in data_file['iterations']['all_size']])
+    res['all_unique_coverage'] = np.array([float(x) / float(all_capacity) * 100. for x in res['all_unique_size']])
+    res['training_size'] = np.array([int(x) for x in data_file['iterations']['all_size']])
+    res['best'] = np.array([float(x.replace("[", "").replace("]", "")) for x in data_file['iterations']['max']])
+    return res
 
 
 def compute_corr_fd(config, mat_inds):
@@ -414,10 +425,12 @@ def compute_ref(config):
     density_refs = []
     refs_range = []
     stats_last_it = []
+    stats_all_it = []
     stats_corr = []
     for i, data_file in enumerate(loader):
         print(f"Computing KL densities and stats of reference case '{ref_name}'-{i}...")
         stats_last_it.append(compute_stats_last_iteration(config, data_file))
+        stats_all_it.append(compute_stats_all_iterations(config, data_file))
         inds = get_added_inds(config, data_file, max_inds, remove_extracted_scores=False, including_parents=including_parents)
         mat_inds = metrics.inds_to_scores_mat(inds, scores_names)
         #futures.append(_compute_klc_density.remote(mat_inds, nb_bins, epsilon, ref_ranges))
@@ -452,6 +465,11 @@ def compute_ref(config):
     last_it_stats['std_mean_best'] = np.std(mean_best)
     print(f"last_it_stats: {last_it_stats}")
 
+    # Assemble stats of all iterations
+    all_it_stats = {}
+    for k in stats_all_it[0].keys():
+        all_it_stats[k] = np.array([s[k] for s in stats_all_it]).T
+
     # Compute correlation stats
     corr_stats = {}
     corr_stats_np = np.array(stats_corr)
@@ -459,7 +477,7 @@ def compute_ref(config):
     corr_stats['std_mean_abs_cov'], corr_stats['std_mean_abs_corr'] = np.std(corr_stats_np, 0)
     print(f"corr_stats: {corr_stats}")
 
-    res = {"name": ref_name, "dir": ref_dir, "density": density_refs, "range": refs_range, "containers": containers, "last_it_stats": last_it_stats, "corr_stats": corr_stats}
+    res = {"name": ref_name, "dir": ref_dir, "density": density_refs, "range": refs_range, "containers": containers, "last_it_stats": last_it_stats, "all_it_stats": all_it_stats, "corr_stats": corr_stats}
     return res
 
 
@@ -681,7 +699,7 @@ def create_config(args):
 
 def create_or_open_stats_file(config):
     stats_filename = config['resultsFilename']
-    if not os.path.exists(stats_filename):
+    if not os.path.exists(stats_filename) or config['recompute']:
         data = {}
         with open(stats_filename, "wb") as f:
             pickle.dump(data, f)
