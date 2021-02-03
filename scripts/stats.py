@@ -199,7 +199,7 @@ def compute_qdscore(inds, cont0):
 
 
 def recompute_latent(config, inds_data_file, base_containers):
-    including_parents = config['klc'].get('including_parents', None)
+    including_parents = config['klc'].get('including_parents', True)
     max_inds = config['klc'].get('max_inds', None)
     scores_names = config['klc'].get('scores_names', None)
     if isinstance(scores_names, Sized) and len(scores_names) == 0:
@@ -380,7 +380,7 @@ def compute_ref(config):
     nb_bins = config['klc'].get('nb_bins', 15)
     epsilon = config['klc'].get('epsilon', 1e-20)
     scores_names = config['klc'].get('scores_names', None)
-    including_parents = config['klc'].get('including_parents', None)
+    including_parents = config['klc'].get('including_parents', True)
     if isinstance(scores_names, Sized) and len(scores_names) == 0:
         scores_names = None
 
