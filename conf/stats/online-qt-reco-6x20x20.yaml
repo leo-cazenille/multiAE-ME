@@ -15,7 +15,7 @@ klc:
 
 
     data_dirs:
-        hardcoded-4x25x25:          "bipedalM30-reference-4xGridx25x25-scoreprop_100000_cpu"
+        hardcoded-4x25x25:          "bipedalM30-reference-4xGridx25x25-scoreprop_100000"
         pt-reco-4x25x25:            "bipedalM30-pretrained_100-recononly_0.0-4xAutoScalingGrid2x25x25-scoreprop_100000_cpu"
         online-reco-4x25x25:        "bipedalM30-preonline5000_100-recononly_0.0-4xAutoScalingGrid2x25x25-scoreprop_100000_cpu"
         online-qt-reco-4x25x25:     "bipedalM30-preonline5000_100_quartile-recononly_0.0-4xGridx25x25-scoreprop_100000_cpu"
