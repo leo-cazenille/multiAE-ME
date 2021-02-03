@@ -343,10 +343,7 @@ def compute_stats_last_iteration(config, data_file):
     all_unique_size = int(data_file['iterations'].iloc[-1]['all_size'])
     all_capacity = np.sum([a.container.capacity for a in data_file['algorithms']])
     all_unique_coverage = all_unique_size / float(all_capacity)
-    try:
-        bests = [a.container.best_fitness[0] for a in data_file['algorithms']]
-    except Exception as e:
-        bests = [np.nan for a in data_file['algorithms']]
+    bests = [a.container.best_fitness[0] for a in data_file['algorithms']]
     max_best = np.max(bests)
     mean_best = np.mean(bests)
     std_best = np.std(bests)
@@ -377,6 +374,7 @@ def compute_ref(config):
     stats_last_it = []
     for i, data_file in enumerate(loader):
         print(f"Computing KL densities and stats of reference case '{ref_name}'-{i}...")
+        stats_last_it.append(compute_stats_last_iteration(config, data_file))
         inds = get_added_inds(config, data_file, max_inds, remove_extracted_scores=False)
         mat_inds = metrics.inds_to_scores_mat(inds, scores_names)
         #futures.append(_compute_klc_density.remote(mat_inds, nb_bins, epsilon, ref_ranges))
@@ -384,7 +382,6 @@ def compute_ref(config):
         density_refs.append(r[0])
         refs_range.append(r[1])
         containers.append(get_empty_containers(config, data_file))
-        stats_last_it.append(compute_stats_last_iteration(config, data_file))
     #assert(len(futures) > 0)
     print(f"Reference case: found {len(containers)} data files.")
 
