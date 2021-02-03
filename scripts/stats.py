@@ -343,7 +343,10 @@ def compute_stats_last_iteration(config, data_file):
     all_unique_size = int(data_file['iterations'].iloc[-1]['all_size'])
     all_capacity = np.sum([a.container.capacity for a in data_file['algorithms']])
     all_unique_coverage = all_unique_size / float(all_capacity)
-    bests = [a.container.best_fitness[0] for a in data_file['algorithms']]
+    try:
+        bests = [a.container.best_fitness[0] for a in data_file['algorithms']]
+    except Exception as e:
+        bests = [np.nan for a in data_file['algorithms']]
     max_best = np.max(bests)
     mean_best = np.mean(bests)
     std_best = np.std(bests)
