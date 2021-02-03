@@ -1,0 +1,70 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\usetikzlibrary{positioning,fit,matrix}
+\usepackage{todonotes}
+%\usepackage{scalefnt}
+
+%\tikzset{%
+%  textnode/.style     = {\sffamily font=\fontsize{10}{12.4}\selectfont},
+%}
+
+\begin{document}
+
+\sffamily%\sansmath
+%\scalefont{0.01}
+\fontsize{8}{8.0}\selectfont
+
+\begin{tikzpicture}
+
+[align=center,node distance=0cm]
+
+
+% hardcoded-4x25x25
+\node[inner sep=0]                   (hc1) {\includegraphics[width=3cm]{figs/hardcoded-4x25x25/performancesGrid-20210202150943-algo1.pdf}};
+\node[inner sep=0, right=0mm of hc1] (hc2) {\includegraphics[width=3cm]{figs/hardcoded-4x25x25/performancesGrid-20210202150943-algo2.pdf}};
+\node[inner sep=0, right=0mm of hc2] (hc3) {\includegraphics[width=3cm]{figs/hardcoded-4x25x25/performancesGrid-20210202150943-algo3.pdf}};
+\node[inner sep=0, right=0mm of hc3] (hc4) {\includegraphics[width=3cm]{figs/hardcoded-4x25x25/performancesGrid-20210202150943-algo5.pdf}};
+
+
+%% pt-reco-4x25x25
+%\node[inner sep=0, below=0mm of hc1] (pt1) {\includegraphics[width=3cm]{figs/pt-reco-4x25x25/performancesGrid-20210201222559-algo1.pdf}};
+%\node[inner sep=0, right=0mm of pt1] (pt2) {\includegraphics[width=3cm]{figs/pt-reco-4x25x25/performancesGrid-20210201222559-algo2.pdf}};
+%\node[inner sep=0, right=0mm of pt2] (pt3) {\includegraphics[width=3cm]{figs/pt-reco-4x25x25/performancesGrid-20210201222559-algo3.pdf}};
+%\node[inner sep=0, right=0mm of pt3] (pt4) {\includegraphics[width=3cm]{figs/pt-reco-4x25x25/performancesGrid-20210201222559-algo4.pdf}};
+
+
+% online-reco-4x25x25
+%\node[inner sep=0, below=0mm of pt1] (or1) {\includegraphics[width=3cm]{figs/online-reco-4x25x25/performancesGrid-20210201224010-algo1.pdf}};
+\node[inner sep=0, below=0mm of hc1] (or1) {\includegraphics[width=3cm]{figs/online-reco-4x25x25/performancesGrid-20210201224010-algo1.pdf}};
+\node[inner sep=0, right=0mm of or1] (or2) {\includegraphics[width=3cm]{figs/online-reco-4x25x25/performancesGrid-20210201224010-algo2.pdf}};
+\node[inner sep=0, right=0mm of or2] (or3) {\includegraphics[width=3cm]{figs/online-reco-4x25x25/performancesGrid-20210201224010-algo3.pdf}};
+\node[inner sep=0, right=0mm of or3] (or4) {\includegraphics[width=3cm]{figs/online-reco-4x25x25/performancesGrid-20210201224010-algo4.pdf}};
+
+
+% online-qt-reco-4x25x25
+\node[inner sep=0, below=0mm of or1] (qt1) {\includegraphics[width=3cm]{figs/online-qt-reco-4x25x25/performancesGrid-20210202133911-algo1.pdf}};
+\node[inner sep=0, right=0mm of qt1] (qt2) {\includegraphics[width=3cm]{figs/online-qt-reco-4x25x25/performancesGrid-20210202133911-algo2.pdf}};
+\node[inner sep=0, right=0mm of qt2] (qt3) {\includegraphics[width=3cm]{figs/online-qt-reco-4x25x25/performancesGrid-20210202133911-algo3.pdf}};
+\node[inner sep=0, right=0mm of qt3] (qt4) {\includegraphics[width=3cm]{figs/online-qt-reco-4x25x25/performancesGrid-20210202133911-algo4.pdf}};
+
+
+%% CBar
+%\node[inner sep=0, below=0mm of tetra1] (cbar1) {\includegraphics[width=6cm]{peppercorn-cbar-meanStruct.pdf}};
+%\node[inner sep=0, right=0mm of cbar1] (cbar2) {\includegraphics[width=6cm]{peppercorn-cbar-entropyReactionTypes.pdf}};
+%%\node[inner sep=0, right=0mm of cbar2] (cbar3) {\includegraphics[width=6cm]{nupack-cbar-combined.pdf}};
+% Titles
+%\node[color=black,above=5mm of baseline1,rotate=0,anchor=north,align=center,shift={(0.20,0.00)}] {Mean Struct. Size};
+
+%\node[color=black,left=6mm of hc1,rotate=90,anchor=north,align=center,shift={(0.0,0.0)}] {\textbf{hardcoded-4x25x25}};
+%\node[color=black,left=6mm of pt1,rotate=90,anchor=north,align=center,shift={(0.0,0.0)}] {\textbf{pt-reco-4x25x25}};
+%\node[color=black,left=6mm of or1,rotate=90,anchor=north,align=center,shift={(0.0,0.0)}] {\textbf{online-reco-4x25x25}};
+%\node[color=black,left=6mm of qt1,rotate=90,anchor=north,align=center,shift={(0.0,0.0)}] {\textbf{online-qt-reco-4x25x25}};
+\node[color=black,left=6mm of hc1,rotate=90,anchor=north,align=center,shift={(0.0,0.0)}] {\textbf{hardcoded}};
+%\node[color=black,left=6mm of pt1,rotate=90,anchor=north,align=center,shift={(0.0,0.0)}] {\textbf{pt-reco}};
+\node[color=black,left=6mm of or1,rotate=90,anchor=north,align=center,shift={(0.0,0.0)}] {\textbf{online-reco}};
+\node[color=black,left=6mm of qt1,rotate=90,anchor=north,align=center,shift={(0.0,0.0)}] {\textbf{online-qt-reco}};
+
+
+\end{tikzpicture}
+
+\end{document}
