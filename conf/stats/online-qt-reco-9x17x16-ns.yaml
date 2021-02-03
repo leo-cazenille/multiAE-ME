@@ -10,8 +10,8 @@ klc:
 
 
     refs:
-        name: online-qt-reco-4x25x25
-        dir: "bipedalM30-preonline5000_100_quartile-recononly_0.0-4xGridx25x25-scoreprop_100000_cpu"
+        name: online-qt-reco-9x17x16-ns
+        dir: "bipedalM30-preonline5000_100_quartile-recononly_0.0-9xGridx17x16-scoreprop_notshared_100000_cpu"
 
 
     data_dirs:

@@ -11,24 +11,28 @@ klc:
 
     refs:
         name: online-reco-4x25x25
-        dir: "bipedalM30-preonline5000_100-recononly_0.0-4xAutoScalingGrid2x25x25-scoreprop_100000_cpu"
+        dir: "bipedalM30-preonline5000_100-recononly_0.0-1xAutoScalingGrid2x50x50-scoreprop_100000_cpu"
 
 
     data_dirs:
-        hardcoded-4x25x25:          "bipedalM30-reference-4xGridx25x25-scoreprop_100000"
-        pt-reco-4x25x25:            "bipedalM30-pretrained_100-recononly_0.0-4xAutoScalingGrid2x25x25-scoreprop_100000_cpu"
-        online-reco-4x25x25:        "bipedalM30-preonline5000_100-recononly_0.0-4xAutoScalingGrid2x25x25-scoreprop_100000_cpu"
-        online-qt-reco-4x25x25:     "bipedalM30-preonline5000_100_quartile-recononly_0.0-4xGridx25x25-scoreprop_100000_cpu"
-        online-qt-reco-1x25x25:     "bipedalM30-preonline5000_100_quartile-recononly_0.0-1xGridx50x50-scoreprop_100000_cpu"
-        online-qt-reco-1x50x50:     "bipedalM30-preonline5000_100_quartile-recononly_0.0-1xGridx50x50-scoreprop_100000_cpu"
-        online-qt-reco-4x25x25:     "bipedalM30-preonline5000_100_quartile-recononly_0.0-4xGridx25x25-scoreprop_100000_cpu"
-        online-qt-reco-6x20x20:     "bipedalM30-preonline5000_100_quartile-recononly_0.0-6xGridx20x20-scoreprop_100000_cpu"
-        online-qt-reco-6x25x25:     "bipedalM30-preonline5000_100_quartile-recononly_0.0-6xGridx25x25-scoreprop_100000_cpu"
-        online-qt-reco-9x17x16:     "bipedalM30-preonline5000_100_quartile-recononly_0.0-9xGridx17x16-scoreprop_100000_cpu"
-        online-qt-reco-9x25x25:     "bipedalM30-preonline5000_100_quartile-recononly_0.0-9xGridx25x25-scoreprop_100000_cpu"
-        online-qt-outputs-4x25x25:  "bipedalM30-preonline5000_100_quartile-outputs_1.0-4xGridx25x25-scoreprop_100000_cpu"
-        online-qt-cov-4x25x25:      "bipedalM30-preonline5000_100_quartile-covlatent_1.0-4xGridx25x25-scoreprop_100000_cpu"
-        online-qt-cmd-4x25x25:      "bipedalM30-preonline5000_100_quartile-cmdlatent_1.0-4xGridx25x25-scoreprop_100000_cpu"
+        hardcoded-4x25x25:              "bipedalM30-reference-4xGridx25x25-scoreprop_100000"
+        pt-reco-4x25x25:                "bipedalM30-pretrained_100-recononly_0.0-4xAutoScalingGrid2x25x25-scoreprop_100000_cpu"
+        online-reco-4x25x25:            "bipedalM30-preonline5000_100-recononly_0.0-1xAutoScalingGrid2x50x50-scoreprop_100000_cpu"
+        online-qt-reco-4x25x25:         "bipedalM30-preonline5000_100_quartile-recononly_0.0-4xGridx25x25-scoreprop_100000_cpu"
+
+        hardcoded-4x25x25-ns:           "bipedalM30-reference-4xGridx25x25-scoreprop_notshared_100000"
+        online-qt-reco-4x25x25-ns:      "bipedalM30-preonline5000_100_quartile-recononly_0.0-4xGridx25x25-scoreprop_notshared_100000_cpu"
+
+        hardcoded-1x50x50:              "bipedalM30-reference0-1xGridx50x50-scoreprop_100000"
+        online-qt-reco-1x50x50:         "bipedalM30-preonline5000_100_quartile-recononly_0.0-1xGridx50x50-scoreprop_100000_cpu"
+        online-qt-reco-6x20x20-ns:      "bipedalM30-preonline5000_100_quartile-recononly_0.0-6xGridx20x20-scoreprop_notshared_100000_cpu"
+        online-qt-reco-9x17x16-ns:      "bipedalM30-preonline5000_100_quartile-recononly_0.0-9xGridx17x16-scoreprop_notshared_100000_cpu"
+
+        online-qt-outputs-4x25x25-ns:   "bipedalM30-preonline5000_100_quartile-outputs_1.0-4xGridx25x25-scoreprop_notshared_100000_cpu"
+        online-qt-covmin-4x25x25-ns:    "bipedalM30-preonline5000_100_quartile-covlatent_1.0-4xGridx25x25-scoreprop_notshared_100000_cpu"
+        online-qt-covmax-4x25x25-ns:    "bipedalM30-preonline5000_100_quartile-covlatent_-1.0-4xGridx25x25-scoreprop_notshared_100000_cpu"
+        online-qt-cmd-4x25x25-ns:       "bipedalM30-preonline5000_100_quartile-cmdlatent_1.0-4xGridx25x25-scoreprop_notshared_100000_cpu"
+
 
 
 # MODELINE "{{{1
