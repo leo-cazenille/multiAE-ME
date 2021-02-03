@@ -199,13 +199,14 @@ def compute_qdscore(inds, cont0):
 
 
 def recompute_latent(config, inds_data_file, base_containers):
+    including_parents = config['klc'].get('including_parents', None)
     max_inds = config['klc'].get('max_inds', None)
     scores_names = config['klc'].get('scores_names', None)
     if isinstance(scores_names, Sized) and len(scores_names) == 0:
         scores_names = None
 
     containers = copy.deepcopy(base_containers)
-    orig_inds = get_added_inds(config, inds_data_file, max_inds, remove_extracted_scores=True)
+    orig_inds = get_added_inds(config, inds_data_file, max_inds, remove_extracted_scores=True, including_parents=including_parents)
     added_inds = sortedcollections.IndexableSet()
     # Add all inds to all containers:
     for c in containers:
@@ -379,6 +380,7 @@ def compute_ref(config):
     nb_bins = config['klc'].get('nb_bins', 15)
     epsilon = config['klc'].get('epsilon', 1e-20)
     scores_names = config['klc'].get('scores_names', None)
+    including_parents = config['klc'].get('including_parents', None)
     if isinstance(scores_names, Sized) and len(scores_names) == 0:
         scores_names = None
 
@@ -393,7 +395,7 @@ def compute_ref(config):
     for i, data_file in enumerate(loader):
         print(f"Computing KL densities and stats of reference case '{ref_name}'-{i}...")
         stats_last_it.append(compute_stats_last_iteration(config, data_file))
-        inds = get_added_inds(config, data_file, max_inds, remove_extracted_scores=False)
+        inds = get_added_inds(config, data_file, max_inds, remove_extracted_scores=False, including_parents=including_parents)
         mat_inds = metrics.inds_to_scores_mat(inds, scores_names)
         #futures.append(_compute_klc_density.remote(mat_inds, nb_bins, epsilon, ref_ranges))
         r = _compute_klc_density(mat_inds, nb_bins, epsilon, ref_ranges)
