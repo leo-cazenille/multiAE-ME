@@ -250,6 +250,8 @@ def recompute_latent(config, inds_data_file, base_containers):
 
 #@ray.remote
 def _compute_klc_density(mat_refs, nb_bins, epsilon, ranges):
+    if nb_bins == 0:
+        return [], []
     # Compute refs extrema
     if ranges == None:
         refs_min = np.min(mat_refs, 0)
@@ -290,6 +292,8 @@ def _compute_klc(mat_inds, density_refs, refs_range, nb_bins, epsilon):
 
 def relative_kl_coverage_btw_two_cases(config, ref_stats, inds_case_name):
     nb_bins = config['klc'].get('nb_bins', 15)
+    if nb_bins == 0:
+        return [], [], []
     epsilon = config['klc'].get('epsilon', 1e-20)
     print(f"Computing KL coverage of case '{inds_case_name}' using case '{ref_stats['name']}' as reference.")
 
