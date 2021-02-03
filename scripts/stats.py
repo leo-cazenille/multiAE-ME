@@ -234,8 +234,10 @@ def _compute_klc_density(mat_refs, nb_bins, epsilon, ranges):
         else:
             refs_range = list(ranges)
     # Compute histograms
-    density_refs = (np.histogramdd(mat_refs, nb_bins, range=refs_range, density=False)[0] / len(mat_refs)).ravel()
+    #density_refs = (np.histogramdd(mat_refs, nb_bins, range=refs_range, density=False)[0] / len(mat_refs)).ravel()
+    density_refs = (np.histogramdd(mat_refs, nb_bins, range=refs_range, density=False)[0]).ravel()
     density_refs[np.where(density_refs == 0.)] = epsilon
+    density_refs /= np.sum(density_refs)
     return density_refs, refs_range
 
 
@@ -250,8 +252,10 @@ def _compute_klc(mat_inds, density_refs, refs_range, nb_bins, epsilon):
 #    print(f"DEBUG _compute_klc refs_range: {refs_range}")
 #    print(f"DEBUG _compute_klc nb_bins: {nb_bins}")
     # Compute histograms
-    density_inds = (np.histogramdd(mat_inds, nb_bins, range=refs_range, density=False)[0] / len(mat_inds)).ravel()
+    #density_inds = (np.histogramdd(mat_inds, nb_bins, range=refs_range, density=False)[0] / len(mat_inds)).ravel()
+    density_inds = (np.histogramdd(mat_inds, nb_bins, range=refs_range, density=False)[0]).ravel()
     density_inds[np.where(density_inds == 0.)] = epsilon
+    density_inds /= np.sum(density_inds)
     # Compute KLC
     return np.sum(density_inds * np.log(density_inds / density_refs))
     #return np.sum(density_refs * np.log(density_refs / density_inds))
