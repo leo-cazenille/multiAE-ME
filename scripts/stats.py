@@ -124,20 +124,32 @@ def get_added_inds(config, data_file, max_inds = None, remove_extracted_scores =
     return added_inds
 
 
-def get_empty_containers(config, data_file):
+def get_empty_containers(config, data_file, shape = None):
     containers = []
     for a in data_file['algorithms']:
-        try:
-            a.container.clear()
-        except Exception as e:
-            # XXX horrible hack... and ignore "also_from_parents"
-            a.container.items.clear()
-            a.container._init_grid()
-            a.container.recentness = []
-            a.container._size = 0
-            a.container._best = None
-            a.container._best_fitness = None
-            a.container._best_features = None
+#        try:
+#            a.container.clear()
+#        except Exception as e:
+#            # XXX horrible hack... and ignore "also_from_parents"
+#            a.container.items.clear()
+#            a.container._init_grid()
+#            a.container.recentness = []
+#            a.container._size = 0
+#            a.container._best = None
+#            a.container._best_fitness = None
+#            a.container._best_features = None
+
+        # XXX horrible hack... and ignore "also_from_parents"
+        a.container.items.clear()
+        if shape != None:
+            a.container.shape = shape
+        a.container._init_grid()
+        a.container.recentness = []
+        a.container._size = 0
+        a.container._best = None
+        a.container._best_fitness = None
+        a.container._best_features = None
+
         #print(f"DEBUG container len: {len(a.container)}")
         a.container.parents = []
         a.container.training_containers = []
@@ -381,6 +393,7 @@ def compute_ref(config):
     epsilon = config['klc'].get('epsilon', 1e-20)
     scores_names = config['klc'].get('scores_names', None)
     including_parents = config['klc'].get('including_parents', False)
+    container_shape = config['klc'].get('container_shape', (25, 25))
     if isinstance(scores_names, Sized) and len(scores_names) == 0:
         scores_names = None
 
@@ -401,7 +414,7 @@ def compute_ref(config):
         r = _compute_klc_density(mat_inds, nb_bins, epsilon, ref_ranges)
         density_refs.append(r[0])
         refs_range.append(r[1])
-        containers.append(get_empty_containers(config, data_file))
+        containers.append(get_empty_containers(config, data_file, container_shape))
     #assert(len(futures) > 0)
     print(f"Reference case: found {len(containers)} data files.")
 
