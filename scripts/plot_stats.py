@@ -74,8 +74,10 @@ import stats
 def create_table_pairwise(all_stats, output_file, mean_key = "mean_klc", std_key = "std_klc"):
     vals_dict = {}
     for c_stats in all_stats.values():
-        c_df = c_stats['compare']
         c_case_name = c_stats['case_name']
+        if not 'compare' in c_stats:
+            continue
+        c_df = c_stats['compare']
         mean_series = c_df[mean_key]
         std_series = c_df[std_key]
         idx = c_df.index
@@ -147,7 +149,6 @@ def create_plot_it(all_stats, output_file, stats_key, y_label, cmap=plt.cm.jet):
 
     colors = cmap(np.linspace(0., 1., len(y_all)))
     for y, c in zip(y_all, colors):
-        print(y.shape)
         tsplot(ax, y, color=c)
 
     plt.xlabel("Iteration", fontsize=18)

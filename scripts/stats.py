@@ -49,7 +49,6 @@ import containers
 #from containers import *
 #import sim
 import main
-#import ray
 
 
 #import warnings
@@ -253,7 +252,6 @@ def recompute_latent(config, inds_data_file, base_containers):
 
 
 
-#@ray.remote
 def _compute_klc_density(mat_refs, nb_bins, epsilon, ranges):
     if nb_bins == 0:
         return [], []
@@ -279,7 +277,6 @@ def _compute_klc_density(mat_refs, nb_bins, epsilon, ranges):
 
 
 
-#@ray.remote
 def _compute_klc(mat_inds, density_refs, refs_range, nb_bins, epsilon):
 ##    print(f"DEBUG _compute_klc mat_inds: {mat_inds}")
 #    print(f"DEBUG _compute_klc density_refs: {density_refs}")
@@ -330,9 +327,6 @@ def relative_kl_coverage_btw_two_cases(config, ref_stats, inds_case_name):
             qdscores.append(qds)
             gc.collect()
 
-
-    #futures2 = [_compute_klc.remote(sc_mat, refs_d, refs_r, nb_bins, epsilon) for sc_mat in comp_scores_mats for refs_d, refs_r in zip(density_refs, refs_range)]
-    #klcs = list(ray.get(futures))
     print(f"klcs: {np.mean(klcs)} {np.std(klcs)}  coverage: {np.mean(coverage)} {np.std(coverage)}  qdscores: {np.mean(qdscores)} {np.std(qdscores)}")
     gc.collect()
     return klcs, coverage, qdscores
@@ -729,44 +723,21 @@ if __name__ == "__main__":
     config = create_config(args)
     recompute = config.get('recompute', False)
 
-#    # Init ray
-#    ray.init()
-
     # Create or retrieve stats
     stats_data, stats_filename = create_or_open_stats_file(config)
     # Update config
     stats_data['config'] = config
-
-#    if recompute or not 'container' in stats_data:
-#        stats_data['containers'] = gather_conts(config)
-#    save_stats_file(config, stats_filename, stats_data)
-
-#    if recompute or not 'added_inds' in stats_data:
-#        stats_data['added_inds'], stats_data['containers'] = gather_added_inds_and_conts(config)
-#    save_stats_file(config, stats_filename, stats_data)
-
-#    if recompute or not 'scores_mats' in stats_data:
-#        stats_data['scores_mats'] = gather_score_mats(config)
-#    save_stats_file(config, stats_filename, stats_data)
-#
-#    if recompute or not 'klc' in stats_data:
-#        stats_data['klc'] = compute_relative_kl_coverage(config, stats_data['scores_mats'])
-#    save_stats_file(config, stats_filename, stats_data)
 
     if recompute or not 'ref' in stats_data:
         stats_data['ref'] = compute_ref(config)
     save_stats_file(config, stats_filename, stats_data)
     gc.collect()
 
-    if recompute or not 'compare' in stats_data:
-        stats_data['compare'] = compute_relative_kl_coverage(config, stats_data['ref'])
-    save_stats_file(config, stats_filename, stats_data)
-    gc.collect()
+#    if recompute or not 'compare' in stats_data:
+#        stats_data['compare'] = compute_relative_kl_coverage(config, stats_data['ref'])
+#    save_stats_file(config, stats_filename, stats_data)
+#    gc.collect()
 
-    #exp = create_experiment(args, base_config)
-    #launch_experiment(exp)
-    ##model = train_AE(exp)
-    #make_plots(exp)
 
 
 
