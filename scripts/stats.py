@@ -66,8 +66,12 @@ def data_files_loader(config, path, max_data_files=None):
     for i, filename in enumerate(glob.glob(os.path.join(base_path, path, "final*.p"))):
         if i >= max_data_files:
             break
-        with open(filename, "rb") as f:
-            data_file = pickle.load(f)
+        try:
+            with open(filename, "rb") as f:
+                data_file = pickle.load(f)
+        except Exception as e:
+            warnings.warn(f"Pickle failed to open file '{filename}': {str(e)}")
+            continue
         yield data_file
 
 #def added_inds_loader(config, data_file, max_inds=None):
