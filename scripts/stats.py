@@ -393,7 +393,7 @@ def compute_ref(config):
     epsilon = config['klc'].get('epsilon', 1e-20)
     scores_names = config['klc'].get('scores_names', None)
     including_parents = config['klc'].get('including_parents', False)
-    container_shape = config['klc'].get('container_shape', (25, 25))
+    container_shape = config['klc'].get('container_shape', None)
     if isinstance(scores_names, Sized) and len(scores_names) == 0:
         scores_names = None
 
