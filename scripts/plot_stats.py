@@ -140,7 +140,7 @@ def tsplot(ax, data, label=None, **kw):
     ax.margins(x=0)
 
 
-def create_plot_it(all_stats, output_file, stats_key, y_label, cmap=plt.cm.jet, hack_always_increase=False):
+def create_plot_it(all_stats, output_file, stats_key, y_label, cmap=plt.cm.jet, hack_always_increase=False, only_legend=False):
     y_all = [s['ref']['all_it_stats'][stats_key].T for s in all_stats.values()]
     y_names = [s['case_name'] for s in all_stats.values()]
 
@@ -151,17 +151,17 @@ def create_plot_it(all_stats, output_file, stats_key, y_label, cmap=plt.cm.jet, 
     colors = cmap(np.linspace(0., 1., len(y_all)))
     for y, c, name in zip(y_all, colors, y_names):
         if hack_always_increase:
-            y_ = []
-            prev = y[0]
-            y_.append(prev)
-            for val in y[1:]:
+            y2 = []
+            prev = y[:,0]
+            y2.append(prev)
+            for val in y.T[1:]:
                 val2 = np.max([val, prev], 0)
                 prev = val2
-                y_.append(val2)
+                y2.append(val2)
+            y2 = np.array(y2).T
         else:
-            y_ = y
-        y_ = np.array(y_)
-        tsplot(ax, y_, label=name, color=c)
+            y2 = y
+        tsplot(ax, y2, label=name, color=c)
 
     plt.xlabel("Iteration", fontsize=18)
     plt.xticks(fontsize=18)
@@ -175,12 +175,21 @@ def create_plot_it(all_stats, output_file, stats_key, y_label, cmap=plt.cm.jet, 
     #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
     #ax.yaxis.set_major_formatter(ticker.ScalarFormatter())
 
-    plt.legend()
+    if only_legend:
+        legend = plt.legend(loc=3, framealpha=1, frameon=True)
+        figleg = legend.figure
+        figleg.canvas.draw()
+        bbox  = legend.get_window_extent()
+        expand=[0,0,0,-3]
+        bbox = bbox.from_extents(*(bbox.extents + np.array(expand)))
+        bbox = bbox.transformed(fig.dpi_scale_trans.inverted())
+        fig.savefig(output_file, dpi="figure", bbox_inches=bbox)
 
-    sns.despine()
-    #plt.tight_layout(rect=[0, 0, 1.0, 0.95])
-    plt.tight_layout()
-    fig.savefig(output_file)
+    else:
+        sns.despine()
+        #plt.tight_layout(rect=[0, 0, 1.0, 0.95])
+        plt.tight_layout()
+        fig.savefig(output_file)
     plt.close(fig)
 
 
@@ -239,10 +248,11 @@ if __name__ == "__main__":
 
     # Create plots
     if args.type == "plots_it" or args.type == "all":
-        create_plot_it(all_stats, os.path.join(args.resultsDir, "qd-score.pdf"), "all_unique_qd_score", "QD-Score")
-        create_plot_it(all_stats, os.path.join(args.resultsDir, "coverage.pdf"), "all_unique_coverage", "Coverage (%)")
+        create_plot_it(all_stats, os.path.join(args.resultsDir, "qd-score.pdf"), "all_unique_qd_score", "QD-Score", hack_always_increase=True)
+        create_plot_it(all_stats, os.path.join(args.resultsDir, "coverage.pdf"), "all_unique_coverage", "Coverage (%)", hack_always_increase=True)
         create_plot_it(all_stats, os.path.join(args.resultsDir, "training-size.pdf"), "training_size", "Training size", hack_always_increase=True)
         create_plot_it(all_stats, os.path.join(args.resultsDir, "best.pdf"), "best", "Best Fitness", hack_always_increase=True)
+        create_plot_it(all_stats, os.path.join(args.resultsDir, "legend.pdf"), "best", "", hack_always_increase=True, only_legend=True)
 
 
 
