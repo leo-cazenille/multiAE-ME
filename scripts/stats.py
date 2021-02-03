@@ -337,7 +337,8 @@ def compute_stats_last_iteration(config, data_file):
     last_entry = data_file['iterations'].iloc[-1]
     algos = data_file['algorithms']
     all_unique_qd_score = float(last_entry['all_qd_score'])
-    qd_score_lst = [float(last_entry[f"qd_score-algo{i+1}"]) for i in range(len(algos))]
+    algos_names = [a.name for a in data_file['algorithms']]
+    qd_score_lst = [float(last_entry[f"qd_score-{n}"]) for n in algos_names]
     mean_qd_score = np.mean(qd_score_lst)
     all_unique_size = int(data_file['iterations'].iloc[-1]['all_size'])
     all_capacity = np.sum([a.container.capacity for a in data_file['algorithms']])
