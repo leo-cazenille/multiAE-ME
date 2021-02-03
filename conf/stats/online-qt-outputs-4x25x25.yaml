@@ -8,13 +8,10 @@ klc:
 #    max_data_files: 1
 #    max_inds: 10
 
-    scores_names: ["meanDistance", "meanHeadStability", "meanTorquePerStep", "meanJump", "meanLeg0HipAngle", "meanLeg1HipAngle", "meanLeg0KneeAngle", "meanLeg1KneeAngle"]
-
 
     refs:
-        name: hardcoded-4x25x25
-        dir: "bipedalM30-reference-4xGridx25x25-scoreprop_100000_cpu"
-        ranges: [[0., 50.], [0., 2.5], [0., 25.], [0., 0.75], [0.0, 2.5], [0.0, 2.5], [0.0, 2.5], [0.0, 2.5]]
+        name: online-qt-outputs-4x25x25
+        dir: "bipedalM30-preonline5000_100_quartile-outputs_1.0-4xGridx25x25-scoreprop_100000_cpu"
 
 
     data_dirs:
@@ -31,8 +28,6 @@ klc:
         online-qt-outputs-4x25x25:  "bipedalM30-preonline5000_100_quartile-outputs_1.0-4xGridx25x25-scoreprop_100000_cpu"
         online-qt-cov-4x25x25:      "bipedalM30-preonline5000_100_quartile-covlatent_1.0-4xGridx25x25-scoreprop_100000_cpu"
         online-qt-cmd-4x25x25:      "bipedalM30-preonline5000_100_quartile-cmdlatent_1.0-4xGridx25x25-scoreprop_100000_cpu"
-
-
 
 
 # MODELINE "{{{1

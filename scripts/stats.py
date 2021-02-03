@@ -613,6 +613,7 @@ def parse_args():
     parser.add_argument('-o', '--resultsFilename', type=str, default='results/stats.p', help = "Path of results file")
     parser.add_argument('-v', '--verbose', default=False, action='store_true', help = "Enable verbose mode")
     parser.add_argument('-r', '--recompute', default=False, action='store_true', help = "Recompute everything, don't use cached data")
+    parser.add_argument('--maxDataFiles', type=int, default=0, help = "Max number of data file to take into account")
     return parser.parse_args()
 
 def create_config(args):
@@ -621,6 +622,8 @@ def create_config(args):
         config['resultsFilename'] = args.resultsFilename
     config['verbose'] = args.verbose
     config['recompute'] = args.recompute
+    if args.maxDataFiles > 0:
+        config['klc']['max_data_files'] = args.maxDataFiles
     return config
 
 def create_or_open_stats_file(config):
