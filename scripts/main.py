@@ -516,8 +516,10 @@ class BipedalWalkerExperiment(MultiAEExperiment):
         self.set_defaultconfig_entry(['algorithms', 'dimension'], self.sim_model.param_count)
         print(f"CONFIG param_count: {self.sim_model.param_count}")
         self.set_defaultconfig_entry(['containers', 'base_scores'], ["meanAvgReward", "meanDistance", "meanHeadStability", "meanTorquePerStep", "meanJump", "meanLeg0HipAngle", "meanLeg0HipSpeed", "meanLeg0KneeAngle", "meanLeg0KneeSpeed", "meanLeg1HipAngle", "meanLeg1HipSpeed", "meanLeg1KneeAngle", "meanLeg1KneeSpeed"])
+        self.set_defaultconfig_entry(['algorithms', 'optimisation_task'], 'max')
         # Reinit
         super().reinit()
+        self.optimisation_task = "max"
 
         self.evalobj = BipedalWalkerEval(
                 self.env_name,
@@ -533,7 +535,6 @@ class BipedalWalkerExperiment(MultiAEExperiment):
         self.several_eval_fn = self.evalobj.several_eval_fn
 
         #self.eval_fn = self._eval
-        self.optimisation_task = "max"
         super().reinit_globals()
         super().reinit_curiosity()
         super().reinit_loggers()
