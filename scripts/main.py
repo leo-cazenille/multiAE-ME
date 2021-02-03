@@ -453,6 +453,7 @@ class BallisticExperiment(MultiAEExperiment):
         self.set_defaultconfig_entry(['algorithms', 'ind_domain'], env.ind_domain)
         self.set_defaultconfig_entry(['algorithms', 'dimension'], env.dimensions)
         self.set_defaultconfig_entry(['containers', 'base_scores'], env.get_observations_scores_names())
+        self.set_defaultconfig_entry(['algorithms', 'optimisation_task'], 'minimisation')
         # Reinit
         super().reinit()
         self.eval_fn = self._eval
