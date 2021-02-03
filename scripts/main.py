@@ -316,8 +316,9 @@ class RastriginExperiment(MultiAEExperiment):
         #self.config['features_list'] = ["0", "1"]
         #self.config['0Domain'] = self.bench.features_domain[0]
         #self.config['1Domain'] = self.bench.features_domain[1]
-        self.config['algorithms']['ind_domain'] = self.bench.ind_domain
         #self.features_domain = self.bench.features_domain
+        self.set_defaultconfig_entry(['algorithms', 'ind_domain'], self.bench.ind_domain)
+        self.set_defaultconfig_entry(['algorithms', 'optimisation_task'], 'minimisation')
         super().reinit()
         self.eval_fn = self.bench.fn
         self.optimisation_task = self.bench.default_task
