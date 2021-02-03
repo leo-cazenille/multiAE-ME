@@ -83,7 +83,17 @@ def data_files_loader(config, path, max_data_files=None):
 #            if remaining_inds == 0:
 #                break
 
-def get_added_inds(config, data_file, max_inds = None, remove_extracted_scores = False):
+
+def _get_added_inds_parents(ind):
+    if not hasattr(ind, 'parent') or ind.parent == None:
+        return []
+    else:
+        parent = ind.parent
+        for s in [k for k in parent.scores.keys() if k.startswith("extracted_")]:
+            del parent.scores[s]
+        return [parent] + _get_added_inds_parents(parent)
+
+def get_added_inds(config, data_file, max_inds = None, remove_extracted_scores = False, including_parents = False):
     added_inds = sortedcollections.IndexableSet()
     if max_inds == None:
         for a in data_file['algorithms']:
@@ -91,6 +101,8 @@ def get_added_inds(config, data_file, max_inds = None, remove_extracted_scores =
                 if remove_extracted_scores:
                     for s in [k for k in i.scores.keys() if k.startswith("extracted_")]:
                         del i.scores[s]
+                if including_parents:
+                    added_inds |= _get_added_inds_parents(i)
                 if hasattr(i, 'parent'):
                     i.parent = None
                 added_inds.add(i)
@@ -103,6 +115,8 @@ def get_added_inds(config, data_file, max_inds = None, remove_extracted_scores =
                 if remove_extracted_scores:
                     for s in [k for k in i.scores.keys() if k.startswith("extracted_")]:
                         del i.scores[s]
+                if including_parents:
+                    added_inds |= _get_added_inds_parents(i)
                 if hasattr(i, 'parent'):
                     i.parent = None
                 added_inds.add(i)
