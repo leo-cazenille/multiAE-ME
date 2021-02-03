@@ -125,7 +125,7 @@ def create_table_last_it_stats(all_stats, output_file):
 
 
 # https://stackoverflow.com/questions/47581672/replacement-for-deprecated-tsplot
-def tsplot(ax, data, **kw):
+def tsplot(ax, data, label=None, **kw):
     x = np.arange(data.shape[1])
     med = np.median(data, axis=0)
     min_ = np.min(data, axis=0)
@@ -136,20 +136,32 @@ def tsplot(ax, data, **kw):
     #ax.fill_between(x, cis[0], cis[1], alpha=0.4, **kw)
     ax.fill_between(x,min_,max_,alpha=0.2, **kw)
     ax.fill_between(x,q25,q75,alpha=0.4, **kw)
-    ax.plot(x, med, **kw)
+    ax.plot(x, med, label=label, **kw)
     ax.margins(x=0)
 
 
-def create_plot_it(all_stats, output_file, stats_key, y_label, cmap=plt.cm.jet):
+def create_plot_it(all_stats, output_file, stats_key, y_label, cmap=plt.cm.jet, hack_always_increase=False):
     y_all = [s['ref']['all_it_stats'][stats_key].T for s in all_stats.values()]
+    y_names = [s['case_name'] for s in all_stats.values()]
 
     fig = plt.figure(figsize=(5.*scipy.constants.golden, 5.))
     ax = fig.add_subplot(111)
     fig.subplots_adjust(bottom=0.3)
 
     colors = cmap(np.linspace(0., 1., len(y_all)))
-    for y, c in zip(y_all, colors):
-        tsplot(ax, y, color=c)
+    for y, c, name in zip(y_all, colors, y_names):
+        if hack_always_increase:
+            y_ = []
+            prev = y[0]
+            y_.append(prev)
+            for val in y[1:]:
+                val2 = np.max([val, prev], 0)
+                prev = val2
+                y_.append(val2)
+        else:
+            y_ = y
+        y_ = np.array(y_)
+        tsplot(ax, y_, label=name, color=c)
 
     plt.xlabel("Iteration", fontsize=18)
     plt.xticks(fontsize=18)
@@ -162,6 +174,8 @@ def create_plot_it(all_stats, output_file, stats_key, y_label, cmap=plt.cm.jet):
     ##ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
     #ax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
     #ax.yaxis.set_major_formatter(ticker.ScalarFormatter())
+
+    plt.legend()
 
     sns.despine()
     #plt.tight_layout(rect=[0, 0, 1.0, 0.95])
@@ -227,8 +241,8 @@ if __name__ == "__main__":
     if args.type == "plots_it" or args.type == "all":
         create_plot_it(all_stats, os.path.join(args.resultsDir, "qd-score.pdf"), "all_unique_qd_score", "QD-Score")
         create_plot_it(all_stats, os.path.join(args.resultsDir, "coverage.pdf"), "all_unique_coverage", "Coverage (%)")
-        create_plot_it(all_stats, os.path.join(args.resultsDir, "training-size.pdf"), "training_size", "Training size")
-        create_plot_it(all_stats, os.path.join(args.resultsDir, "best.pdf"), "best", "Best Fitness")
+        create_plot_it(all_stats, os.path.join(args.resultsDir, "training-size.pdf"), "training_size", "Training size", hack_always_increase=True)
+        create_plot_it(all_stats, os.path.join(args.resultsDir, "best.pdf"), "best", "Best Fitness", hack_always_increase=True)
 
 
 
