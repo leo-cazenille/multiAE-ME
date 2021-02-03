@@ -254,11 +254,11 @@ def _compute_klc(mat_inds, density_refs, refs_range, nb_bins, epsilon):
     # Compute histograms
     #density_inds = (np.histogramdd(mat_inds, nb_bins, range=refs_range, density=False)[0] / len(mat_inds)).ravel()
     density_inds = (np.histogramdd(mat_inds, nb_bins, range=refs_range, density=False)[0]).ravel()
-    density_inds[np.where(density_inds == 0.)] = epsilon
+    #density_inds[np.where(density_inds == 0.)] = epsilon
     density_inds /= np.sum(density_inds)
     # Compute KLC
-    return np.sum(density_inds * np.log(density_inds / density_refs))
-    #return np.sum(density_refs * np.log(density_refs / density_inds))
+    return np.nansum(density_inds * np.log(density_inds / density_refs))
+    #return np.nansum(density_refs * np.log(density_refs / density_inds))
 
 
 def relative_kl_coverage_btw_two_cases(config, ref_stats, inds_case_name):
