@@ -28,6 +28,7 @@ klc_epsilon: 1e-20
 
 mean_corr_stat_scores_names: ["meanDistance", "meanHeadStability", "meanTorquePerStep", "meanJump", "meanLeg0HipAngle", "meanLeg1HipAngle", "meanLeg0KneeAngle", "meanLeg1KneeAngle"]
 
+reference_data_file: "data/bipedalM30-random-10000.p"
 
 fitness_type: "meanAvgReward"
 meanAvgRewardDomain: [-200., 350.]

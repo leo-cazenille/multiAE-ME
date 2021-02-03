@@ -14,25 +14,26 @@ send_several_suggestions_to_fn: True
 max_nb_suggestions_per_call: 10
 
 # Type of experiment
-experiment_type: bipedal_walker
-debug_features: False # set to True to determine feature domain bounds
-indv_eps: 5       # episodes per individual
-max_episode_length: 300
-bipedal_scores_type: mean30
+#experiment_type: bipedal_walker
+#debug_features: False # set to True to determine feature domain bounds
+#indv_eps: 5       # episodes per individual
+#max_episode_length: 300
+#bipedal_scores_type: mean30
 
-# KLC
-klc_reference_data_file: data/bipedalM30-100000.p
-klc_scores_names: ["meanDistance", "meanHeadStability"]
-klc_nb_bins: 10
-klc_epsilon: 1e-20
+## KLC
+#klc_reference_data_file: data/bipedalM30-100000.p
+#klc_scores_names: ["meanDistance", "meanHeadStability"]
+#klc_nb_bins: 10
+#klc_epsilon: 1e-20
+#
+#mean_corr_stat_scores_names: ["meanDistance", "meanHeadStability"]
 
-mean_corr_stat_scores_names: ["meanDistance", "meanHeadStability"]
+experiment_type: rastrigin
+nb_features: 2
 
-reference_data_file: "data/bipedalM30-random-10000.p"
 
-
-fitness_type: "meanAvgReward"
-meanAvgRewardDomain: [-200., 350.]
+#fitness_type: "meanAvgReward"
+#meanAvgRewardDomain: [-200., 350.]
 
 #features_list: ["meanDistance", "meanHeadStability"]
 #meanDistanceDomain: [0., 50.]
@@ -87,6 +88,7 @@ containers:
     epsilon_dominance: True
     epsilon: 0.1
     rebalancing_period: 1000
+    base_scores: ["0", "1"]
     compute_new_threshold_period: 10000
 
 
@@ -101,10 +103,12 @@ containers:
     grid1:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
-        fitness_score_names: ["meanAvgReward"]
-        fitness_domain: [[-200., 350.]]
-        features_score_names: ["meanDistance", "meanHeadStability"]
-        features_domain: [[0., 50.], [0., 2.5]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        #fitness_score_names: ["meanAvgReward"]
+        #fitness_domain: [[-200., 350.]]
+        #features_score_names: ["meanDistance", "meanHeadStability"]
+        #features_domain: [[0., 50.], [0., 2.5]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
+        fitness_domain: [[0., 1.]]                             # The domain of each fitness objective (here we only have one objective)
+        features_domain: [[-1., 1.], [-1., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         only_add_accepted_inds_to_parents: True
         storage_type: indexableset              # Faster than 'orderedset' but may have compatibility problems with pickle in some versions
 
@@ -119,12 +123,12 @@ containers:
 # The list of all algorithms
 algorithms:
     # Default parameter values for each algorithm
-    #optimisation_task: minimisation   # We perform maximisation of all fitness objectives
-    #dimension: 5                      # The number of dimensions of the problem. For rastrigin, any dimension >= 2 can be chosen
+    #optimisation_task: maximisation   # We perform maximisation of all fitness objectives
+    dimension: 5                      # The number of dimensions of the problem. For rastrigin, any dimension >= 2 can be chosen
     #ind_domain: [0.1, 0.9]              # The domain of each value of the genome (optional)
 
     # Evolution parameters
-    batch_size: 1000 #0     # The number of evaluations in each subsequent batch
+    batch_size: 100 #0     # The number of evaluations in each subsequent batch
     sel_pb: 0.9 # 1.0         # The probability of performing selection+variation instead of initialising a new genome
     init_pb: 0.1 # 0.0        # The probability of initiating a new genome instead of performing selection
     mut_pb: 0.1 # 0.1         # The probability of mutating each value of the genome of a selected individual
@@ -140,7 +144,7 @@ algorithms:
 
     algoTotal:
         type: AlternatingAlgWrapper
-        budget: 100000
+        budget: 20000
         tell_container_when_switching: False
         tell_all: True
         #tell_container_when_switching: True               # Whether to tell the next algorithm in the list all results of the previous algorithm

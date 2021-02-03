@@ -28,8 +28,6 @@ klc_epsilon: 1e-20
 
 mean_corr_stat_scores_names: ["meanDistance", "meanHeadStability"]
 
-reference_data_file: "data/bipedalM30-random-10000.p"
-
 
 fitness_type: "meanAvgReward"
 meanAvgRewardDomain: [-200., 350.]
@@ -119,12 +117,12 @@ containers:
 # The list of all algorithms
 algorithms:
     # Default parameter values for each algorithm
-    #optimisation_task: minimisation   # We perform maximisation of all fitness objectives
+    optimisation_task: maximisation   # We perform maximisation of all fitness objectives
     #dimension: 5                      # The number of dimensions of the problem. For rastrigin, any dimension >= 2 can be chosen
     #ind_domain: [0.1, 0.9]              # The domain of each value of the genome (optional)
 
     # Evolution parameters
-    batch_size: 1000 #0     # The number of evaluations in each subsequent batch
+    batch_size: 50 #0     # The number of evaluations in each subsequent batch
     sel_pb: 0.9 # 1.0         # The probability of performing selection+variation instead of initialising a new genome
     init_pb: 0.1 # 0.0        # The probability of initiating a new genome instead of performing selection
     mut_pb: 0.1 # 0.1         # The probability of mutating each value of the genome of a selected individual
@@ -140,7 +138,7 @@ algorithms:
 
     algoTotal:
         type: AlternatingAlgWrapper
-        budget: 100000
+        budget: 1000
         tell_container_when_switching: False
         tell_all: True
         #tell_container_when_switching: True               # Whether to tell the next algorithm in the list all results of the previous algorithm
