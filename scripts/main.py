@@ -284,6 +284,11 @@ class MultiAEExperiment(QDExperiment):
             self.parent_container.update(ref_cont)
 
             # XXX dirty
+            for a in self.algo.algorithms:
+                if type(a.container) == ContainerDecorator:
+                    a.container.update(ref_cont)
+
+            # XXX dirty
             # Create models
             if len(ref_cont) > 0:
                 for alg in self.algo.algorithms:
