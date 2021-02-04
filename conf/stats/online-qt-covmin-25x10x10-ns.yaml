@@ -3,7 +3,7 @@
 resultsBaseDir: results/
 
 klc:
-    nb_bins: 5
+    nb_bins: 0
     epsilon: 1e-100
 #    max_data_files: 1
 #    max_inds: 10
