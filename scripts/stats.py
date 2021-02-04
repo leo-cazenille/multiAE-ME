@@ -385,7 +385,7 @@ def compute_stats_last_iteration(config, data_file):
     mean_best = np.mean(bests)
     std_best = np.std(bests)
 
-    return {'all_qd_score': all_qd_score, 'all_size': all_size, 'all_unique_qd_score': all_unique_qd_score, 'mean_qd_score': mean_qd_score, 'all_unique_coverage': all_unique_coverage, 'max_best': max_best, 'mean_best': mean_best, 'std_best': std_best}
+    return {'all_qd_score': all_qd_score, 'all_coverage': all_coverage, 'all_unique_qd_score': all_unique_qd_score, 'mean_qd_score': mean_qd_score, 'all_unique_coverage': all_unique_coverage, 'max_best': max_best, 'mean_best': mean_best, 'std_best': std_best}
 
 
 def compute_stats_all_iterations(config, data_file):
@@ -458,6 +458,12 @@ def compute_ref(config):
 
     # Compute means of last iteration stats
     last_it_stats = {}
+    all_qd_score = [s['all_qd_score'] for s in stats_last_it]
+    last_it_stats['mean_all_qd_score'] = np.mean(all_qd_score)
+    last_it_stats['std_all_qd_score'] = np.std(all_qd_score)
+    all_coverage = [s['all_coverage'] for s in stats_last_it]
+    last_it_stats['mean_all_coverage'] = np.mean(all_coverage)
+    last_it_stats['std_all_coverage'] = np.std(all_coverage)
     all_unique_qd_score = [s['all_unique_qd_score'] for s in stats_last_it]
     last_it_stats['mean_all_unique_qd_score'] = np.mean(all_unique_qd_score)
     last_it_stats['std_all_unique_qd_score'] = np.std(all_unique_qd_score)

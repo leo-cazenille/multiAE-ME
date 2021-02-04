@@ -106,8 +106,9 @@ def create_table_last_it_stats(all_stats, output_file):
         last_it_stats = c_stats['ref']['last_it_stats']
         corr_stats = c_stats['ref']['corr_stats']
         entries = {}
-        entries['QD-Score'] = f"${last_it_stats['mean_mean_qd_score']:.3f} \pm {last_it_stats['std_mean_qd_score']:.3f}$"
+        entries['QD-Score'] = f"${last_it_stats['mean_all_qd_score']:.3f} \pm {last_it_stats['std_all_qd_score']:.3f}$"
         entries['Unique QD-Score'] = f"${last_it_stats['mean_all_unique_qd_score']:.3f} \pm {last_it_stats['std_all_unique_qd_score']:.3f}$"
+        entries['Coverage (%)'] = f"${last_it_stats['mean_all_coverage']:.3f} \pm {last_it_stats['std_all_coverage']:.3f}$"
         entries['Unique Coverage (%)'] = f"${last_it_stats['mean_all_unique_coverage']:.3f} \pm {last_it_stats['std_all_unique_coverage']:.3f}$"
         entries['Best Fitness'] = f"${last_it_stats['mean_max_best']:.3f} \pm {last_it_stats['std_max_best']:.3f}$"
         entries['FD Abs. Corr.'] = f"${corr_stats['mean_mean_abs_corr']:.3f} \pm {corr_stats['std_mean_abs_corr']:.3f}$"
