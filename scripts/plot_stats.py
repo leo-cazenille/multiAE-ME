@@ -112,7 +112,8 @@ def create_table_last_it_stats(all_stats, output_file):
         entries['Coverage (\%)'] = f"${last_it_stats['mean_all_coverage']:.3f} \pm {last_it_stats['std_all_coverage']:.3f}$"
         entries['Best Fitness'] = f"${last_it_stats['mean_max_best']:.3f} \pm {last_it_stats['std_max_best']:.3f}$"
         entries['FD Abs. Corr.'] = f"${corr_stats['mean_mean_abs_corr']:.3f} \pm {corr_stats['std_mean_abs_corr']:.3f}$"
-        entries['Mean Orig.'] = f"${last_it_stats['mean_mean_originality']:.3f} \pm {last_it_stats['std_mean_originality']:.3f}$"
+        #entries['Mean Originality'] = f"${last_it_stats['mean_mean_originality']:.3f} \pm {last_it_stats['std_mean_originality']:.3f}$"
+        entries['Cont. Redundancy'] = f"${1.0 - last_it_stats['mean_mean_originality']:.3f} \pm {last_it_stats['std_mean_originality']:.3f}$"
         vals_dict[c_case_name] = entries
 
     vals_df = pd.DataFrame.from_dict(vals_dict, orient="index")
