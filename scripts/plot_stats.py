@@ -248,11 +248,12 @@ if __name__ == "__main__":
 
     # Create plots
     if args.type == "plots_it" or args.type == "all":
-        create_plot_it(all_stats, os.path.join(args.resultsDir, "qd-score.pdf"), "all_unique_qd_score", "QD-Score", hack_always_increase=True)
-        create_plot_it(all_stats, os.path.join(args.resultsDir, "coverage.pdf"), "all_unique_coverage", "Coverage (%)", hack_always_increase=True)
+        create_plot_it(all_stats, os.path.join(args.resultsDir, "qd-score.pdf"), "qd_score", "QD-Score")
+        create_plot_it(all_stats, os.path.join(args.resultsDir, "unique-qd-score.pdf"), "all_unique_qd_score", "Unique QD-Score")
+        create_plot_it(all_stats, os.path.join(args.resultsDir, "unique-coverage.pdf"), "all_unique_coverage", "Unique Coverage (%)")
         create_plot_it(all_stats, os.path.join(args.resultsDir, "training-size.pdf"), "training_size", "Training size", hack_always_increase=True)
         create_plot_it(all_stats, os.path.join(args.resultsDir, "best.pdf"), "best", "Best Fitness", hack_always_increase=True)
-        create_plot_it(all_stats, os.path.join(args.resultsDir, "legend.pdf"), "best", "", hack_always_increase=True, only_legend=True)
+        create_plot_it(all_stats, os.path.join(args.resultsDir, "legend.pdf"), "best", "", only_legend=True)
 
 
 

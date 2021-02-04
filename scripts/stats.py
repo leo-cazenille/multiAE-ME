@@ -388,6 +388,10 @@ def compute_stats_last_iteration(config, data_file):
 def compute_stats_all_iterations(config, data_file):
     res = {}
     all_capacity = np.sum([a.container.capacity for a in data_file['algorithms']])
+    algos_names = [a.name for a in data_file['algorithms']]
+
+    qd_score = np.array([[float(x) for x in data_file['iterations'][f"qd_score-{n}"]] for n in algos_names])
+    res['qd_score'] = np.sum(qd_score, 0)
     res['all_unique_qd_score'] = np.array([float(x) for x in data_file['iterations']['all_qd_score']])
     res['all_unique_size'] = np.array([int(x) for x in data_file['iterations']['all_size']])
     res['all_unique_coverage'] = np.array([float(x) / float(all_capacity) * 100. for x in res['all_unique_size']])
