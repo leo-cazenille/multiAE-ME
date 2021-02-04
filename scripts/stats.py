@@ -374,15 +374,18 @@ def compute_stats_last_iteration(config, data_file):
     algos_names = [a.name for a in data_file['algorithms']]
     qd_score_lst = [float(last_entry[f"qd_score-{n}"]) for n in algos_names]
     mean_qd_score = np.mean(qd_score_lst)
+    all_qd_score = np.sum(qd_score_lst)
     all_unique_size = int(data_file['iterations'].iloc[-1]['all_size'])
     all_capacity = np.sum([a.container.capacity for a in data_file['algorithms']])
     all_unique_coverage = all_unique_size / float(all_capacity) * 100.
+    all_size = np.sum([a.container.size for a in data_file['algorithms']])
+    all_coverage = all_size / float(all_capacity) * 100.
     bests = [a.container.best_fitness[0] for a in data_file['algorithms']]
     max_best = np.max(bests)
     mean_best = np.mean(bests)
     std_best = np.std(bests)
 
-    return {'all_unique_qd_score': all_unique_qd_score, 'mean_qd_score': mean_qd_score, 'all_unique_coverage': all_unique_coverage, 'max_best': max_best, 'mean_best': mean_best, 'std_best': std_best}
+    return {'all_qd_score': all_qd_score, 'all_size': all_size, 'all_unique_qd_score': all_unique_qd_score, 'mean_qd_score': mean_qd_score, 'all_unique_coverage': all_unique_coverage, 'max_best': max_best, 'mean_best': mean_best, 'std_best': std_best}
 
 
 def compute_stats_all_iterations(config, data_file):

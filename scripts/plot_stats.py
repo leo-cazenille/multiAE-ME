@@ -106,8 +106,9 @@ def create_table_last_it_stats(all_stats, output_file):
         last_it_stats = c_stats['ref']['last_it_stats']
         corr_stats = c_stats['ref']['corr_stats']
         entries = {}
-        entries['QD-Score'] = f"${last_it_stats['mean_all_unique_qd_score']:.3f} \pm {last_it_stats['std_all_unique_qd_score']:.3f}$"
-        entries['Coverage (%)'] = f"${last_it_stats['mean_all_unique_coverage']:.3f} \pm {last_it_stats['std_all_unique_coverage']:.3f}$"
+        entries['QD-Score'] = f"${last_it_stats['mean_mean_qd_score']:.3f} \pm {last_it_stats['std_mean_qd_score']:.3f}$"
+        entries['Unique QD-Score'] = f"${last_it_stats['mean_all_unique_qd_score']:.3f} \pm {last_it_stats['std_all_unique_qd_score']:.3f}$"
+        entries['Unique Coverage (%)'] = f"${last_it_stats['mean_all_unique_coverage']:.3f} \pm {last_it_stats['std_all_unique_coverage']:.3f}$"
         entries['Best Fitness'] = f"${last_it_stats['mean_max_best']:.3f} \pm {last_it_stats['std_max_best']:.3f}$"
         entries['FD Abs. Corr.'] = f"${corr_stats['mean_mean_abs_corr']:.3f} \pm {corr_stats['std_mean_abs_corr']:.3f}$"
         vals_dict[c_case_name] = entries
@@ -248,9 +249,9 @@ if __name__ == "__main__":
 
     # Create plots
     if args.type == "plots_it" or args.type == "all":
-        create_plot_it(all_stats, os.path.join(args.resultsDir, "qd-score.pdf"), "qd_score", "QD-Score")
+        create_plot_it(all_stats, os.path.join(args.resultsDir, "qd-score.pdf"), "qd_score", "QD-Score", hack_always_increase=True)
         create_plot_it(all_stats, os.path.join(args.resultsDir, "unique-qd-score.pdf"), "all_unique_qd_score", "Unique QD-Score")
-        create_plot_it(all_stats, os.path.join(args.resultsDir, "unique-coverage.pdf"), "all_unique_coverage", "Unique Coverage (%)")
+        create_plot_it(all_stats, os.path.join(args.resultsDir, "unique-coverage.pdf"), "all_unique_coverage", "Unique Coverage (\%)")
         create_plot_it(all_stats, os.path.join(args.resultsDir, "training-size.pdf"), "training_size", "Training size", hack_always_increase=True)
         create_plot_it(all_stats, os.path.join(args.resultsDir, "best.pdf"), "best", "Best Fitness", hack_always_increase=True)
         create_plot_it(all_stats, os.path.join(args.resultsDir, "legend.pdf"), "best", "", only_legend=True)
