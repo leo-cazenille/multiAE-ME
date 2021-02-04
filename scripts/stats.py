@@ -385,7 +385,9 @@ def compute_stats_last_iteration(config, data_file):
     mean_best = np.mean(bests)
     std_best = np.std(bests)
 
-    return {'all_qd_score': all_qd_score, 'all_coverage': all_coverage, 'all_unique_qd_score': all_unique_qd_score, 'mean_qd_score': mean_qd_score, 'all_unique_coverage': all_unique_coverage, 'max_best': max_best, 'mean_best': mean_best, 'std_best': std_best}
+    mean_originality = metrics.mean_originality([a.container for a in data_file['algorithms']])
+
+    return {'all_qd_score': all_qd_score, 'all_coverage': all_coverage, 'all_unique_qd_score': all_unique_qd_score, 'mean_qd_score': mean_qd_score, 'all_unique_coverage': all_unique_coverage, 'max_best': max_best, 'mean_best': mean_best, 'std_best': std_best, 'mean_originality': mean_originality}
 
 
 def compute_stats_all_iterations(config, data_file):
@@ -479,6 +481,9 @@ def compute_ref(config):
     mean_best = [s['mean_best'] for s in stats_last_it]
     last_it_stats['mean_mean_best'] = np.mean(mean_best)
     last_it_stats['std_mean_best'] = np.std(mean_best)
+    mean_originality = [s['mean_originality'] for s in stats_last_it]
+    last_it_stats['mean_mean_originality'] = np.mean(mean_originality)
+    last_it_stats['std_mean_originality'] = np.std(mean_originality)
     print(f"last_it_stats: {last_it_stats}")
 
     # Assemble stats of all iterations
