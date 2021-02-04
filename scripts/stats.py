@@ -265,11 +265,18 @@ def _compute_klc_density(mat_refs, nb_bins, epsilon, ranges):
             refs_range = [list(ranges)] * int(mat_refs.shape[1])
         else:
             refs_range = list(ranges)
-    # Compute histograms
-    #density_refs = (np.histogramdd(mat_refs, nb_bins, range=refs_range, density=False)[0] / len(mat_refs)).ravel()
-    density_refs = (np.histogramdd(mat_refs, nb_bins, range=refs_range, density=False)[0]).ravel()
-    density_refs[np.where(density_refs == 0.)] = epsilon
-    density_refs /= np.sum(density_refs)
+    # Compute histograms over every pair of dimension
+    density_refs = []
+    for i in range(len(refs_range)//2):
+        h = np.histogram2d(mat_refs[:,i*2], mat_refs[:,i*2+1], nb_bins, range=refs_range[i*2:i*2+2], density=False)[0].ravel()
+        h[np.where(h == 0.)] = epsilon
+        h /= np.sum(h)
+        density_refs.append(h)
+
+#    #density_refs = (np.histogramdd(mat_refs, nb_bins, range=refs_range, density=False)[0] / len(mat_refs)).ravel()
+#    density_refs = (np.histogramdd(mat_refs, nb_bins, range=refs_range, density=False)[0]).ravel()
+#    density_refs[np.where(density_refs == 0.)] = epsilon
+#    density_refs /= np.sum(density_refs)
     return density_refs, refs_range
 
 
@@ -282,14 +289,26 @@ def _compute_klc(mat_inds, density_refs, refs_range, nb_bins, epsilon):
 #    print(f"DEBUG _compute_klc density_refs: {density_refs}")
 #    print(f"DEBUG _compute_klc refs_range: {refs_range}")
 #    print(f"DEBUG _compute_klc nb_bins: {nb_bins}")
-    # Compute histograms
-    #density_inds = (np.histogramdd(mat_inds, nb_bins, range=refs_range, density=False)[0] / len(mat_inds)).ravel()
-    density_inds = (np.histogramdd(mat_inds, nb_bins, range=refs_range, density=False)[0]).ravel()
-    density_inds[np.where(density_inds == 0.)] = epsilon
-    density_inds /= np.sum(density_inds)
-    # Compute KLC
-    return np.nansum(density_inds * np.log(density_inds / density_refs))
-    #return np.nansum(density_refs * np.log(density_refs / density_inds))
+
+#    # Compute histograms
+#    #density_inds = (np.histogramdd(mat_inds, nb_bins, range=refs_range, density=False)[0] / len(mat_inds)).ravel()
+#    density_inds = (np.histogramdd(mat_inds, nb_bins, range=refs_range, density=False)[0]).ravel()
+#    density_inds[np.where(density_inds == 0.)] = epsilon
+#    density_inds /= np.sum(density_inds)
+
+    # Compute histograms over every pair of dimension
+    klc = 0.
+    for i in range(len(refs_range)//2):
+        h = np.histogram2d(mat_inds[:,i*2], mat_inds[:,i*2+1], nb_bins, range=refs_range[i*2:i*2+2], density=False)[0].ravel()
+        h[np.where(h == 0.)] = epsilon
+        h /= np.sum(h)
+        klc += np.nansum(h * np.log(h / density_refs[i]))
+
+
+    ## Compute KLC
+    return klc
+    #return np.nansum(density_inds * np.log(density_inds / density_refs))
+    ##return np.nansum(density_refs * np.log(density_refs / density_inds))
 
 
 def relative_kl_coverage_btw_two_cases(config, ref_stats, inds_case_name):
@@ -751,10 +770,10 @@ if __name__ == "__main__":
     save_stats_file(config, stats_filename, stats_data)
     gc.collect()
 
-#    if recompute or not 'compare' in stats_data:
-#        stats_data['compare'] = compute_relative_kl_coverage(config, stats_data['ref'])
-#    save_stats_file(config, stats_filename, stats_data)
-#    gc.collect()
+    if recompute or not 'compare' in stats_data:
+        stats_data['compare'] = compute_relative_kl_coverage(config, stats_data['ref'])
+    save_stats_file(config, stats_filename, stats_data)
+    gc.collect()
 
 
 

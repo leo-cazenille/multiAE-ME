@@ -18,6 +18,8 @@ klc:
 
     data_dirs:
         testM30_10: "test-bipedalM30_10"
+        testM30_4: "test-bipedalM30_4"
+        testM30_5: "test-bipedalM30_5"
 
 
 # MODELINE "{{{1

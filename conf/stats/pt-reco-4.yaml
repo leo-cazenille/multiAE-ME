@@ -1,0 +1,42 @@
+---
+
+resultsBaseDir: results/
+
+klc:
+    nb_bins: 10
+    epsilon: 1e-100
+#    max_data_files: 1
+#    max_inds: 10
+
+
+    refs:
+        name: pt-reco-4
+        dir: "bipedalM30-pretrained_100-recononly_0.0-4xAutoScalingGrid2x25x25-scoreprop_100000_cpu"
+
+
+    data_dirs:
+
+        hardcoded-4:       "bipedalM30-reference-4xGridx25x25-scoreprop_100000"
+        pt-reco-4:         "bipedalM30-pretrained_100-recononly_0.0-4xAutoScalingGrid2x25x25-scoreprop_100000_cpu"
+        reco-4:            "bipedalM30-preonline5000_100-recononly_0.0-1xAutoScalingGrid2x50x50-scoreprop_100000_cpu"
+        qt-reco-4:         "bipedalM30-preonline5000_100_quartile-recononly_0.0-4xGridx25x25-scoreprop_100000_cpu"
+
+        hardcoded-4-ns:    "bipedalM30-reference-4xGridx25x25-scoreprop_notshared_100000"
+        qt-reco-4-ns:      "bipedalM30-preonline5000_100_quartile-recononly_0.0-4xGridx25x25-scoreprop_notshared_100000_cpu"
+
+        hardcoded-1:       "bipedalM30-reference0-1xGridx50x50-scoreprop_100000"
+        qt-reco-1:         "bipedalM30-preonline5000_100_quartile-recononly_0.0-1xGridx50x50-scoreprop_100000_cpu"
+        qt-reco-6-ns:      "bipedalM30-preonline5000_100_quartile-recononly_0.0-6xGridx20x20-scoreprop_notshared_100000_cpu"
+        qt-reco-9-ns:      "bipedalM30-preonline5000_100_quartile-recononly_0.0-9xGridx17x16-scoreprop_notshared_100000_cpu"
+        qt-reco-25-ns:     "bipedalM30-preonline5000_100_quartile-recononly_0.0-25xGridx10x10-scoreprop_notshared_100000_cpu"
+
+        qt-outputs-4-ns:   "bipedalM30-preonline5000_100_quartile-outputs_1.0-4xGridx25x25-scoreprop_notshared_100000_cpu"
+        qt-covmin-4-ns:    "bipedalM30-preonline5000_100_quartile-covlatent_1.0-4xGridx25x25-scoreprop_notshared_100000_cpu"
+        qt-covmax-4-ns:    "bipedalM30-preonline5000_100_quartile-covlatent_-1.0-4xGridx25x25-scoreprop_notshared_100000_cpu"
+        qt-cmd-4-ns:       "bipedalM30-preonline5000_100_quartile-cmdlatent_1.0-4xGridx25x25-scoreprop_notshared_100000_cpu"
+
+
+
+# MODELINE "{{{1
+# vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
+# vim:foldmethod=marker
