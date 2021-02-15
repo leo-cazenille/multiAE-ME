@@ -245,10 +245,10 @@ if __name__ == "__main__":
     # Create tables
     if args.type == "table_last_it" or args.type == "all":
         create_table_last_it_stats(all_stats, os.path.join(args.resultsDir, "table-last_it.tex"))
-    #if args.type == "table_pairwise" or args.type == "all":
-    #    create_table_pairwise(all_stats, os.path.join(args.resultsDir, "table-klc.tex"), "mean_klc", "std_klc")
-    #    create_table_pairwise(all_stats, os.path.join(args.resultsDir, "table-coverage.tex"), "mean_coverage", "std_coverage")
-    #    create_table_pairwise(all_stats, os.path.join(args.resultsDir, "table-qdscore.tex"), "mean_qdscore", "std_qdscore")
+    if args.type == "table_pairwise" or args.type == "all":
+        create_table_pairwise(all_stats, os.path.join(args.resultsDir, "table-klc.tex"), "mean_klc", "std_klc")
+        create_table_pairwise(all_stats, os.path.join(args.resultsDir, "table-coverage.tex"), "mean_coverage", "std_coverage")
+        create_table_pairwise(all_stats, os.path.join(args.resultsDir, "table-qdscore.tex"), "mean_qdscore", "std_qdscore")
 
     # Create plots
     if args.type == "plots_it" or args.type == "all":
