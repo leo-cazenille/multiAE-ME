@@ -101,7 +101,7 @@ containers:
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         fitness_score_names: ["meanAvgReward"]
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_score_names: ["meanDistance", "meanHeadStability"]
         features_domain: [[0., 50.], [0., 2.5]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         only_add_accepted_inds_to_parents: True
@@ -111,7 +111,7 @@ containers:
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         fitness_score_names: ["meanAvgReward"]
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_score_names: ["meanTorquePerStep", "meanJump"]
         features_domain: [[0., 25.], [0., 0.75]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         only_add_accepted_inds_to_parents: True
@@ -121,7 +121,7 @@ containers:
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         fitness_score_names: ["meanAvgReward"]
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_score_names: ["meanLeg0HipAngle", "meanLeg1HipAngle"]
         features_domain: [[0.0, 2.5], [0.0, 2.5]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         only_add_accepted_inds_to_parents: True
@@ -131,7 +131,7 @@ containers:
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         fitness_score_names: ["meanAvgReward"]
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_score_names: ["meanLeg0HipSpeed", "meanLeg1HipSpeed"]
         features_domain: [[0.0, 10.], [0.0, 10.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         only_add_accepted_inds_to_parents: True
@@ -141,7 +141,7 @@ containers:
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         fitness_score_names: ["meanAvgReward"]
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_score_names: ["meanLeg0KneeAngle", "meanLeg1KneeAngle"]
         features_domain: [[0.0, 2.5], [0.0, 2.5]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         only_add_accepted_inds_to_parents: True
@@ -151,7 +151,7 @@ containers:
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         fitness_score_names: ["meanAvgReward"]
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_score_names: ["meanLeg0KneeSpeed", "meanLeg1KneeSpeed"]
         features_domain: [[0.0, 10.], [0.0, 10.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
         only_add_accepted_inds_to_parents: True

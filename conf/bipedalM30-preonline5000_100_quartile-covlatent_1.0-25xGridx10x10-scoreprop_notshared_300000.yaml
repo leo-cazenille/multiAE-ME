@@ -130,175 +130,175 @@ containers:
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid2:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid3:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid4:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid5:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid6:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid7:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid8:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid9:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid10:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid11:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid12:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid13:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid14:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid15:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid16:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid17:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid18:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid19:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid20:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid21:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid22:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid23:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid24:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
     grid25:                                                # The main grid container
         type: Grid                             # The type of the container. Here we use an AutoScalingGrid that periodically adjust the feature descriptors domains to match the individuals encountered so far
         parents: [parentContainer]                        # The list of parent containers. Every individual added to `cont0` will be also forwarded to the parents
         scaling_containers: [parentContainer]             # The list of containers used to store individuals added after a rescaling operation. If empty, will use the parents instead.
-        fitness_domain: [[-200., 350.]]
+        fitness_domain: [[-200., 40.]]
         features_domain: [[0., 1.], [0., 1.]]             # The initial domain of each feature. Must be specified here even if the container will autoscale the domains, to set the number of features
 
 
